@@ -16,7 +16,7 @@ async function register(req, res) {
     if (existingEmail)
       return res
         .status(409)
-        .json({ message: "Email is alredy registered. Please log in." });
+        .json({ error: "Email is alredy registered. Please log in." });
     // bcrypt
     const hash = await bcrypt.hash(password, 10);
     // create new user
@@ -57,7 +57,7 @@ async function login(req, res) {
       } else {
         res.status(400).json({ error: errorText });
       }
-    }
+    } else return res.status(400).json({ error: errorText });
   } catch (err) {
     res.status(400).json({ error: "Error logging in." });
   }

@@ -31,4 +31,17 @@ module.exports = {
       directory: path.join(__dirname, "server/db/migrations"),
     },
   },
+  test: {
+    client: "pg",
+    connection: {
+      host: "127.0.0.1",
+      port: 5432,
+      database: `${dbName}_test`,
+    },
+    asyncStackTraces: true,
+    migrations: {
+      extension: "ts",
+      directory: path.join(__dirname, "server/db/migrations"),
+    },
+  },
 };
