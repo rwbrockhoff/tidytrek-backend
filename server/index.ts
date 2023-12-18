@@ -1,6 +1,6 @@
 import server from "./server.js";
 
-const port = 4001;
+const port = process.env.PORT;
 
 server.get("/", (req, res) => {
   res.status(200).send("Server is up and running.");
