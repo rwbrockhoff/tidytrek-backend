@@ -8,7 +8,6 @@ async function register(req, res) {
   try {
     // validate incoming data
     const { email, password, first_name, last_name } = req.body;
-    console.log("BODY: ", req.body);
     // check if email is already in use
     const existingEmail = await knex("users")
       .select("email")
@@ -40,16 +39,18 @@ async function login(req, res) {
   try {
     // get info off body
     const { email, password } = req.body;
+
     if (!email && !password) return res.status(400).json({ error: errorText });
     // get user from db
     const user = await knex("users").where({ email }).first();
     // passwords match
     const passwordsMatch = await bcrypt.compare(password, user.password);
-    // create token + cookie
-    // send back user, no password attached
+
     if (passwordsMatch) {
+      // create token + cookie
       const token = createWebToken(user.user_id);
       res.cookie("token", token, cookieOptions);
+      // send back user, no password attached
       if (user.password) delete user.password;
       if (!user.password) {
         res.status(200).json({ user });
@@ -62,7 +63,11 @@ async function login(req, res) {
   }
 }
 
-async function logout(req, res) {}
+async function logout(req, res) {
+  return res.status(200).clearCookie("token").json({
+    message: "User has been logged out.",
+  });
+}
 
 function createWebToken(userId) {
   return jwt.sign({ userId }, process.env.APP_SECRET);
