@@ -1,5 +1,4 @@
-import server from "./server.js";
-
+const server = require("./server");
 const port = process.env.PORT;
 
 server.get("/", (req, res) => {

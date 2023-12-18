@@ -1,7 +1,9 @@
-import userRoutes from "../routes/user/userRoutes";
+const userRoutes = require("../routes/user/userRoutes");
+const authenticationRoutes = require("../routes/authentication/authenticationRoutes");
 
 const routeConfig = (app) => {
+  app.use("/auth", authenticationRoutes);
   app.use("/user", userRoutes);
 };
 
-export default routeConfig;
+module.exports = routeConfig;

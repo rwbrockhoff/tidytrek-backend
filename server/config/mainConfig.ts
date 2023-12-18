@@ -1,5 +1,5 @@
-import express from "express";
-import cors from "cors";
+const express = require("express");
+const cors = require("cors");
 import { Express } from "express";
 
 const mainConfig = (app: Express) => {
@@ -8,4 +8,4 @@ const mainConfig = (app: Express) => {
   app.use(cors());
 };
 
-export default mainConfig;
+module.exports = mainConfig;

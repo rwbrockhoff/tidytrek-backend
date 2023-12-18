@@ -4,4 +4,4 @@ const userController = require("./userController");
 
 router.get("/", userController.getUser);
 
-export default router;
+module.exports = router;

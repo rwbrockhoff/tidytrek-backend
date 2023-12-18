@@ -1,13 +1,12 @@
-import express from "express";
-import dotenv from "dotenv";
-import mainConfig from "./config/mainConfig.js";
-import routeConfig from "./config/routeConfig.js";
-
-dotenv.config({
+const express = require("express");
+require("dotenv").config({
   path: process.env.NODE_ENV === "production" ? "production.env" : "dev.env",
 });
+const mainConfig = require("./config/mainConfig");
+const routeConfig = require("./config/routeConfig");
+
 const app = express();
 mainConfig(app);
 routeConfig(app);
 
-export default app;
+module.exports = app;

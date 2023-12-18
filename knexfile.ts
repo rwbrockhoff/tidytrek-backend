@@ -1,9 +1,8 @@
-import type { Knex } from "knex";
 import path from "path";
 require("ts-node/register");
 const dbName = "tidytrek_db";
 
-const config: { [key: string]: Knex.Config } = {
+module.exports = {
   development: {
     client: "pg",
     connection: {
@@ -33,5 +32,3 @@ const config: { [key: string]: Knex.Config } = {
     },
   },
 };
-
-export default config;
