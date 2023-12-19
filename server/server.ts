@@ -4,9 +4,11 @@ require("dotenv").config({
 });
 const mainConfig = require("./config/mainConfig");
 const routeConfig = require("./config/routeConfig");
+const customConfig = require("./config/customConfig");
 
 const app = express();
 mainConfig(app);
+customConfig(app); // custom middleware
 routeConfig(app);
 
 module.exports = app;

@@ -2,12 +2,16 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 const knex = require("../../db/connection");
 
-const cookieOptions = { httpOnly: true, maxAge: 1000 * 60 * 60 * 24 * 180 };
+const cookieOptions = {
+  httpOnly: true,
+  maxAge: 1000 * 60 * 60 * 24 * 180,
+  signed: true,
+};
 
 async function register(req, res) {
   try {
     // validate incoming data
-    const { email, password, first_name, last_name } = req.body;
+    const { email, password, name } = req.body;
     // check if email is already in use
     const existingEmail = await knex("users")
       .select("email")
@@ -21,9 +25,9 @@ async function register(req, res) {
     const hash = await bcrypt.hash(password, 10);
     // create new user
     const user = await knex("users")
-      .insert({ email, first_name, last_name, password: hash })
-      .returning("user_id", "email", "first_name", "last_name");
-    // add jwt + cookie
+      .insert({ email, name, password: hash })
+      .returning("user_id", "email", "name");
+    // add jwt + signed cookie
     const token = createWebToken(user.user_id);
     res.cookie("token", token, cookieOptions);
     // send back user (double check no password attached)
@@ -45,7 +49,6 @@ async function login(req, res) {
     const user = await knex("users").where({ email }).first();
     // passwords match
     const passwordsMatch = await bcrypt.compare(password, user.password);
-
     if (passwordsMatch) {
       // create token + cookie
       const token = createWebToken(user.user_id);
@@ -69,8 +72,12 @@ async function logout(req, res) {
   });
 }
 
+async function getAuthStatus(req, res) {
+  return res.status(200).end();
+}
+
 function createWebToken(userId) {
   return jwt.sign({ userId }, process.env.APP_SECRET);
 }
 
-module.exports = { register, login, logout };
+module.exports = { register, login, logout, getAuthStatus };

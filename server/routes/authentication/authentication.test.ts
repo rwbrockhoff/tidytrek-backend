@@ -4,8 +4,7 @@ const request = require("supertest")(server);
 const knex = require("../../db/connection");
 
 const mockUser = {
-  first_name: "Jim",
-  last_name: "Halpert",
+  name: "Jim Halpert",
   email: "jhalpert@dundermifflin.com",
   password: "ilovepaper",
 };
@@ -26,6 +25,13 @@ afterAll(async () => {
 });
 
 describe("Auth Routes: ", () => {
+  describe("GET /STATUS: ", () => {
+    it("Should get auth status", async () => {
+      const response = await request.get("/auth/status").send();
+      expect(response.statusCode).toEqual(200);
+    });
+  });
+
   describe("POST /REGISTER: ", () => {
     it("Should register new user", async () => {
       const response = await registerMockUser();
