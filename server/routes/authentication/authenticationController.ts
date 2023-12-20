@@ -24,9 +24,11 @@ async function register(req, res) {
     // bcrypt
     const hash = await bcrypt.hash(password, 10);
     // create new user
-    const user = await knex("users")
-      .insert({ email, name, password: hash })
-      .returning("user_id", "email", "name");
+    const [user] = await knex("users").insert({ email, name, password: hash }, [
+      "user_id",
+      "name",
+      "email",
+    ]);
     // add jwt + signed cookie
     const token = createWebToken(user.user_id);
     res.cookie("token", token, cookieOptions);
@@ -73,7 +75,7 @@ async function logout(req, res) {
 }
 
 async function getAuthStatus(req, res) {
-  return res.status(200).end();
+  return res.status(200).json({ user: req.user });
 }
 
 function createWebToken(userId) {
