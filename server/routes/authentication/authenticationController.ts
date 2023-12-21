@@ -75,7 +75,11 @@ async function logout(req, res) {
 }
 
 async function getAuthStatus(req, res) {
-  return res.status(200).json({ user: req.user });
+  if (req.user && req.userId) {
+    res.status(200).json({ isAuthenticated: true, user: req.user });
+  } else {
+    res.status(200).json({ isAuthenticated: req.userId !== undefined });
+  }
 }
 
 function createWebToken(userId) {

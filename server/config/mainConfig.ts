@@ -16,7 +16,7 @@ const mainConfig = (app: Express) => {
       origin: (origin, cb) => {
         //testing
         if (!origin) return cb(null, true);
-        //return error for origins we don't recognize
+
         if (!acceptedOrigins.includes(origin)) {
           return cb(new Error(corsErrorMessage), true);
         }
