@@ -20,7 +20,6 @@ export async function up(knex: Knex): Promise<void> {
       .inTable("users")
       .onDelete("CASCADE");
     table.boolean("thruhike").defaultTo(false).notNullable();
-    table.integer("pack_community_id");
     table.timestamp("created_at").notNullable().defaultTo(knex.fn.now());
     table.timestamp("updated_at").nullable().defaultTo(knex.fn.now());
   });

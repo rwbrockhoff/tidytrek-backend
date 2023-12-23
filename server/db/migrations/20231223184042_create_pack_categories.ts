@@ -13,6 +13,8 @@ export async function up(knex: Knex): Promise<void> {
       .references("user_id")
       .inTable("users")
       .onDelete("CASCADE");
+    table.integer("pack_id").unsigned().notNullable();
+    table.foreign("pack_id").references("pack_id").inTable("packs");
   });
 }
 
