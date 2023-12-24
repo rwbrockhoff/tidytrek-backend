@@ -1,5 +1,6 @@
 const jwt = require("jsonwebtoken");
 const knex = require("../db/connection");
+const _ = require("lodash");
 
 async function getUserId(req, res, next) {
   // get token from signedCookies and verify jwt
@@ -40,4 +41,17 @@ async function protectedRoute(req, res, next) {
   next();
 }
 
-module.exports = { getUserId, attachUserToRequest, protectedRoute };
+function changeCase(req, res, next) {
+  if (req.body) {
+    let snakeCaseBody = _.mapKeys(req.body, (value, key) => _.snakeCase(key));
+    req.body = snakeCaseBody;
+  }
+  next();
+}
+
+module.exports = {
+  getUserId,
+  attachUserToRequest,
+  protectedRoute,
+  changeCase,
+};
