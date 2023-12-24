@@ -1,6 +1,6 @@
-const jwt = require("jsonwebtoken");
-const bcrypt = require("bcrypt");
-const knex = require("../../db/connection");
+import jwt from "jsonwebtoken";
+import bcrypt from "bcrypt";
+import knex from "../../db/connection.js";
 
 const cookieOptions = {
   httpOnly: true,
@@ -86,4 +86,4 @@ function createWebToken(userId) {
   return jwt.sign({ userId }, process.env.APP_SECRET);
 }
 
-module.exports = { register, login, logout, getAuthStatus };
+export default { register, login, logout, getAuthStatus };

@@ -1,14 +1,13 @@
-const express = require("express");
-require("dotenv").config({
-  path: process.env.NODE_ENV === "production" ? "production.env" : "dev.env",
-});
-const mainConfig = require("./config/mainConfig");
-const routeConfig = require("./config/routeConfig");
-const customConfig = require("./config/customConfig");
+import express from "express";
+import "./config/config.js"; //dotenv
+
+import mainConfig from "./config/mainConfig.js";
+import routeConfig from "./config/routeConfig.js";
+import customConfig from "./config/customConfig.js";
 
 const app = express();
 mainConfig(app);
 customConfig(app); // custom middleware
 routeConfig(app);
 
-module.exports = app;
+export default app;

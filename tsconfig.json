@@ -8,8 +8,11 @@
     "outDir": "dist",
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true
+    // "allowImportingTsExtensions": true,
+    // "noEmit": true
   },
   "include": ["server/**/*"],
+  // "exclude": ["server/**/*.test.ts"],
   "esm": true
   // "experimentalSpecifierResolution": "node"
 }

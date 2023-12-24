@@ -1,8 +1,8 @@
-const jwt = require("jsonwebtoken");
-const knex = require("../db/connection");
-const _ = require("lodash");
+import jwt from "jsonwebtoken";
+import knex from "../db/connection.js";
+import snakeCaseKeys from "snakecase-keys";
 
-async function getUserId(req, res, next) {
+export const getUserId = async (req, res, next) => {
   // get token from signedCookies and verify jwt
   const token = req.signedCookies?.token;
   if (token) {
@@ -10,9 +10,9 @@ async function getUserId(req, res, next) {
     req.userId = userId;
   }
   next();
-}
+};
 
-async function attachUserToRequest(req, res, next) {
+export const attachUserToRequest = async (req, res, next) => {
   //don't attach user if not logged in
   if (!req.userId) return next();
   const user = await knex("users")
@@ -29,9 +29,9 @@ async function attachUserToRequest(req, res, next) {
     }
   }
   next();
-}
+};
 
-async function protectedRoute(req, res, next) {
+export const protectedRoute = async (req, res, next) => {
   //middleware used for routes only accessible to logged in users
   if (!req.userId) {
     return res
@@ -39,19 +39,12 @@ async function protectedRoute(req, res, next) {
       .json({ error: "Please log in to complete this request." });
   }
   next();
-}
+};
 
-function changeCase(req, res, next) {
+export const changeCase = (req, res, next) => {
   if (req.body) {
-    let snakeCaseBody = _.mapKeys(req.body, (value, key) => _.snakeCase(key));
+    let snakeCaseBody = snakeCaseKeys(req.body);
     req.body = snakeCaseBody;
   }
   next();
-}
-
-module.exports = {
-  getUserId,
-  attachUserToRequest,
-  protectedRoute,
-  changeCase,
 };

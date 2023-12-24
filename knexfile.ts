@@ -1,8 +1,8 @@
-import path from "path";
-require("ts-node/register");
+import { knexCamelCaseResponse } from "./server/utils/utils.js";
+import "ts-node/register";
 const dbName = "tidytrek_db";
 
-module.exports = {
+export default {
   development: {
     client: "pg",
     connection: {
@@ -10,10 +10,12 @@ module.exports = {
       port: 5432,
       database: dbName,
     },
+    postProcessResponse: (result, queryContext) =>
+      knexCamelCaseResponse(result),
     asyncStackTraces: true,
     migrations: {
       extension: "ts",
-      directory: path.join(__dirname, "server/db/migrations"),
+      directory: `${process.cwd()}/server/db/migrations`,
     },
   },
   production: {
@@ -26,9 +28,11 @@ module.exports = {
       password: process.env.PRODUCTION_DB_PASSWORD,
       ssl: true,
     },
+    postProcessResponse: (result, queryContext) =>
+      knexCamelCaseResponse(result),
     migrations: {
       extension: "ts",
-      directory: path.join(__dirname, "server/db/migrations"),
+      directory: `${process.cwd()}/server/db/migrations`,
     },
   },
   test: {
@@ -38,10 +42,12 @@ module.exports = {
       port: 5432,
       database: `${dbName}_test`,
     },
+    postProcessResponse: (result, queryContext) =>
+      knexCamelCaseResponse(result),
     asyncStackTraces: true,
     migrations: {
       extension: "ts",
-      directory: path.join(__dirname, "server/db/migrations"),
+      directory: `${process.cwd()}/server/db/migrations`,
     },
   },
 };

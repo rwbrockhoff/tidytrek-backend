@@ -1,7 +1,7 @@
-const userRoutes = require("../routes/user/userRoutes");
-const authenticationRoutes = require("../routes/authentication/authenticationRoutes");
-const packRoutes = require("../routes/pack/packRoutes");
-const { protectedRoute } = require("../utils/customMiddleware");
+import userRoutes from "../routes/user/userRoutes.js";
+import authenticationRoutes from "../routes/authentication/authenticationRoutes.js";
+import packRoutes from "../routes/pack/packRoutes.js";
+import { protectedRoute } from "../utils/customMiddleware.js";
 
 const routeConfig = (app) => {
   app.use("/auth", authenticationRoutes);
@@ -9,4 +9,4 @@ const routeConfig = (app) => {
   app.use("/packs", protectedRoute, packRoutes);
 };
 
-module.exports = routeConfig;
+export default routeConfig;

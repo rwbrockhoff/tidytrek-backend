@@ -1,8 +1,8 @@
-const {
+import {
   getUserId,
   attachUserToRequest,
   changeCase,
-} = require("../utils/customMiddleware");
+} from "../utils/customMiddleware.js";
 import { Express } from "express";
 
 function customConfig(app: Express) {
@@ -11,4 +11,4 @@ function customConfig(app: Express) {
   app.use(changeCase);
 }
 
-module.exports = customConfig;
+export default customConfig;

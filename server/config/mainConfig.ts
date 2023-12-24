@@ -1,11 +1,8 @@
-const express = require("express");
-const cors = require("cors");
-const cookieParser = require("cookie-parser");
+import express from "express";
+import cors from "cors";
+import cookieParser from "cookie-parser";
 import { Express } from "express";
-const {
-  acceptedOrigins,
-  corsErrorMessage,
-} = require("./configurationVariables");
+import { acceptedOrigins, corsErrorMessage } from "./configurationVariables.js";
 
 const mainConfig = (app: Express) => {
   app.use(express.urlencoded({ extended: false }));
@@ -28,4 +25,4 @@ const mainConfig = (app: Express) => {
   app.use(cookieParser(process.env.COOKIE_SECRET));
 };
 
-module.exports = mainConfig;
+export default mainConfig;

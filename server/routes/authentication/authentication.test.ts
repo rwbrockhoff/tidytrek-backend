@@ -1,7 +1,8 @@
 process.env.NODE_ENV = "test";
-const server = require("../../server");
-const request = require("supertest")(server);
-const knex = require("../../db/connection");
+import server from "../../server.js";
+import initialRequest from "supertest";
+const request = initialRequest(server);
+import knex from "../../db/connection.js";
 
 const mockUser = {
   name: "Jim Halpert",
