@@ -29,4 +29,8 @@ async function getPacks(req, res) {
   return res.status(200).json(userPacks);
 }
 
-export default { getPacks };
+async function addPack(req, res) {
+  return res.status(200);
+}
+
+export default { getPacks, addPack };
