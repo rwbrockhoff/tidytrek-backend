@@ -6,7 +6,7 @@ const { protectedRoute } = require("../utils/customMiddleware");
 const routeConfig = (app) => {
   app.use("/auth", authenticationRoutes);
   app.use("/user", protectedRoute, userRoutes);
-  app.use("/pack", protectedRoute, packRoutes);
+  app.use("/packs", protectedRoute, packRoutes);
 };
 
 module.exports = routeConfig;
