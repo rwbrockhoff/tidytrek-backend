@@ -29,8 +29,21 @@ async function getPacks(req, res) {
   return res.status(200).json(userPacks);
 }
 
-async function addPack(req, res) {
-  return res.status(200);
+async function editPackItem(req, res) {
+  try {
+    const { packItemId } = req.params;
+
+    const [updatedItem = {}] = await knex("pack_items")
+      .update({ ...req.body })
+      .where({ pack_item_id: packItemId })
+      .returning("*");
+
+    return res.status(200).json(updatedItem);
+  } catch (err) {
+    return res
+      .status(400)
+      .json({ error: "There was an error saving your pack item." });
+  }
 }
 
-export default { getPacks, addPack };
+export default { getPacks, editPackItem };
