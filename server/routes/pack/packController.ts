@@ -66,4 +66,20 @@ async function editPackItem(req, res) {
   }
 }
 
-export default { getDefaultPack, editPackItem };
+async function deletePackItem(req, res) {
+  try {
+    const { packItemId } = req.params;
+    const [deletedItemIds = {}] = await knex("pack_items")
+      .delete()
+      .where({ pack_item_id: packItemId })
+      .returning(["pack_category_id", "pack_item_id"]);
+    return res.status(200).json({ deletedItemIds });
+  } catch (err) {
+    console.log("ERR: ", err);
+    return res
+      .status(400)
+      .json({ error: "There was an error deleting your pack item." });
+  }
+}
+
+export default { getDefaultPack, editPackItem, deletePackItem };
