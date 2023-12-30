@@ -1,32 +1,52 @@
 import knex from "../../db/connection.js";
 // const { camelCase } = require("../../utils/utils");
 
-async function getPacks(req, res) {
-  const { userId } = req;
-  const userPacks =
-    await knex.raw(`select packs.pack_id, packs.pack_name, packs.pack_description, packs.pack_public,
-    packs.pack_affiliate, packs.pack_affiliate_description, packs.pack_location_tag, packs.pack_duration_tag,
-    packs.pack_season_tag, packs.pack_url,
-    
-    (
-      select array_agg(row_to_json(t)) as items_in_categories 
-    FROM (
-    select pack_categories.pack_category_id, pack_categories.pack_category_name, pack_categories.pack_category_description, 
-    pack_categories.pack_category_placement_index, pack_categories.pack_id,
-     array_agg(row_to_json(pack_items)) as items from pack_items 
-    left join pack_categories on pack_categories.pack_category_id = pack_items.pack_category_id
-    where pack_categories.pack_id = pack_items.pack_id and packs.pack_id = pack_items.pack_id
-    group by pack_items.pack_category_id, pack_categories.pack_category_id
-    ) t
-    ) categories
-    
-    from packs
-    left join pack_categories on packs.pack_id = pack_categories.pack_id
-    left join pack_items on packs.pack_id = pack_items.pack_id
-    where packs.user_id = ${userId}
-    group by packs.pack_id`);
+async function getDefaultPack(req, res) {
+  try {
+    const { userId } = req;
 
-  return res.status(200).json(userPacks);
+    const { packId: defaultPackId } = await knex("packs")
+      .select("pack_id")
+      .where({ user_id: userId })
+      .orderBy("created_at")
+      .first();
+
+    const { pack, categories } = await getPack(userId, defaultPackId);
+
+    const packList = await knex("packs")
+      .select(["pack_id", "pack_name"])
+      .where({ user_id: userId });
+
+    return res.status(200).json({ packList, pack, categories });
+  } catch (err) {
+    res
+      .status(400)
+      .json({ error: "We're having trouble loading your packs right now." });
+  }
+}
+
+async function getPack(userId, packId) {
+  const pack = await knex("packs")
+    .where({ user_id: userId })
+    .orderBy("created_at")
+    .first();
+
+  // Gets categories for a pack ordered by placement index
+  // Groups all pack items for each category into an array property {pack_items: []}
+  const [categories] = await knex.raw(
+    `select array_agg(row_to_json(t)) as categories
+  FROM (
+  select pack_categories.pack_category_id, pack_categories.pack_category_name, 
+  pack_categories.pack_category_description, pack_categories.pack_category_placement_index,
+   array_agg(row_to_json(pack_items)) as pack_items from pack_items 
+  left join pack_categories on pack_categories.pack_category_id = pack_items.pack_category_id
+  where pack_categories.user_id = ${userId} 
+  AND pack_categories.pack_id = ${packId}
+  group by pack_items.pack_category_id, pack_categories.pack_category_id
+  order by pack_categories.pack_category_placement_index
+  ) t`
+  );
+  return { pack, categories: categories?.categories || [] };
 }
 
 async function editPackItem(req, res) {
@@ -46,4 +66,4 @@ async function editPackItem(req, res) {
   }
 }
 
-export default { getPacks, editPackItem };
+export default { getDefaultPack, editPackItem };

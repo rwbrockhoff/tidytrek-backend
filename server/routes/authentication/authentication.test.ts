@@ -26,21 +26,21 @@ afterAll(async () => {
 });
 
 describe("Auth Routes: ", () => {
-  describe("GET /STATUS: ", () => {
+  describe("GET /status: ", () => {
     it("Should get auth status", async () => {
       const response = await request.get("/auth/status").send();
       expect(response.statusCode).toEqual(200);
     });
   });
 
-  describe("POST /REGISTER: ", () => {
+  describe("POST /register: ", () => {
     it("Should register new user", async () => {
       const response = await registerMockUser();
       expect(response.statusCode).toEqual(200);
       expect(response.body).toHaveProperty("user");
     });
   });
-  describe("POST /LOGIN: ", () => {
+  describe("POST /login: ", () => {
     it("Should allow registered users to log in", async () => {
       await registerMockUser();
       const response = await request.post("/auth/login").send(mockUser);
@@ -48,7 +48,7 @@ describe("Auth Routes: ", () => {
       expect(response.body).toHaveProperty("user");
     });
   });
-  describe("POST /LOGOUT: ", () => {
+  describe("POST /logout: ", () => {
     it("Should allow user to logout", async () => {
       await registerMockUser();
       await request.post("/auth/login").send(mockUser);
@@ -57,7 +57,7 @@ describe("Auth Routes: ", () => {
       expect(response.body).toHaveProperty("message");
     });
   });
-  describe("POST /REGISTER: ", () => {
+  describe("POST /register: ", () => {
     it("Should NOT allow existing user to register", async () => {
       await registerMockUser();
       const response = await request.post("/auth/register").send(mockUser);
@@ -65,7 +65,7 @@ describe("Auth Routes: ", () => {
       expect(response.body).toHaveProperty("error");
     });
   });
-  describe("POST /LOGIN: ", () => {
+  describe("POST /login: ", () => {
     it("Should NOT allow wrong password", async () => {
       await registerMockUser();
       const mockUserBadPassword = {
