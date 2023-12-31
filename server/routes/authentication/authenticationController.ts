@@ -30,7 +30,7 @@ async function register(req, res) {
       "email",
     ]);
     // add jwt + signed cookie
-    const token = createWebToken(user.user_id);
+    const token = createWebToken(user.userId);
     res.cookie("token", token, cookieOptions);
     // send back user (double check no password attached)
     if (user.password) delete user.password;
@@ -53,7 +53,7 @@ async function login(req, res) {
     const passwordsMatch = await bcrypt.compare(password, user.password);
     if (passwordsMatch) {
       // create token + cookie
-      const token = createWebToken(user.user_id);
+      const token = createWebToken(user.userId);
       res.cookie("token", token, cookieOptions);
       // send back user, no password attached
       if (user.password) delete user.password;

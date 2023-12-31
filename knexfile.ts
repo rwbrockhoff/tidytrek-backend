@@ -1,5 +1,4 @@
 import { knexCamelCaseResponse } from "./server/utils/utils.js";
-import "ts-node/register";
 const dbName = "tidytrek_db";
 
 export default {
@@ -46,8 +45,8 @@ export default {
       knexCamelCaseResponse(result),
     asyncStackTraces: true,
     migrations: {
-      extension: "ts",
-      directory: `${process.cwd()}/server/db/migrations`,
+      extension: "js",
+      directory: `${process.cwd()}/dist/server/db/migrations`,
     },
   },
 };

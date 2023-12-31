@@ -1,23 +1,27 @@
 import knex from "../../db/connection.js";
-// const { camelCase } = require("../../utils/utils");
 
 async function getDefaultPack(req, res) {
   try {
     const { userId } = req;
 
-    const { packId: defaultPackId } = await knex("packs")
-      .select("pack_id")
-      .where({ user_id: userId })
-      .orderBy("created_at")
-      .first();
+    const { packId: defaultPackId } =
+      (await knex("packs")
+        .select("pack_id")
+        .where({ user_id: userId })
+        .orderBy("created_at")
+        .first()) || {};
 
-    const { pack, categories } = await getPack(userId, defaultPackId);
+    if (defaultPackId) {
+      const { pack, categories } = await getPack(userId, defaultPackId);
 
-    const packList = await knex("packs")
-      .select(["pack_id", "pack_name"])
-      .where({ user_id: userId });
+      const packList = await knex("packs")
+        .select(["pack_id", "pack_name"])
+        .where({ user_id: userId });
 
-    return res.status(200).json({ packList, pack, categories });
+      return res.status(200).json({ packList, pack, categories });
+    } else {
+      return res.status(200).send();
+    }
   } catch (err) {
     res
       .status(400)
@@ -75,7 +79,6 @@ async function deletePackItem(req, res) {
       .returning(["pack_category_id", "pack_item_id"]);
     return res.status(200).json({ deletedItemIds });
   } catch (err) {
-    console.log("ERR: ", err);
     return res
       .status(400)
       .json({ error: "There was an error deleting your pack item." });
