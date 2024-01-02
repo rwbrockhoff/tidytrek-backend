@@ -12,9 +12,12 @@
     "dev": "NODE_ENV=development tsx watch server/index.ts",
     "test": "NODE_ENV=test vitest",
     "test:coverage": "NODE_ENV=test vitest run --coverage",
+    "migrate:make": "NODE_OPTIONS='--import=tsx' knex migrate:make",
     "migrate:latest": "NODE_OPTIONS='--import=tsx' knex migrate:latest",
     "migrate:rollback": "NODE_OPTIONS='--import=tsx' knex migrate:rollback",
-    "migrate:unlock": "NODE_OPTIONS='--import=tsx' knex migrate:unlock"
+    "migrate:unlock": "NODE_OPTIONS='--import=tsx' knex migrate:unlock",
+    "seed:make": "NODE_OPTIONS='--import=tsx' knex seed:make",
+    "seed:run" : "NODE_OPTIONS='--import=tsx' knex seed:run"
   },
   "keywords": [],
   "license": "ISC",

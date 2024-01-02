@@ -1,9 +1,9 @@
 import server from "../server.js";
 
-const mockUser = {
-  name: "Jim Halpert",
-  email: "jhalpert@dundermifflin.com",
-  password: "ilovepaper",
+export const mockUser = {
+  name: "Ryan Brockhoff",
+  email: "ryan@tidytrek.com",
+  password: "ilovehiking",
 };
 
 export const registerMockUser = async () => {
