@@ -8,7 +8,7 @@ async function getDefaultPack(req, res) {
       (await knex("packs")
         .select("pack_id")
         .where({ user_id: userId })
-        .orderBy("created_at")
+        .orderBy("pack_index")
         .first()) || {};
 
     if (defaultPackId) {
@@ -35,22 +35,44 @@ async function getPack(userId, packId) {
     .orderBy("created_at")
     .first();
 
-  // Gets categories for a pack ordered by placement index
+  // Gets categories for a pack ordered by index
   // Groups all pack items for each category into an array property {pack_items: []}
   const [categories] = await knex.raw(
     `select array_agg(row_to_json(t)) as categories
   FROM (
-  select pack_categories.pack_category_id, pack_categories.pack_category_name, 
-  pack_categories.pack_category_description, pack_categories.pack_category_placement_index,
+  select pack_categories.pack_category_id, pack_categories.pack_id, pack_categories.pack_category_name, 
+  pack_categories.pack_category_description, pack_categories.pack_category_index,
    array_agg(row_to_json(pack_items)) as pack_items from pack_items 
   left join pack_categories on pack_categories.pack_category_id = pack_items.pack_category_id
   where pack_categories.user_id = ${userId} 
   AND pack_categories.pack_id = ${packId}
   group by pack_items.pack_category_id, pack_categories.pack_category_id
-  order by pack_categories.pack_category_placement_index
+  order by pack_categories.pack_category_index
   ) t`
   );
   return { pack, categories: categories?.categories || [] };
+}
+
+async function addPackItem(req, res) {
+  try {
+    const { userId } = req;
+    const { pack_id, pack_category_id } = req.body;
+    const [packItem] =
+      (await knex("pack_items")
+        .insert({
+          user_id: userId,
+          pack_id,
+          pack_category_id,
+          pack_item_name: "",
+        })
+        .returning("*")) || [];
+    return res.status(200).json({ packItem });
+  } catch (err) {
+    console.log("ERROR: ", err);
+    res
+      .status(400)
+      .json({ error: "There was an error adding a new pack item." });
+  }
 }
 
 async function editPackItem(req, res) {
@@ -85,4 +107,4 @@ async function deletePackItem(req, res) {
   }
 }
 
-export default { getDefaultPack, editPackItem, deletePackItem };
+export default { getDefaultPack, addPackItem, editPackItem, deletePackItem };
