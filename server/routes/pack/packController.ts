@@ -37,20 +37,20 @@ async function getPack(userId, packId) {
 
   // Gets categories for a pack ordered by index
   // Groups all pack items for each category into an array property {pack_items: []}
-  const [categories] = await knex.raw(
-    `select array_agg(row_to_json(t)) as categories
-  FROM (
-  select pack_categories.pack_category_id, pack_categories.pack_id, pack_categories.pack_category_name, 
-  pack_categories.pack_category_description, pack_categories.pack_category_index,
-   array_agg(row_to_json(pack_items)) as pack_items from pack_items 
-  left join pack_categories on pack_categories.pack_category_id = pack_items.pack_category_id
-  where pack_categories.user_id = ${userId} 
-  AND pack_categories.pack_id = ${packId}
-  group by pack_items.pack_category_id, pack_categories.pack_category_id
-  order by pack_categories.pack_category_index
-  ) t`
+  const categories = await knex.raw(
+    `select 
+    pack_categories.pack_category_id, pack_categories.pack_id, pack_categories.pack_category_name, pack_categories.pack_category_description,
+    array_agg(row_to_json(ordered_pack_items)) as pack_items from pack_categories
+    left outer join
+    (
+      select * from pack_items where pack_items.user_id = ${userId} order by pack_items.pack_item_index
+      
+    ) ordered_pack_items on pack_categories.pack_category_id = ordered_pack_items.pack_category_id
+    where pack_categories.user_id = ${userId} and pack_categories.pack_id = ${packId}
+    group by pack_categories.pack_category_id
+    order by pack_categories.pack_category_index`
   );
-  return { pack, categories: categories?.categories || [] };
+  return { pack, categories: categories || [] };
 }
 
 async function addPackItem(req, res) {
@@ -68,7 +68,6 @@ async function addPackItem(req, res) {
         .returning("*")) || [];
     return res.status(200).json({ packItem });
   } catch (err) {
-    console.log("ERROR: ", err);
     res
       .status(400)
       .json({ error: "There was an error adding a new pack item." });
