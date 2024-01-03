@@ -106,4 +106,62 @@ async function deletePackItem(req, res) {
   }
 }
 
-export default { getDefaultPack, addPackItem, editPackItem, deletePackItem };
+async function addPackCategory(req, res) {
+  try {
+    const { userId } = req;
+    const { packId } = req.params;
+
+    const [packCategory] = await knex("pack_categories")
+      .insert({
+        pack_category_name: "Category",
+        user_id: userId,
+        pack_id: packId,
+      })
+      .returning("*");
+
+    // add default pack item
+    const [packItem] = await knex("pack_items")
+      .insert({
+        user_id: userId,
+        pack_id: packId,
+        pack_category_id: packCategory.packCategoryId,
+        pack_item_name: "",
+      })
+      .returning("*");
+    packCategory.packItems = [packItem];
+
+    return res.status(200).json({ packCategory });
+  } catch (err) {
+    return res
+      .status(400)
+      .json({ error: "There was an error adding a new category." });
+  }
+}
+
+async function editPackCategory(req, res) {
+  try {
+    const { userId } = req;
+    const { categoryId } = req.params;
+    const { pack_category_name } = req.body;
+
+    const [packCategory] = await knex("pack_categories")
+      .update({ pack_category_name })
+      .where({ user_id: userId, pack_category_id: categoryId })
+      .returning("*");
+
+    return res.status(200).json({ packCategory });
+  } catch (err) {
+    return res
+      .status(400)
+      .json({ error: "There was an error editing your pack category." });
+  }
+}
+
+export default {
+  getDefaultPack,
+  addPackItem,
+  editPackItem,
+  deletePackItem,
+  addPackCategory,
+  editPackCategory,
+};
