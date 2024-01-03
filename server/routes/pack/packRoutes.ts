@@ -9,5 +9,6 @@ router.put("/pack/item/:packItemId", packController.editPackItem);
 router.delete("/pack/item/:packItemId", packController.deletePackItem);
 router.post("/pack/:packId/category", packController.addPackCategory);
 router.put("/pack/category/:categoryId", packController.editPackCategory);
+router.delete("/pack/category/:categoryId", packController.deletePackCategory);
 
 export default router;
