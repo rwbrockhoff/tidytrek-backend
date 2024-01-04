@@ -163,8 +163,8 @@ async function deletePackCategory(req, res) {
     const { categoryId } = req.params;
 
     await knex("pack_items")
-      .del()
-      .where({ user_id: userId, pack_category_id: categoryId });
+      .update({ pack_category_id: null, pack_id: null })
+      .where({ pack_category_id: categoryId });
 
     await knex("pack_categories")
       .del()
@@ -178,11 +178,34 @@ async function deletePackCategory(req, res) {
   }
 }
 
+async function deleteCategoryAndItems(req, res) {
+  try {
+    const { userId } = req;
+    const { categoryId } = req.params;
+
+    await knex("pack_items")
+      .del()
+      .where({ user_id: userId, pack_category_id: categoryId });
+
+    await knex("pack_categories")
+      .del()
+      .where({ user_id: userId, pack_category_id: categoryId });
+
+    return res.status(200).json({ deletedId: categoryId });
+  } catch (err) {
+    console.log("Delete All Pack Item Error: ", err);
+    return res
+      .status(400)
+      .json({ error: "There was an error deleting your pack items." });
+  }
+}
+
 export default {
   getDefaultPack,
   addPackItem,
   editPackItem,
   deletePackItem,
+  deleteCategoryAndItems,
   addPackCategory,
   editPackCategory,
   deletePackCategory,

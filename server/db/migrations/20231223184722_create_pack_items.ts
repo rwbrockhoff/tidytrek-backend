@@ -10,10 +10,10 @@ export async function up(knex: Knex): Promise<void> {
       .references("user_id")
       .inTable("users")
       .onDelete("CASCADE");
-    table.integer("pack_id").unsigned().notNullable();
+    table.integer("pack_id").unsigned();
     table.foreign("pack_id").references("pack_id").inTable("packs");
 
-    table.integer("pack_category_id").unsigned().notNullable();
+    table.integer("pack_category_id").unsigned();
     table
       .foreign("pack_category_id")
       .references("pack_category_id")
