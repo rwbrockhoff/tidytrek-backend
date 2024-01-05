@@ -15,12 +15,13 @@ export async function up(knex: Knex): Promise<void> {
     table.string("pack_location_tag").nullable();
     table.string("pack_duration_tag").nullable();
     table.string("pack_season_tag").nullable();
+    table.string("pack_miles_tag").nullable();
     table.boolean("pack_public").defaultTo(false).notNullable();
     table.boolean("pack_affiliate").defaultTo(false).notNullable();
     table.text("pack_affiliate_description").nullable();
-    table.string("pack_url").nullable();
+    table.string("pack_url_name").nullable();
+    table.text("pack_url").nullable();
     table.integer("pack_views").defaultTo(0).notNullable();
-    table.boolean("thruhike").defaultTo(false).notNullable();
     table.timestamp("created_at").notNullable().defaultTo(knex.fn.now());
     table.timestamp("updated_at").nullable().defaultTo(knex.fn.now());
   });

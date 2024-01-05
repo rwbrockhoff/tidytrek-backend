@@ -13,7 +13,7 @@ export async function up(knex: Knex): Promise<void> {
     table.integer("pack_id").unsigned().notNullable();
     table.foreign("pack_id").references("pack_id").inTable("packs");
     table.string("pack_category_name").notNullable();
-    table.text("pack_category_description").nullable();
+    table.string("pack_category_color").nullable();
     table
       .increments("pack_category_index", { primaryKey: false })
       .notNullable();

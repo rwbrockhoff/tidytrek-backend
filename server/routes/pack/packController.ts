@@ -39,7 +39,7 @@ async function getPack(userId, packId) {
   // Groups all pack items for each category into an array property {pack_items: []}
   const categories = await knex.raw(
     `select 
-    pack_categories.pack_category_id, pack_categories.pack_id, pack_categories.pack_category_name, pack_categories.pack_category_description,
+    pack_categories.pack_category_id, pack_categories.pack_id, pack_categories.pack_category_name, pack_categories.pack_category_color,
     array_agg(row_to_json(ordered_pack_items)) as pack_items from pack_categories
     left outer join
     (
@@ -51,6 +51,32 @@ async function getPack(userId, packId) {
     order by pack_categories.pack_category_index`
   );
   return { pack, categories: categories || [] };
+}
+
+async function editPack(req, res) {
+  try {
+    const { userId } = req;
+    const { packId } = req.params;
+    const { modified_pack } = req.body;
+
+    //remove non-essential properties for update
+    delete modified_pack["user_id"];
+    delete modified_pack["pack_id"];
+    delete modified_pack["pack_index"];
+    delete modified_pack["created_at"];
+    delete modified_pack["updated_at"];
+
+    const [updatedPack] = await knex("packs")
+      .update({ ...modified_pack })
+      .where({ user_id: userId, pack_id: packId })
+      .returning("*");
+
+    return res.status(200).json({ updatedPack });
+  } catch (err) {
+    return res
+      .status(400)
+      .json({ error: "There was an error editing your pack." });
+  }
 }
 
 async function addPackItem(req, res) {
@@ -193,7 +219,6 @@ async function deleteCategoryAndItems(req, res) {
 
     return res.status(200).json({ deletedId: categoryId });
   } catch (err) {
-    console.log("Delete All Pack Item Error: ", err);
     return res
       .status(400)
       .json({ error: "There was an error deleting your pack items." });
@@ -202,6 +227,7 @@ async function deleteCategoryAndItems(req, res) {
 
 export default {
   getDefaultPack,
+  editPack,
   addPackItem,
   editPackItem,
   deletePackItem,
