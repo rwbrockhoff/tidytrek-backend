@@ -83,10 +83,15 @@ async function addNewPack(req, res) {
 
 async function createNewPack(userId: number) {
   try {
+    const packIndex = await generateIndex("packs", "pack_index", {
+      user_id: userId,
+    });
+
     const [pack] = await knex("packs")
       .insert({
         user_id: userId,
         pack_name: "New Pack",
+        pack_index: packIndex,
       })
       .returning("*");
 
@@ -162,7 +167,7 @@ async function deletePack(req, res) {
     //if no packs left, create default pack
     const response = await knex("packs")
       .select("pack_id")
-      .where({ user_id: 424 })
+      .where({ user_id: userId })
       .first();
     if (!response) await createNewPack(packId);
 
@@ -190,7 +195,7 @@ async function deletePackAndItems(req, res) {
     //if no packs left, create default pack
     const response = await knex("packs")
       .select("pack_id")
-      .where({ user_id: 424 })
+      .where({ user_id: userId })
       .first();
     if (!response) await createNewPack(packId);
 
@@ -207,12 +212,11 @@ async function addPackItem(req, res) {
     const { userId } = req;
     const { pack_id, pack_category_id } = req.body;
 
-    // determine highest current index value for pack
-    const { max: currentIndexMax } =
-      (await knex("pack_items")
-        .select(knex.raw(`MAX(pack_item_index)`))
-        .where({ user_id: userId, pack_id, pack_category_id })
-        .first()) || {};
+    const packItemIndex = await generateIndex("pack_items", "pack_item_index", {
+      user_id: userId,
+      pack_id,
+      pack_category_id,
+    });
 
     const [packItem] =
       (await knex("pack_items")
@@ -221,9 +225,10 @@ async function addPackItem(req, res) {
           pack_id,
           pack_category_id,
           pack_item_name: "",
-          pack_item_index: currentIndexMax + 1,
+          pack_item_index: packItemIndex,
         })
         .returning("*")) || [];
+
     return res.status(200).json({ packItem });
   } catch (err) {
     res
@@ -318,11 +323,18 @@ async function addPackCategory(req, res) {
     const { userId } = req;
     const { packId } = req.params;
 
+    const packCategoryIndex = await generateIndex(
+      "pack_categories",
+      "pack_category_index",
+      { user_id: userId, pack_id: packId }
+    );
+
     const [packCategory] = await knex("pack_categories")
       .insert({
         pack_category_name: "Category",
         user_id: userId,
         pack_id: packId,
+        pack_category_index: packCategoryIndex,
       })
       .returning("*");
 
@@ -336,6 +348,7 @@ async function addPackCategory(req, res) {
         pack_item_index: 0,
       })
       .returning("*");
+
     packCategory.packItems = [packItem];
 
     return res.status(200).json({ packCategory });
@@ -405,6 +418,28 @@ async function deleteCategoryAndItems(req, res) {
       .status(400)
       .json({ error: "There was an error deleting your pack items." });
   }
+}
+
+// Generate a new index based on the current pack context
+// used when we can't gurantee item created is the first item (0 index)
+// cannot auto increment indexes in pg because this is used for ordering purposes
+async function generateIndex(
+  tableName: string,
+  indexName: string,
+  conditions: {
+    user_id: number;
+    pack_id?: number;
+    pack_category_id?: number;
+    pack_item_id?: number;
+  }
+) {
+  const response = await knex(tableName)
+    .select(knex.raw(`MAX(${indexName})`))
+    .where(conditions)
+    .first();
+
+  if (response.max === null) return 0;
+  else return response.max + 1;
 }
 
 export default {

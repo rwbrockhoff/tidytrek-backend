@@ -93,6 +93,7 @@ async function createDefaultPack(userId) {
       .insert({
         user_id: userId,
         pack_name: "Default Pack",
+        pack_index: 0,
       })
       .returning("pack_id");
 
@@ -101,6 +102,7 @@ async function createDefaultPack(userId) {
         user_id: userId,
         pack_id: packId,
         pack_category_name: "Default Category",
+        pack_category_index: 0,
       })
       .returning("pack_category_id");
 
@@ -109,6 +111,7 @@ async function createDefaultPack(userId) {
       pack_id: packId,
       pack_category_id: packCategoryId,
       pack_item_name: "",
+      pack_items_index: 0,
     });
   } catch (err) {
     return new Error("Error creating default pack for user");

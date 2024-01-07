@@ -9,7 +9,8 @@ export async function up(knex: Knex): Promise<void> {
       .references("user_id")
       .inTable("users")
       .onDelete("CASCADE");
-    table.increments("pack_index", { primaryKey: false }).notNullable();
+    table.integer("pack_index").unsigned().notNullable();
+    table.index("pack_index");
     table.string("pack_name").notNullable();
     table.text("pack_description").nullable();
     table.string("pack_location_tag").nullable();

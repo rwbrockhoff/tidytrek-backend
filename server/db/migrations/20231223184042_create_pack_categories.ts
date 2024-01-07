@@ -14,9 +14,8 @@ export async function up(knex: Knex): Promise<void> {
     table.foreign("pack_id").references("pack_id").inTable("packs");
     table.string("pack_category_name").notNullable();
     table.string("pack_category_color").nullable();
-    table
-      .increments("pack_category_index", { primaryKey: false })
-      .notNullable();
+    table.integer("pack_category_index").unsigned().notNullable();
+    table.index("pack_category_index");
   });
 }
 

@@ -17,7 +17,7 @@ router.post("/categories/:packId", packController.addPackCategory);
 router.put("/categories/:categoryId", packController.editPackCategory);
 router.delete("/categories/:categoryId", packController.deletePackCategory);
 router.delete(
-  "/categories-items/:categoryId",
+  "/categories/items/:categoryId",
   packController.deleteCategoryAndItems
 );
 
