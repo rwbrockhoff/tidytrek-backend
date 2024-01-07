@@ -53,6 +53,43 @@ async function getPack(userId, packId) {
   return { pack, categories: categories || [] };
 }
 
+async function addNewPack(req, res) {
+  const { userId } = req;
+  try {
+    const [pack] = await knex("packs")
+      .insert({
+        user_id: userId,
+        pack_name: "New Pack",
+      })
+      .returning("*");
+
+    const categories = await knex("pack_categories")
+      .insert({
+        user_id: userId,
+        pack_id: pack.packId,
+        pack_category_name: "Default Category",
+      })
+      .returning("*");
+
+    const packItems = await knex("pack_items")
+      .insert({
+        user_id: userId,
+        pack_id: pack.packId,
+        pack_category_id: categories.packCategoryId,
+        pack_item_name: "",
+      })
+      .returning("*");
+
+    categories[0].packItems = packItems;
+
+    return res.status(200).json({ pack, categories });
+  } catch (err) {
+    return res
+      .status(400)
+      .json({ error: "There was an error adding a new pack." });
+  }
+}
+
 async function editPack(req, res) {
   try {
     const { userId } = req;
@@ -286,6 +323,7 @@ async function deleteCategoryAndItems(req, res) {
 
 export default {
   getDefaultPack,
+  addNewPack,
   editPack,
   addPackItem,
   editPackItem,
