@@ -83,6 +83,14 @@ async function addPackItem(req, res) {
   try {
     const { userId } = req;
     const { pack_id, pack_category_id } = req.body;
+
+    // determine highest current index value for pack
+    const { max: currentIndexMax } =
+      (await knex("pack_items")
+        .select(knex.raw(`MAX(pack_item_index)`))
+        .where({ user_id: userId, pack_id, pack_category_id })
+        .first()) || {};
+
     const [packItem] =
       (await knex("pack_items")
         .insert({
@@ -90,6 +98,7 @@ async function addPackItem(req, res) {
           pack_id,
           pack_category_id,
           pack_item_name: "",
+          pack_item_index: currentIndexMax + 1,
         })
         .returning("*")) || [];
     return res.status(200).json({ packItem });
@@ -102,11 +111,12 @@ async function addPackItem(req, res) {
 
 async function editPackItem(req, res) {
   try {
+    const { userId } = req;
     const { packItemId } = req.params;
 
     const [updatedItem = {}] = await knex("pack_items")
       .update({ ...req.body })
-      .where({ pack_item_id: packItemId })
+      .where({ pack_item_id: packItemId, user_id: userId })
       .returning("*");
 
     return res.status(200).json(updatedItem);
@@ -114,6 +124,54 @@ async function editPackItem(req, res) {
     return res
       .status(400)
       .json({ error: "There was an error saving your pack item." });
+  }
+}
+
+async function movePackItem(req, res) {
+  try {
+    const { userId } = req;
+    const { packItemId } = req.params;
+    const {
+      pack_category_id,
+      pack_item_index,
+      prev_pack_category_id,
+      prev_pack_item_index,
+    } = req.body;
+
+    // move all items forward to make room for packItem at new position
+    // only move indexes that are greater than or equal
+    await knex.raw(`UPDATE pack_items 
+    SET pack_item_index = pack_item_index + 1 
+    WHERE pack_item_index >= ${pack_item_index}
+    AND pack_category_id = ${pack_category_id}`);
+
+    await knex("pack_items")
+      .update({
+        pack_item_index,
+        pack_category_id,
+      })
+      .where({ user_id: userId, pack_item_id: packItemId });
+
+    // if packItem is dragged into a new cateogry
+    // move all items in previous category back an index to account for
+    // pack item "leaving" the category
+    if (prev_pack_category_id !== pack_category_id) {
+      await knex.raw(`UPDATE pack_items 
+        SET pack_item_index = pack_item_index - 1 
+        WHERE pack_item_index >= ${prev_pack_item_index}
+        AND pack_category_id = ${prev_pack_category_id}`);
+    }
+
+    return res.status(200).json({
+      packCategoryId: pack_category_id,
+      packItemIndex: pack_item_index,
+      prevPackCategoryId: prev_pack_category_id,
+      prevPackItemIndex: prev_pack_item_index,
+    });
+  } catch (err) {
+    return res
+      .status(400)
+      .json({ error: "There was an error moving your pack item." });
   }
 }
 
@@ -152,6 +210,7 @@ async function addPackCategory(req, res) {
         pack_id: packId,
         pack_category_id: packCategory.packCategoryId,
         pack_item_name: "",
+        pack_item_index: 0,
       })
       .returning("*");
     packCategory.packItems = [packItem];
@@ -230,6 +289,7 @@ export default {
   editPack,
   addPackItem,
   editPackItem,
+  movePackItem,
   deletePackItem,
   deleteCategoryAndItems,
   addPackCategory,
