@@ -12,11 +12,12 @@ async function getDefaultPack(req, res) {
         .first()) || {};
 
     if (defaultPackId) {
-      const { pack, categories } = await getPack(userId, defaultPackId);
+      const { pack, categories } = await getPackById(userId, defaultPackId);
 
       const packList = await knex("packs")
         .select(["pack_id", "pack_name"])
-        .where({ user_id: userId });
+        .where({ user_id: userId })
+        .orderBy("created_at");
 
       return res.status(200).json({ packList, pack, categories });
     } else {
@@ -29,9 +30,24 @@ async function getDefaultPack(req, res) {
   }
 }
 
-async function getPack(userId, packId) {
+async function getPack(req, res) {
+  try {
+    const { userId } = req;
+    const { packId } = req.params;
+
+    const { pack, categories } = await getPackById(userId, packId);
+
+    return res.status(200).json({ pack, categories });
+  } catch (err) {
+    return res
+      .status(400)
+      .json({ error: "There was an error loading your pack right now." });
+  }
+}
+
+async function getPackById(userId, packId) {
   const pack = await knex("packs")
-    .where({ user_id: userId })
+    .where({ user_id: userId, pack_id: packId })
     .orderBy("created_at")
     .first();
 
@@ -68,6 +84,7 @@ async function addNewPack(req, res) {
         user_id: userId,
         pack_id: pack.packId,
         pack_category_name: "Default Category",
+        pack_category_index: 0,
       })
       .returning("*");
 
@@ -75,8 +92,9 @@ async function addNewPack(req, res) {
       .insert({
         user_id: userId,
         pack_id: pack.packId,
-        pack_category_id: categories.packCategoryId,
+        pack_category_id: categories[0].packCategoryId,
         pack_item_name: "",
+        pack_item_index: 0,
       })
       .returning("*");
 
@@ -323,6 +341,7 @@ async function deleteCategoryAndItems(req, res) {
 
 export default {
   getDefaultPack,
+  getPack,
   addNewPack,
   editPack,
   addPackItem,
