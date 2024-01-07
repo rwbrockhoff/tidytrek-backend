@@ -70,7 +70,18 @@ async function getPackById(userId, packId) {
 }
 
 async function addNewPack(req, res) {
-  const { userId } = req;
+  try {
+    const { userId } = req;
+    const { pack, categories } = await createNewPack(userId);
+    return res.status(200).json({ pack, categories });
+  } catch (err) {
+    return res
+      .status(400)
+      .json({ error: "There was an error adding a new pack." });
+  }
+}
+
+async function createNewPack(userId: number) {
   try {
     const [pack] = await knex("packs")
       .insert({
@@ -100,11 +111,9 @@ async function addNewPack(req, res) {
 
     categories[0].packItems = packItems;
 
-    return res.status(200).json({ pack, categories });
+    return { pack, categories };
   } catch (err) {
-    return res
-      .status(400)
-      .json({ error: "There was an error adding a new pack." });
+    return new Error("There was an error creating a new pack.");
   }
 }
 
@@ -131,6 +140,65 @@ async function editPack(req, res) {
     return res
       .status(400)
       .json({ error: "There was an error editing your pack." });
+  }
+}
+
+async function deletePack(req, res) {
+  try {
+    const { userId } = req;
+    const { packId } = req.params;
+
+    // unattach pack items (keep in garage)
+    await knex("pack_items")
+      .update({ pack_category_id: null, pack_id: null })
+      .where({ pack_id: packId });
+
+    await knex("pack_categories")
+      .del()
+      .where({ user_id: userId, pack_id: packId });
+
+    await knex("packs").del().where({ user_id: userId, pack_id: packId });
+
+    //if no packs left, create default pack
+    const response = await knex("packs")
+      .select("pack_id")
+      .where({ user_id: 424 })
+      .first();
+    if (!response) await createNewPack(packId);
+
+    return res.status(200).json({ deletedPackId: packId });
+  } catch (err) {
+    return res
+      .status(400)
+      .json({ error: "There was an error deleting your pack." });
+  }
+}
+
+async function deletePackAndItems(req, res) {
+  try {
+    const { userId } = req;
+    const { packId } = req.params;
+
+    await knex("pack_items").del().where({ user_id: userId, pack_id: packId });
+
+    await knex("pack_categories")
+      .del()
+      .where({ user_id: userId, pack_id: packId });
+
+    await knex("packs").del().where({ user_id: userId, pack_id: packId });
+
+    //if no packs left, create default pack
+    const response = await knex("packs")
+      .select("pack_id")
+      .where({ user_id: 424 })
+      .first();
+    if (!response) await createNewPack(packId);
+
+    return res.status(200).json({ deletedPackId: packId });
+  } catch (err) {
+    return res
+      .status(400)
+      .json({ error: "There was an error deleting your pack." });
   }
 }
 
@@ -344,6 +412,8 @@ export default {
   getPack,
   addNewPack,
   editPack,
+  deletePack,
+  deletePackAndItems,
   addPackItem,
   editPackItem,
   movePackItem,

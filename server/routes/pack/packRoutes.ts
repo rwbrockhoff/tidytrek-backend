@@ -7,6 +7,8 @@ router.get("/", packController.getDefaultPack);
 router.get("/:packId", packController.getPack);
 router.post("/", packController.addNewPack);
 router.put("/:packId", packController.editPack);
+router.delete("/:packId", packController.deletePack);
+router.delete("/items/:packId", packController.deletePackAndItems);
 router.post("/pack-items", packController.addPackItem);
 router.put("/pack-items/:packItemId", packController.editPackItem);
 router.put("/pack-items/index/:packItemId", packController.movePackItem);
