@@ -2,6 +2,12 @@ import tsconfigPaths from "vite-tsconfig-paths"; // only if you are using custom
 import { defineConfig } from "vitest/config";
 
 export default defineConfig({
-  test: { globals: true, poolOptions: { threads: { singleThread: true } } },
-  plugins: [tsconfigPaths()], // only if you are using custom tsconfig paths
+  test: {
+    globals: true,
+    poolOptions: { threads: { singleThread: true } },
+    setupFiles: "./src/tests/setup.ts",
+  },
+  plugins: [], // only if you are using custom tsconfig paths
 });
+
+// tsconfigPaths()
