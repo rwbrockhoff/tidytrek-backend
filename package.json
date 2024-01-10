@@ -17,7 +17,7 @@
     "migrate:rollback": "NODE_OPTIONS='--import=tsx' knex migrate:rollback",
     "migrate:unlock": "NODE_OPTIONS='--import=tsx' knex migrate:unlock",
     "seed:make": "NODE_OPTIONS='--import=tsx' knex seed:make",
-    "seed:run" : "NODE_OPTIONS='--import=tsx' knex seed:run"
+    "seed:run": "NODE_ENV=development NODE_OPTIONS='--import=tsx' knex seed:run"
   },
   "keywords": [],
   "license": "ISC",

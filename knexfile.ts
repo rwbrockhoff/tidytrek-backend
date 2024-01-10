@@ -17,6 +17,7 @@ export default {
       directory: `${process.cwd()}/server/db/migrations`,
     },
     seeds: {
+      extension: "ts",
       directory: `${process.cwd()}/server/db/seeds`,
     },
   },
@@ -52,6 +53,7 @@ export default {
       directory: `${process.cwd()}/dist/server/db/migrations`,
     },
     seeds: {
+      extension: "js",
       directory: `${process.cwd()}/dist/server/db/seeds`,
     },
   },

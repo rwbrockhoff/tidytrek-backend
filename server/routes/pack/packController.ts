@@ -72,8 +72,12 @@ async function getPackById(userId, packId) {
 async function addNewPack(req, res) {
   try {
     const { userId } = req;
-    const { pack, categories } = await createNewPack(userId);
-    return res.status(200).json({ pack, categories });
+    const response = await createNewPack(userId);
+    if (response) {
+      return res
+        .status(200)
+        .json({ pack: response["pack"], categories: response["categories"] });
+    }
   } catch (err) {
     return res
       .status(400)
@@ -423,6 +427,11 @@ async function deleteCategoryAndItems(req, res) {
 // Generate a new index based on the current pack context
 // used when we can't gurantee item created is the first item (0 index)
 // cannot auto increment indexes in pg because this is used for ordering purposes
+
+interface MaxResponse {
+  max: number | null;
+}
+
 async function generateIndex(
   tableName: string,
   indexName: string,
@@ -438,8 +447,8 @@ async function generateIndex(
     .where(conditions)
     .first();
 
-  if (response.max === null) return 0;
-  else return response.max + 1;
+  if (response["max"] === null) return 0;
+  else return response["max"] + 1;
 }
 
 export default {
