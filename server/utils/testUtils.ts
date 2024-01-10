@@ -6,6 +6,50 @@ export const mockUser = {
   password: "ilovehiking",
 };
 
+export const mockPack = {
+  pack_name: "Kungsleden",
+  pack_description:
+    "This is the pack used for my thruhike in the Arctic Circle of Sweden!",
+  pack_public: true,
+  pack_location_tag: "Sweden",
+  pack_season_tag: "Summer",
+  pack_duration_tag: "1 Month",
+  pack_miles_tag: "300 Miles",
+  pack_index: 0,
+};
+
+export const mockPackCategory = {
+  pack_category_name: "Big 3",
+  pack_category_index: 0,
+};
+
+export const mockPackItems = [
+  {
+    pack_item_name: "Durston Kakwa",
+    pack_item_description: "40 Liter UL Pack",
+    pack_item_weight: 28,
+    pack_item_unit: "oz",
+    pack_item_quantity: 1,
+    pack_item_index: 0,
+  },
+  {
+    pack_item_name: "X-Mid 2",
+    pack_item_description: "2-person regular version",
+    pack_item_weight: 40,
+    pack_item_unit: "oz",
+    pack_item_quantity: 1,
+    pack_item_index: 1,
+  },
+  {
+    pack_item_name: "Nemo Tensor Insulated",
+    pack_item_description: "Sleeping Pad",
+    pack_item_weight: 1,
+    pack_item_unit: "lb",
+    pack_item_quantity: 1,
+    pack_item_index: 2,
+  },
+];
+
 // dummy user is not seeded into the database
 export const notSeededUser = {
   name: "Sarah Collins",
