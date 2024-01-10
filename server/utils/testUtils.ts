@@ -50,6 +50,14 @@ export const mockPackItems = [
   },
 ];
 
+export const notSeededPackItem = {
+  pack_item_name: "Petz Headlamp",
+  pack_item_description: "Rechargeable",
+  pack_item_weight: 3,
+  pack_item_unit: "oz",
+  pack_item_quantity: 1,
+};
+
 // dummy user is not seeded into the database
 export const notSeededUser = {
   name: "Sarah Collins",
