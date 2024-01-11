@@ -3,6 +3,7 @@ import bcrypt from "bcrypt";
 import {
   mockUser,
   mockPack,
+  mockPack2,
   mockPackCategory,
   mockPackItems,
 } from "../../utils/testUtils.js";
@@ -40,6 +41,10 @@ export async function seed(knex: Knex): Promise<void> {
   });
 
   await knex("pack_items").insert(packItemsWithIds);
+
+  await knex("packs")
+    .insert({ ...mockPack2, user_id: dummyUser.userId })
+    .returning("*");
 
   const [secondUser] = await knex("users").insert({
     name: "Justin Hill",

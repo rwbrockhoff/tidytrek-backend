@@ -17,7 +17,7 @@ async function getDefaultPack(req, res) {
       const packList = await knex("packs")
         .select(["pack_id", "pack_name"])
         .where({ user_id: userId })
-        .orderBy("created_at");
+        .orderBy("pack_index");
 
       return res.status(200).json({ packList, pack, categories });
     } else {
@@ -149,6 +149,31 @@ async function editPack(req, res) {
     return res
       .status(400)
       .json({ error: "There was an error editing your pack." });
+  }
+}
+
+async function movePack(req, res) {
+  try {
+    const { userId } = req;
+    const { packId } = req.params;
+    const { new_index } = req.body;
+
+    await knex.raw(`UPDATE packs 
+    SET pack_index = pack_index + 1 
+    WHERE pack_index >= ${new_index}
+    AND user_id = ${userId}`);
+
+    await knex("packs")
+      .update({
+        pack_index: new_index,
+      })
+      .where({ user_id: userId, pack_id: packId });
+
+    return res.status(200).json({ packId, newIndex: new_index });
+  } catch (err) {
+    return res
+      .status(400)
+      .json({ error: "There was an error changing your pack order." });
   }
 }
 
@@ -456,6 +481,7 @@ export default {
   getPack,
   addNewPack,
   editPack,
+  movePack,
   deletePack,
   deletePackAndItems,
   addPackItem,

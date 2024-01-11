@@ -18,6 +18,18 @@ export const mockPack = {
   pack_index: 0,
 };
 
+export const mockPack2 = {
+  pack_name: "Utah Pack",
+  pack_description:
+    "This is the pack used for backpacking in Utah in the winter.",
+  pack_public: true,
+  pack_location_tag: "Utah",
+  pack_season_tag: "Winter",
+  pack_duration_tag: "1-3 Nights",
+  pack_miles_tag: "50 Miles",
+  pack_index: 1,
+};
+
 export const mockPackCategory = {
   pack_category_name: "Big 3",
   pack_category_index: 0,

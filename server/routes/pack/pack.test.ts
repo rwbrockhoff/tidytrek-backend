@@ -48,6 +48,19 @@ describe("Pack Routes: Pack ", () => {
     expect(response.status).toEqual(200);
   });
 
+  it("PUT /index/:packId -> Should move a pack", async () => {
+    const userAgent = await loginMockUser();
+    const packResponse = await userAgent.get("/packs/").send();
+    const { packList } = packResponse.body;
+    const packId = packList[0].packId;
+
+    const response = await userAgent
+      .put(`/packs/index/${packId}`)
+      .send({ newIndex: 1 });
+
+    expect(response.status).toBe(200);
+  });
+
   it("DELETE /:packId -> Should delete a pack", async () => {
     // deletes pack but keeps pack items in "pack garage"
     const userAgent = await loginMockUser();
