@@ -111,7 +111,7 @@ async function createDefaultPack(userId) {
       pack_id: packId,
       pack_category_id: packCategoryId,
       pack_item_name: "",
-      pack_items_index: 0,
+      pack_item_index: 0,
     });
   } catch (err) {
     return new Error("Error creating default pack for user");

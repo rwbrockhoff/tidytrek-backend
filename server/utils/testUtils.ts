@@ -69,8 +69,6 @@ export const notSeededPackItem = {
   pack_item_unit: "oz",
   pack_item_quantity: 1,
 };
-
-// dummy user is not seeded into the database
 export const notSeededUser = {
   name: "Sarah Collins",
   email: "scollins@tidytrek.com",
@@ -81,6 +79,16 @@ export const loginMockUser = async () => {
   try {
     const agent = require("supertest").agent(server);
     await agent.post("/auth/login").send(mockUser);
+    return agent;
+  } catch (err) {
+    return { error: "Could not register user for testing." };
+  }
+};
+
+export const registerNewUser = async () => {
+  try {
+    const agent = require("supertest").agent(server);
+    await agent.post("/auth/register").send(notSeededUser);
     return agent;
   } catch (err) {
     return { error: "Could not register user for testing." };
