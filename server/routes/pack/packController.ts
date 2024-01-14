@@ -14,13 +14,10 @@ async function getDefaultPack(req, res) {
     if (defaultPackId) {
       const { pack, categories } = await getPackById(userId, defaultPackId);
 
-      const packList = await knex("packs")
-        .select(["pack_id", "pack_name"])
-        .where({ user_id: userId })
-        .orderBy("pack_index");
-
-      return res.status(200).json({ packList, pack, categories });
+      return res.status(200).json({ pack, categories });
     } else {
+      // UI can handle not having a default pack. However, this is just an extra layer of caution.
+      // User should always have at least a default pack.
       return res.status(200).send();
     }
   } catch (err) {
@@ -52,7 +49,7 @@ async function getPackById(userId, packId) {
     .first();
 
   // Gets categories for a pack ordered by index
-  // Groups all pack items for each category into an array property {pack_items: []}
+  // Groups all pack items for each category into an object {pack_items: []}
   const categories = await knex.raw(
     `select 
     pack_categories.pack_category_id, pack_categories.pack_id, pack_categories.pack_category_name, pack_categories.pack_category_color,
@@ -67,6 +64,22 @@ async function getPackById(userId, packId) {
     order by pack_categories.pack_category_index`
   );
   return { pack, categories: categories || [] };
+}
+
+async function getPackList(req, res) {
+  try {
+    const { userId } = req;
+    const packList = await knex("packs")
+      .select(["pack_id", "pack_name"])
+      .where({ user_id: userId })
+      .orderBy("pack_index");
+
+    return res.status(200).json({ packList });
+  } catch (err) {
+    return res
+      .status(400)
+      .json({ error: "There was an error getting your pack list." });
+  }
 }
 
 async function addNewPack(req, res) {
@@ -479,6 +492,7 @@ async function generateIndex(
 export default {
   getDefaultPack,
   getPack,
+  getPackList,
   addNewPack,
   editPack,
   movePack,

@@ -4,6 +4,7 @@ import packController from "./packController.js";
 const router = express.Router();
 
 router.get("/", packController.getDefaultPack);
+router.get("/pack-list", packController.getPackList);
 router.get("/:packId", packController.getPack);
 router.post("/", packController.addNewPack);
 router.put("/:packId", packController.editPack);

@@ -20,7 +20,6 @@ describe("Pack Routes: Pack ", () => {
     const response = await userAgent.get("/packs/").send();
 
     expect(response.statusCode).toEqual(200);
-    expect(response.body).toHaveProperty("packList");
     expect(response.body).toHaveProperty("pack");
     expect(response.body).toHaveProperty("categories");
   });
@@ -28,6 +27,25 @@ describe("Pack Routes: Pack ", () => {
   it("GET / -> Should be a user-only protected route", async () => {
     const response = await request.get("/packs/").send();
     expect(response.statusCode).toEqual(400);
+  });
+
+  it("GET /:packId -> Should get a pack by packId", async () => {
+    const userAgent = await loginMockUser();
+    const packListResponse = await userAgent.get("/packs/pack-list").send();
+    const { packList } = packListResponse.body;
+    const packId = packList[0].packId;
+    const response = await userAgent.get(`/packs/${packId}`).send();
+
+    expect(response.statusCode).toEqual(200);
+    expect(response.body).toHaveProperty("pack");
+  });
+
+  it("GET /pack-list -> Should get pack list", async () => {
+    const userAgent = await loginMockUser();
+    const response = await userAgent.get("/packs/pack-list").send();
+
+    expect(response.statusCode).toEqual(200);
+    expect(response.body).toHaveProperty("packList");
   });
 
   it("POST / -> Should add a new pack", async () => {
@@ -50,7 +68,7 @@ describe("Pack Routes: Pack ", () => {
 
   it("PUT /index/:packId -> Should move a pack", async () => {
     const userAgent = await loginMockUser();
-    const packResponse = await userAgent.get("/packs/").send();
+    const packResponse = await userAgent.get("/packs/pack-list").send();
     const { packList } = packResponse.body;
     const packId = packList[0].packId;
 
