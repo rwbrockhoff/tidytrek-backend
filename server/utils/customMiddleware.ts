@@ -15,6 +15,7 @@ export const getUserId = async (req, res, next) => {
 export const attachUserToRequest = async (req, res, next) => {
   //don't attach user if not logged in
   if (!req.userId) return next();
+
   const user = await knex("users")
     .select("user_id", "name", "email")
     .where({ user_id: req.userId })
@@ -24,7 +25,6 @@ export const attachUserToRequest = async (req, res, next) => {
     //no pass is returned from query, just added layer of caution
     delete user.password;
     if (!user.password) {
-      //only return if no password property is attached to user
       req.user = user;
     }
   }

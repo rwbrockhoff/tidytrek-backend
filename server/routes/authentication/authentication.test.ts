@@ -1,82 +1,91 @@
-process.env.NODE_ENV = "test";
 import server from "../../server.js";
 import initialRequest from "supertest";
 const request = initialRequest(server);
 import knex from "../../db/connection.js";
-
-const mockUser = {
-  name: "Jim Halpert",
-  email: "jhalpert@dundermifflin.com",
-  password: "ilovepaper",
-};
-
-const registerMockUser = async () => {
-  return await request.post("/auth/register").send(mockUser);
-};
+import {
+  loginMockUser,
+  registerNewUser,
+  mockUser,
+  notSeededUser,
+} from "../../utils/testUtils.js";
 
 beforeEach(async () => {
   await knex.migrate.rollback();
   await knex.migrate.latest();
+  await knex.seed.run();
 });
 
 afterAll(async () => {
-  await knex.migrate.rollback().finally(function () {
-    return knex.destroy();
-  });
+  await knex.migrate.rollback().then(() => knex.destroy());
 });
 
 describe("Auth Routes: ", () => {
-  describe("GET /STATUS: ", () => {
-    it("Should get auth status", async () => {
-      const response = await request.get("/auth/status").send();
-      expect(response.statusCode).toEqual(200);
-    });
+  it("GET /status -> Should get auth status", async () => {
+    const response = await request.get("/auth/status").send();
+
+    expect(response.statusCode).toEqual(200);
   });
 
-  describe("POST /REGISTER: ", () => {
-    it("Should register new user", async () => {
-      const response = await registerMockUser();
-      expect(response.statusCode).toEqual(200);
-      expect(response.body).toHaveProperty("user");
-    });
+  it("POST /register -> Should register new user", async () => {
+    const response = await request.post("/auth/register").send(notSeededUser);
+
+    expect(response.statusCode).toEqual(200);
+    expect(response.body).toHaveProperty("user");
   });
-  describe("POST /LOGIN: ", () => {
-    it("Should allow registered users to log in", async () => {
-      await registerMockUser();
-      const response = await request.post("/auth/login").send(mockUser);
-      expect(response.statusCode).toEqual(200);
-      expect(response.body).toHaveProperty("user");
-    });
+
+  it("POST /register -> Should create a default pack for new user", async () => {
+    const userAgent = await registerNewUser();
+    const response = await userAgent.get("/packs/").send();
+
+    expect(response.status).toBe(200);
+    expect(response.body).toHaveProperty("pack");
   });
-  describe("POST /LOGOUT: ", () => {
-    it("Should allow user to logout", async () => {
-      await registerMockUser();
-      await request.post("/auth/login").send(mockUser);
-      const response = await request.post("/auth/logout");
-      expect(response.statusCode).toEqual(200);
-      expect(response.body).toHaveProperty("message");
-    });
+
+  it("POST /register -> Should create a default category and pack item", async () => {
+    const userAgent = await registerNewUser();
+    const response = await userAgent.get("/packs/").send();
+    const { categories } = response.body;
+
+    expect(response.status).toBe(200);
+    expect(response.body).toHaveProperty("categories");
+    expect(categories[0].packItems).toHaveLength(1);
   });
-  describe("POST /REGISTER: ", () => {
-    it("Should NOT allow existing user to register", async () => {
-      await registerMockUser();
-      const response = await request.post("/auth/register").send(mockUser);
-      expect(response.statusCode).toEqual(409);
-      expect(response.body).toHaveProperty("error");
-    });
+
+  it("POST /register -> Should NOT allow existing user to register", async () => {
+    const userAgent = await loginMockUser();
+    const response = await userAgent.post("/auth/register").send(mockUser);
+
+    expect(response.statusCode).toEqual(409);
+    expect(response.body).toHaveProperty("error");
   });
-  describe("POST /LOGIN: ", () => {
-    it("Should NOT allow wrong password", async () => {
-      await registerMockUser();
-      const mockUserBadPassword = {
-        email: mockUser.email,
-        password: "wrongpassword",
-      };
-      const response = await request
-        .post("/auth/login")
-        .send(mockUserBadPassword);
-      expect(response.statusCode).toEqual(400);
-      expect(response.body).toHaveProperty("error");
-    });
+
+  it("POST /login -> Should allow registered users to log in", async () => {
+    const userAgent = await loginMockUser();
+    const response = await userAgent.post("/auth/login").send(mockUser);
+
+    expect(response.statusCode).toEqual(200);
+    expect(response.body).toHaveProperty("user");
+  });
+
+  it("POST /login -> Should NOT allow wrong password", async () => {
+    const userAgent = await loginMockUser();
+    const mockUserBadPassword = {
+      email: mockUser.email,
+      password: "wrongpassword",
+    };
+    const response = await userAgent
+      .post("/auth/login")
+      .send(mockUserBadPassword);
+
+    expect(response.statusCode).toEqual(400);
+    expect(response.body).toHaveProperty("error");
+  });
+
+  it("POST /logout -> Should allow user to logout", async () => {
+    const userAgent = await loginMockUser();
+    const response = await userAgent.post("/auth/logout");
+
+    expect(response.statusCode).toEqual(200);
+    expect(response.body).toHaveProperty("message");
   });
 });
