@@ -234,7 +234,7 @@ async function deletePackAndItems(req, res) {
 
     await knex("packs").del().where({ user_id: userId, pack_id: packId });
 
-    //if no packs left, ensure user has a default pack
+    //if no packs left, ensure user has default pack
     const response = await knex("packs")
       .select("pack_id")
       .where({ user_id: userId })
