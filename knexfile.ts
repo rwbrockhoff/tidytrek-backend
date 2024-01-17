@@ -25,7 +25,7 @@ export default {
     client: "pg",
     connection: {
       host: process.env.PRODUCTION_DB_HOST,
-      database: dbName,
+      database: process.env.PRODUCTION_DB_NAME,
       port: 5432,
       user: process.env.PRODUCTION_DB_USER,
       password: process.env.PRODUCTION_DB_PASSWORD,
