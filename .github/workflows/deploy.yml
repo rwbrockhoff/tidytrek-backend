@@ -15,12 +15,10 @@ jobs:
         run: npm ci
       - name: Build application
         run: npm run build
-      - name: check files
-        run: ls
       - name: Rsync deployments
         uses: burnett01/rsync-deployments@6.0.0
         with:
-          switches: -avzr --delete
+          switches: -avzr --delete --exclude="${{secrets.DEPLOY_EXCLUDED_FILES}}"
           path: dist/
           remote_path: ${{ secrets.DEPLOY_PATH }}
           remote_host: ${{ secrets.DEPLOY_HOST }}
