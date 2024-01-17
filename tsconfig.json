@@ -12,5 +12,5 @@
     "types": ["node", "vitest/globals"],
     "typeRoots": ["./node_modules", "./node_modules/@types"]
   },
-  "include": ["server/**/*", "package.json"]
+  "include": ["server/**/*"]
 }
