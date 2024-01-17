@@ -24,12 +24,12 @@ export default {
   production: {
     client: "pg",
     connection: {
-      host: process.env.PRODUCTION_DB_HOST,
-      database: process.env.PRODUCTION_DB_NAME,
+      host: `${process.env.PRODUCTION_DB_HOST}`,
+      database: dbName,
       port: 5432,
-      user: process.env.PRODUCTION_DB_USER,
-      password: process.env.PRODUCTION_DB_PASSWORD,
-      ssl: false,
+      user: `${process.env.PRODUCTION_DB_USER}`,
+      password: `${process.env.PRODUCTION_DB_PASSWORD}`,
+      ssl: { rejectUnauthorized: false },
     },
     postProcessResponse: (result, queryContext) =>
       knexCamelCaseResponse(result),
