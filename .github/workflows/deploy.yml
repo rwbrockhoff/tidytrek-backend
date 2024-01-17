@@ -17,10 +17,6 @@ jobs:
         run: npm run build
       - name: check files
         run: ls
-      - name: go into dist
-        run: cd dist
-      - name: check dist
-        run: ls
       - name: Rsync deployments
         uses: burnett01/rsync-deployments@6.0.0
         with:
