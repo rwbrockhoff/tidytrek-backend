@@ -6,8 +6,7 @@
   "main": "server/index.js",
   "type": "module",
   "scripts": {
-    "build": "rimraf dist && npx tsc",
-    "prestart": "npm run build",
+    "build": "npx tsc",
     "start": "NODE_ENV=production node dist/server/index.js",
     "dev": "NODE_ENV=development tsx watch server/index.ts",
     "test": "NODE_ENV=test vitest",

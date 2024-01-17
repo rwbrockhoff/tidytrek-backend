@@ -8,8 +8,9 @@
     "outDir": "dist",
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
+    "resolveJsonModule": true,
     "types": ["node", "vitest/globals"],
     "typeRoots": ["./node_modules", "./node_modules/@types"]
   },
-  "include": ["server/**/*"]
+  "include": ["server/**/*", "package.json"]
 }
