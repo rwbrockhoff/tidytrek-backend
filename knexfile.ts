@@ -29,7 +29,7 @@ export default {
       port: 5432,
       user: process.env.PRODUCTION_DB_USER,
       password: process.env.PRODUCTION_DB_PASSWORD,
-      ssl: true,
+      ssl: false,
     },
     postProcessResponse: (result, queryContext) =>
       knexCamelCaseResponse(result),
