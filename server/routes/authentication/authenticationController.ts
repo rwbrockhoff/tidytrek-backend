@@ -47,7 +47,7 @@ async function register(req, res) {
     if (user.password) delete user.password;
     res.status(200).json({ user });
   } catch (err) {
-    res.status(400).json({ error: "Error registering account." });
+    res.status(400).json({ error: err });
   }
 }
 
