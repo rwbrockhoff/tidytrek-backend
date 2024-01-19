@@ -3,7 +3,6 @@ import authenticationController from "./authenticationController.js";
 
 const router = express.Router();
 
-router.get("/test", authenticationController.test);
 router.get("/status", authenticationController.getAuthStatus);
 router.post("/register", authenticationController.register);
 router.post("/login", authenticationController.login);

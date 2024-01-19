@@ -8,15 +8,6 @@ const cookieOptions = {
   signed: true,
 };
 
-async function test(req, res) {
-  try {
-    console.log("hit this endpoint!");
-    res.status(200).json({ message: "Successful again." });
-  } catch (err) {
-    console.log("test error: ", err);
-    return res.status(400).json({ error: err });
-  }
-}
 async function register(req, res) {
   try {
     const { email, password, name } = req.body;

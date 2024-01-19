@@ -35,7 +35,7 @@ jobs:
             --port 22 \
             --cidr ${{ steps.ip.outputs.ipv4 }}/32
 
-      - name: Rsync deployments
+      - name: Rsync Deployments
         uses: burnett01/rsync-deployments@6.0.0
         with:
           switches: -avzr --delete --exclude="${{secrets.DEPLOY_EXCLUDED_FILES}}" --exclude="/node_modules"
@@ -45,7 +45,7 @@ jobs:
           remote_user: ${{ secrets.DEPLOY_USER }}
           remote_key: ${{ secrets.SSH_PRIVATE_KEY }}
 
-      - name: revoke runner ip address
+      - name: Revoke Runner IP Addresses
         run: |
           aws ec2 revoke-security-group-ingress \
             --group-id $AWS_INSTANCE_SG_ID \
