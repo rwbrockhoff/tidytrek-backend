@@ -11,7 +11,7 @@ const cookieOptions = {
 async function test(req, res) {
   try {
     console.log("hit this endpoint!");
-    res.status(200).json({ message: "Success." });
+    res.status(200).json({ message: "Successful again." });
   } catch (err) {
     console.log("test error: ", err);
     return res.status(400).json({ error: err });
