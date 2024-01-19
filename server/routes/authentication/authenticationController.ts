@@ -118,4 +118,4 @@ async function createDefaultPack(userId) {
   }
 }
 
-export default { register, login, logout, getAuthStatus, test };
+export default { register, login, logout, getAuthStatus };
