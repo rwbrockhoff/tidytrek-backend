@@ -84,13 +84,20 @@ async function logout(req, res) {
 }
 
 async function getAuthStatus(req, res) {
-  if (req.user && req.userId) {
-    res.status(200).json({ isAuthenticated: true, user: req.user });
-  } else {
-    res.status(200).json({
-      isAuthenticated: req.userId !== undefined,
-      info: { user: req.user, id: req.userId },
-    });
+  try {
+    const existingEmail = await knex("users").select("email").first();
+    console.log("Existing Email: ", existingEmail);
+
+    if (req.user && req.userId) {
+      res.status(200).json({ isAuthenticated: true, user: req.user });
+    } else {
+      res.status(200).json({
+        isAuthenticated: req.userId !== undefined,
+        info: { user: req.user, id: req.userId },
+      });
+    }
+  } catch (err) {
+    res.status(400).json({ error: err });
   }
 }
 
