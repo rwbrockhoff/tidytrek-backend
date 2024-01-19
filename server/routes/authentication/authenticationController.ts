@@ -16,6 +16,7 @@ async function register(req, res) {
       .select("email")
       .where({ email })
       .first();
+    console.log("Existing Email: ", existingEmail);
     if (existingEmail)
       return res
         .status(409)
@@ -23,13 +24,17 @@ async function register(req, res) {
 
     const hash = await bcrypt.hash(password, 10);
 
+    console.log("hash: ", hash);
+
     const [user] = await knex("users").insert({ email, name, password: hash }, [
       "user_id",
       "name",
       "email",
     ]);
+    console.log("USER: ", user);
     // add jwt + signed cookie
     const token = createWebToken(user.userId);
+    console.log("TOKEN: ", token);
     res.cookie("token", token, cookieOptions);
 
     await createDefaultPack(user.userId);
@@ -89,6 +94,7 @@ function createWebToken(userId) {
 
 async function createDefaultPack(userId) {
   try {
+    console.log("Creating default pack...", userId);
     const [{ packId }] = await knex("packs")
       .insert({
         user_id: userId,
@@ -114,6 +120,7 @@ async function createDefaultPack(userId) {
       pack_item_index: 0,
     });
   } catch (err) {
+    console.log("Create pack error: ", err);
     return new Error("Error creating default pack for user");
   }
 }
