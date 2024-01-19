@@ -55,11 +55,14 @@ async function login(req, res) {
     if (!email && !password) return res.status(400).json({ error: errorText });
 
     const user = await knex("users").where({ email }).first();
+    console.log("user: ", user);
 
     const passwordsMatch = await bcrypt.compare(password, user.password);
+    console.log("passwords match: ", passwordsMatch);
     if (passwordsMatch) {
       // create token + cookie
       const token = createWebToken(user.userId);
+      console.log("token: ", token);
       res.cookie("token", token, cookieOptions);
       // send back user, no password attached
       if (user.password) delete user.password;
@@ -70,7 +73,7 @@ async function login(req, res) {
       }
     } else return res.status(400).json({ error: errorText });
   } catch (err) {
-    res.status(400).json({ error: "Error logging in." });
+    res.status(400).json({ error: err });
   }
 }
 
