@@ -34,7 +34,6 @@ export default {
     postProcessResponse: (result, queryContext) =>
       knexCamelCaseResponse(result),
     migrations: {
-      extension: "ts",
       directory: `${process.cwd()}/server/db/migrations`,
     },
   },
