@@ -16,7 +16,7 @@ async function register(req, res) {
       .select("email")
       .where({ email })
       .first();
-    console.log("Existing Email: ", existingEmail);
+
     if (existingEmail)
       return res
         .status(409)
@@ -24,17 +24,14 @@ async function register(req, res) {
 
     const hash = await bcrypt.hash(password, 10);
 
-    console.log("hash: ", hash);
-
     const [user] = await knex("users").insert({ email, name, password: hash }, [
       "user_id",
       "name",
       "email",
     ]);
-    console.log("USER: ", user);
+
     // add jwt + signed cookie
     const token = createWebToken(user.userId);
-    console.log("TOKEN: ", token);
     res.cookie("token", token, cookieOptions);
 
     await createDefaultPack(user.userId);
@@ -55,14 +52,12 @@ async function login(req, res) {
     if (!email && !password) return res.status(400).json({ error: errorText });
 
     const user = await knex("users").where({ email }).first();
-    console.log("user: ", user);
 
     const passwordsMatch = await bcrypt.compare(password, user.password);
-    console.log("passwords match: ", passwordsMatch);
+
     if (passwordsMatch) {
       // create token + cookie
       const token = createWebToken(user.userId);
-      console.log("token: ", token);
       res.cookie("token", token, cookieOptions);
       // send back user, no password attached
       if (user.password) delete user.password;
@@ -85,9 +80,6 @@ async function logout(req, res) {
 
 async function getAuthStatus(req, res) {
   try {
-    const existingEmail = await knex("users").select("email").first();
-    console.log("Existing Email: ", existingEmail);
-
     if (req.user && req.userId) {
       res.status(200).json({ isAuthenticated: true, user: req.user });
     } else {
@@ -97,7 +89,9 @@ async function getAuthStatus(req, res) {
       });
     }
   } catch (err) {
-    res.status(400).json({ error: err, custom: "auth status error" });
+    res
+      .status(400)
+      .json({ error: "There was an error checking your log in status." });
   }
 }
 
@@ -107,7 +101,6 @@ function createWebToken(userId) {
 
 async function createDefaultPack(userId) {
   try {
-    console.log("Creating default pack...", userId);
     const [{ packId }] = await knex("packs")
       .insert({
         user_id: userId,
@@ -133,7 +126,6 @@ async function createDefaultPack(userId) {
       pack_item_index: 0,
     });
   } catch (err) {
-    console.log("Create pack error: ", err);
     return new Error("Error creating default pack for user");
   }
 }
