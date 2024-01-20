@@ -97,7 +97,7 @@ async function getAuthStatus(req, res) {
       });
     }
   } catch (err) {
-    res.status(400).json({ error: err });
+    res.status(400).json({ error: err, custom: "auth status error" });
   }
 }
 
