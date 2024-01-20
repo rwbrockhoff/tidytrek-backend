@@ -6,9 +6,8 @@
   "main": "server/index.js",
   "type": "module",
   "scripts": {
-    "build": "rimraf dist && npx tsc",
-    "prestart": "npm run build",
-    "start": "NODE_ENV=production node dist/server/index.js",
+    "build": "npx tsc",
+    "start": "NODE_ENV=production node server/index.js",
     "dev": "NODE_ENV=development tsx watch server/index.ts",
     "test": "NODE_ENV=test vitest",
     "test:coverage": "NODE_ENV=test vitest run --coverage",
@@ -17,7 +16,8 @@
     "migrate:rollback": "NODE_OPTIONS='--import=tsx' knex migrate:rollback",
     "migrate:unlock": "NODE_OPTIONS='--import=tsx' knex migrate:unlock",
     "seed:make": "NODE_OPTIONS='--import=tsx' knex seed:make",
-    "seed:run": "NODE_ENV=development NODE_OPTIONS='--import=tsx' knex seed:run"
+    "seed:run": "NODE_ENV=development NODE_OPTIONS='--import=tsx' knex seed:run",
+    "db-migrate:latest -production": "knex migrate:latest"
   },
   "keywords": [],
   "license": "ISC",
@@ -42,7 +42,6 @@
     "jsonwebtoken": "^9.0.2",
     "knex": "^3.1.0",
     "pg": "^8.11.3",
-    "rimraf": "^5.0.5",
     "snakecase-keys": "^5.5.0"
   }
 }

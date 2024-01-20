@@ -16,6 +16,7 @@ async function register(req, res) {
       .select("email")
       .where({ email })
       .first();
+
     if (existingEmail)
       return res
         .status(409)
@@ -28,6 +29,7 @@ async function register(req, res) {
       "name",
       "email",
     ]);
+
     // add jwt + signed cookie
     const token = createWebToken(user.userId);
     res.cookie("token", token, cookieOptions);
@@ -38,7 +40,7 @@ async function register(req, res) {
     if (user.password) delete user.password;
     res.status(200).json({ user });
   } catch (err) {
-    res.status(400).json({ error: "Error registering account." });
+    res.status(400).json({ error: err });
   }
 }
 
@@ -52,6 +54,7 @@ async function login(req, res) {
     const user = await knex("users").where({ email }).first();
 
     const passwordsMatch = await bcrypt.compare(password, user.password);
+
     if (passwordsMatch) {
       // create token + cookie
       const token = createWebToken(user.userId);
@@ -65,7 +68,7 @@ async function login(req, res) {
       }
     } else return res.status(400).json({ error: errorText });
   } catch (err) {
-    res.status(400).json({ error: "Error logging in." });
+    res.status(400).json({ error: err });
   }
 }
 
@@ -76,10 +79,19 @@ async function logout(req, res) {
 }
 
 async function getAuthStatus(req, res) {
-  if (req.user && req.userId) {
-    res.status(200).json({ isAuthenticated: true, user: req.user });
-  } else {
-    res.status(200).json({ isAuthenticated: req.userId !== undefined });
+  try {
+    if (req.user && req.userId) {
+      res.status(200).json({ isAuthenticated: true, user: req.user });
+    } else {
+      res.status(200).json({
+        isAuthenticated: req.userId !== undefined,
+        info: { user: req.user, id: req.userId },
+      });
+    }
+  } catch (err) {
+    res
+      .status(400)
+      .json({ error: "There was an error checking your log in status." });
   }
 }
 
