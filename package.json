@@ -17,7 +17,9 @@
     "migrate:unlock": "NODE_OPTIONS='--import=tsx' knex migrate:unlock",
     "seed:make": "NODE_OPTIONS='--import=tsx' knex seed:make",
     "seed:run": "NODE_ENV=development NODE_OPTIONS='--import=tsx' knex seed:run",
-    "db-migrate:latest -production": "knex migrate:latest"
+    "migrate:latest-production": "knex migrate:latest",
+    "migrate:rollback-production": "knex migrate:rollback",
+    "migrate:unlock-production": "knex migrate:unlock"
   },
   "keywords": [],
   "license": "ISC",

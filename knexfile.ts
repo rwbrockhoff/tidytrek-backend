@@ -1,4 +1,8 @@
 import { knexCamelCaseResponse } from "./server/utils/utils.js";
+import dotenv from "dotenv";
+dotenv.config({
+  path: process.env.NODE_ENV === "production" ? "production.env" : "dev.env",
+});
 const dbName = "tidytrek_db";
 
 export default {
