@@ -20,7 +20,7 @@ async function register(req, res) {
     if (existingEmail)
       return res
         .status(409)
-        .json({ error: "Email is alredy registered. Please log in." });
+        .json({ error: "Account is already registered. Please log in." });
 
     const hash = await bcrypt.hash(password, 10);
 
@@ -53,6 +53,11 @@ async function login(req, res) {
 
     const user = await knex("users").where({ email }).first();
 
+    if (user === undefined)
+      return res
+        .status(400)
+        .json({ error: "No account found. Feel free to sign up." });
+
     const passwordsMatch = await bcrypt.compare(password, user.password);
 
     if (passwordsMatch) {
@@ -68,7 +73,7 @@ async function login(req, res) {
       }
     } else return res.status(400).json({ error: errorText });
   } catch (err) {
-    res.status(400).json({ error: err });
+    res.status(400).json({ error: errorText });
   }
 }
 

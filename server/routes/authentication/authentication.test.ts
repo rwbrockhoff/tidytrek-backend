@@ -81,6 +81,20 @@ describe("Auth Routes: ", () => {
     expect(response.body).toHaveProperty("error");
   });
 
+  it("POST /login -> Should have error message for invalid email", async () => {
+    const userAgent = await loginMockUser();
+    const mockUserInvalidEmail = {
+      email: "invalidemail@tidytrek.co",
+      password: mockUser.password,
+    };
+    const response = await userAgent
+      .post("/auth/login")
+      .send(mockUserInvalidEmail);
+
+    expect(response.statusCode).toEqual(400);
+    expect(response.body).toHaveProperty("error");
+  });
+
   it("POST /logout -> Should allow user to logout", async () => {
     const userAgent = await loginMockUser();
     const response = await userAgent.post("/auth/logout");
