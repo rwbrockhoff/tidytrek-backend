@@ -309,7 +309,7 @@ async function movePackItem(req, res) {
       prev_pack_item_index,
     } = req.body;
 
-    // move all items forward to make room for packItem at new position
+    // move all items forward to make room for a packItem at new position
     // only move indexes that are greater than or equal
     await knex.raw(`UPDATE pack_items 
     SET pack_item_index = pack_item_index + 1 
