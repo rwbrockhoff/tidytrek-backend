@@ -83,10 +83,7 @@ async function getAuthStatus(req, res) {
     if (req.user && req.userId) {
       res.status(200).json({ isAuthenticated: true, user: req.user });
     } else {
-      res.status(200).json({
-        isAuthenticated: req.userId !== undefined,
-        info: { user: req.user, id: req.userId },
-      });
+      res.status(200).json({ isAuthenticated: req.userId !== undefined });
     }
   } catch (err) {
     res
