@@ -90,6 +90,24 @@ async function getAuthStatus(req, res) {
   }
 }
 
+async function resetPassword(req, res) {
+  try {
+    const { email } = req.body;
+    const [user] = await knex("users").select("email").where({ email });
+
+    if (!user) {
+      return res.status(400).json({
+        error: "We could not verify your account information at this time.",
+      });
+    }
+    return res.status(200).send();
+  } catch (err) {
+    res
+      .status(400)
+      .json({ error: "There was an error reseting your password." });
+  }
+}
+
 function createWebToken(userId) {
   return jwt.sign({ userId }, process.env.APP_SECRET);
 }
@@ -153,4 +171,4 @@ async function isUniqueAccount(email, username) {
   return { unique: true };
 }
 
-export default { register, login, logout, getAuthStatus };
+export default { register, login, logout, getAuthStatus, resetPassword };

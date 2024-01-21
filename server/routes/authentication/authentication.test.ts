@@ -110,4 +110,21 @@ describe("Auth Routes: ", () => {
     expect(response.statusCode).toEqual(200);
     expect(response.body).toHaveProperty("message");
   });
+
+  it("POST /reset-password -> Should allow user to reset password", async () => {
+    const response = await request
+      .post("/auth/reset-password")
+      .send({ email: mockUser.email });
+
+    expect(response.statusCode).toEqual(200);
+  });
+
+  it("POST /reset-password -> Should error for unknown email", async () => {
+    const response = await request
+      .post("/auth/reset-password")
+      .send({ email: notSeededUser.email });
+
+    expect(response.statusCode).toEqual(400);
+    expect(response.body).toHaveProperty("error");
+  });
 });
