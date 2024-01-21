@@ -10,25 +10,18 @@ const cookieOptions = {
 
 async function register(req, res) {
   try {
-    const { email, password, name } = req.body;
+    const { email, password, name, username } = req.body;
 
-    const existingEmail = await knex("users")
-      .select("email")
-      .where({ email })
-      .first();
+    const { unique, message } = await isUniqueAccount(email, username);
 
-    if (existingEmail)
-      return res
-        .status(409)
-        .json({ error: "Account is already registered. Please log in." });
+    if (!unique) return res.status(409).json({ error: message });
 
     const hash = await bcrypt.hash(password, 10);
 
-    const [user] = await knex("users").insert({ email, name, password: hash }, [
-      "user_id",
-      "name",
-      "email",
-    ]);
+    const [user] = await knex("users").insert(
+      { email, name, password: hash, username: username || null },
+      ["user_id", "name", "email", "username"]
+    );
 
     // add jwt + signed cookie
     const token = createWebToken(user.userId);
@@ -130,6 +123,34 @@ async function createDefaultPack(userId) {
   } catch (err) {
     return new Error("Error creating default pack for user");
   }
+}
+
+async function isUniqueAccount(email, username) {
+  const existingEmail = await knex("users")
+    .select("email")
+    .where({ email })
+    .first();
+
+  if (existingEmail) {
+    return {
+      unique: false,
+      message: "Account is already registered. Please log in.",
+    };
+  }
+
+  if (username && username.length) {
+    const existingUsername = await knex("users")
+      .select("username")
+      .where({ username })
+      .first();
+
+    if (existingUsername)
+      return {
+        unique: false,
+        message: "That username is already taken. Good choice but try again!",
+      };
+  }
+  return { unique: true };
 }
 
 export default { register, login, logout, getAuthStatus };

@@ -4,6 +4,7 @@ export const mockUser = {
   name: "Ryan Brockhoff",
   email: "ryan@tidytrek.com",
   password: "ilovehiking",
+  username: "tidyTrekHiker171",
 };
 
 export const mockPack = {
@@ -73,6 +74,7 @@ export const notSeededUser = {
   name: "Sarah Collins",
   email: "scollins@tidytrek.com",
   password: "newtohiking123!",
+  username: "sarahLovesHiking123",
 };
 
 export const loginMockUser = async () => {

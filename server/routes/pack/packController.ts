@@ -291,7 +291,6 @@ async function editPackItem(req, res) {
 
     return res.status(200).json(updatedItem);
   } catch (err) {
-    console.log("Error: ", err);
     return res
       .status(400)
       .json({ error: "There was an error saving your pack item." });
