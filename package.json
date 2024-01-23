@@ -9,6 +9,7 @@
     "build": "npx tsc",
     "start": "NODE_ENV=production node server/index.js",
     "dev": "NODE_ENV=development tsx watch server/index.ts",
+    "lint": "eslint server/**/*.ts",
     "test": "NODE_ENV=test vitest",
     "test:coverage": "NODE_ENV=test vitest run --coverage",
     "migrate:make": "NODE_OPTIONS='--import=tsx' knex migrate:make",
@@ -24,9 +25,19 @@
   "keywords": [],
   "license": "ISC",
   "devDependencies": {
+    "@testing-library/jest-dom": "^6.2.1",
+    "@types/bcrypt": "^5.0.2",
+    "@types/cookie-parser": "^1.4.6",
+    "@types/cors": "^2.8.17",
     "@types/express": "^4.17.21",
+    "@types/jest": "^29.5.11",
+    "@types/jsonwebtoken": "^9.0.5",
     "@types/node": "^20.10.4",
+    "@types/supertest": "^6.0.2",
+    "@typescript-eslint/eslint-plugin": "^6.19.1",
+    "@typescript-eslint/parser": "^6.19.1",
     "@vitest/coverage-v8": "^1.1.0",
+    "eslint": "^8.56.0",
     "supertest": "^6.3.3",
     "tsx": "^4.7.0",
     "typescript": "^5.3.3",
@@ -35,7 +46,6 @@
   },
   "dependencies": {
     "bcrypt": "^5.1.1",
-    "camelcase": "^8.0.0",
     "camelcase-keys": "^9.1.2",
     "cookie-parser": "^1.4.6",
     "cors": "^2.8.5",
@@ -44,6 +54,7 @@
     "jsonwebtoken": "^9.0.2",
     "knex": "^3.1.0",
     "pg": "^8.11.3",
+    "postmark": "^4.0.2",
     "snakecase-keys": "^5.5.0"
   }
 }
