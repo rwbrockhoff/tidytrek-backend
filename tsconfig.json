@@ -1,17 +1,22 @@
 {
-  "compilerOptions": {
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
-    "target": "ES2020",
-    "sourceMap": true,
-    "lib": ["ESNext", "DOM"],
-    "outDir": "dist",
-    "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true,
-    "resolveJsonModule": true,
-    "types": ["node", "vitest/globals"],
-    "typeRoots": ["./node_modules", "./node_modules/@types"]
-  },
-  "include": ["server/**/*", "package.json"],
-  "exclude": ["server/**/*.test.ts"]
+	"compilerOptions": {
+		"module": "NodeNext",
+		"moduleResolution": "NodeNext",
+		"target": "ES2020",
+		"lib": ["ESNext", "DOM"],
+		"skipLibCheck": true,
+		"outDir": "dist",
+		"esModuleInterop": true,
+		"allowSyntheticDefaultImports": true,
+		"resolveJsonModule": true,
+		"types": ["node", "vitest/globals"],
+		"typeRoots": ["./node_modules", "./node_modules/@types"],
+		/* Linting */
+		"strict": true,
+		"noImplicitAny": true,
+		"noUnusedLocals": true,
+		"noUnusedParameters": true
+	},
+	"include": ["server/**/*", "package.json"],
+	"exclude": ["server/**/*.test.ts"]
 }
