@@ -1,12 +1,16 @@
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import knex from "../../db/connection.js";
+import { randomBytes } from "node:crypto";
+import postmark from "postmark";
 
 const cookieOptions = {
   httpOnly: true,
-  maxAge: 1000 * 60 * 60 * 24 * 180,
+  maxAge: 1000 * 60 * 60 * 24 * 180, // 180 days
   signed: true,
 };
+
+const tokenExpirationWindow = 7200000; // 2 hours
 
 async function register(req, res) {
   try {
@@ -90,17 +94,34 @@ async function getAuthStatus(req, res) {
   }
 }
 
-async function resetPassword(req, res) {
+async function requestResetPassword(req, res) {
   try {
+    const errorMessage =
+      "We could not verify your account information at this time.";
     const { email } = req.body;
-    const [user] = await knex("users").select("email").where({ email });
+    const [user] = await knex("users").select("email", "name").where({ email });
 
-    if (!user) {
+    if (!user.email) {
       return res.status(400).json({
-        error: "We could not verify your account information at this time.",
+        error: errorMessage,
       });
     }
-    return res.status(200).send();
+    const token = await createRandomId();
+    const expiration = Date.now() + tokenExpirationWindow;
+
+    const updateUserResponse = await knex("users")
+      .update({
+        reset_password_token: token,
+        reset_password_token_expiration: expiration,
+      })
+      .where({ email });
+
+    if (updateUserResponse) {
+      await createResetPasswordEmail(user.name, user.email, token);
+      return res.status(200).send();
+    } else {
+      return res.status(400).json({ error: errorMessage });
+    }
   } catch (err) {
     res
       .status(400)
@@ -108,8 +129,90 @@ async function resetPassword(req, res) {
   }
 }
 
+async function confirmResetPassword(req, res) {
+  try {
+    const { password, confirm_password, reset_token } = req.body;
+
+    if (password !== confirm_password)
+      return res.status(400).json({ error: "Passwords do not match." });
+
+    const resetTokenInfo = await knex("users")
+      .select("reset_password_token_expiration")
+      .where({ reset_password_token: reset_token })
+      .first();
+
+    if (!resetTokenInfo) {
+      return res.status(400).json({
+        error: "We could not confirm your password reset. Please try again.",
+      });
+    }
+    // if token is expired
+    const { resetPasswordTokenExpiration } = resetTokenInfo;
+    const current = Date.now();
+    const diff =
+      tokenExpirationWindow - Math.abs(current - resetPasswordTokenExpiration);
+    if (diff <= 0)
+      return res.status(400).json({
+        error: "Your request has expired. Reset your password and try again.",
+      });
+
+    const hash = await bcrypt.hash(password, 10);
+
+    const [user] = await knex("users")
+      .update(
+        {
+          password: hash,
+          reset_password_token: null,
+          reset_password_token_expiration: null,
+        },
+        ["user_id", "name", "email", "username"]
+      )
+      .where({ reset_password_token: reset_token });
+
+    // add jwt + signed cookie
+    const jwtToken = createWebToken(user.userId);
+    res.cookie("token", jwtToken, cookieOptions);
+
+    return res.status(200).json({ user });
+  } catch (err) {
+    console.log("err", err);
+    return res
+      .status(400)
+      .json({ error: "There was an error reseting your password." });
+  }
+}
+
 function createWebToken(userId) {
   return jwt.sign({ userId }, process.env.APP_SECRET);
+}
+
+async function createRandomId() {
+  return await randomBytes(16).toString("hex");
+}
+
+async function createResetPasswordEmail(
+  name: string,
+  email: string,
+  token: string
+) {
+  try {
+    const client = new postmark.ServerClient(`${process.env.POSTMARK_TOKEN}`);
+
+    await client.sendEmailWithTemplate({
+      From: "info@tidytrek.co",
+      To: email,
+      TemplateId: 34543255,
+      MessageStream: "transaction-emails-password-re",
+      TemplateModel: {
+        name: name || "friend",
+        product_name: "Tidytrek",
+        action_url: `${process.env.FRONTEND_URL}/reset-password/${token}`,
+        support_url: "https://tidytrek.co",
+      },
+    });
+  } catch (err) {
+    return new Error(err);
+  }
 }
 
 async function createDefaultPack(userId) {
@@ -171,4 +274,11 @@ async function isUniqueAccount(email, username) {
   return { unique: true };
 }
 
-export default { register, login, logout, getAuthStatus, resetPassword };
+export default {
+  register,
+  login,
+  logout,
+  getAuthStatus,
+  requestResetPassword,
+  confirmResetPassword,
+};

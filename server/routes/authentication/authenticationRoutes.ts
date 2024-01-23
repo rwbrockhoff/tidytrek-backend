@@ -7,6 +7,13 @@ router.get("/status", authenticationController.getAuthStatus);
 router.post("/register", authenticationController.register);
 router.post("/login", authenticationController.login);
 router.post("/logout", authenticationController.logout);
-router.post("/reset-password", authenticationController.resetPassword);
+router.post(
+  "/reset-password/request",
+  authenticationController.requestResetPassword
+);
+router.post(
+  "/reset-password/confirm",
+  authenticationController.confirmResetPassword
+);
 
 export default router;

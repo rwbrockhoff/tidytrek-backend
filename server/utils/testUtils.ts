@@ -2,7 +2,7 @@ import server from "../server.js";
 
 export const mockUser = {
   name: "Ryan Brockhoff",
-  email: "ryan@tidytrek.com",
+  email: "ryan@tidytrek.co",
   password: "ilovehiking",
   username: "tidyTrekHiker171",
 };
@@ -15,7 +15,7 @@ export const mockPack = {
   pack_location_tag: "Sweden",
   pack_season_tag: "Summer",
   pack_duration_tag: "1 Month",
-  pack_miles_tag: "300 Miles",
+  pack_distance_tag: "300 Miles",
   pack_index: 0,
 };
 
@@ -27,7 +27,7 @@ export const mockPack2 = {
   pack_location_tag: "Utah",
   pack_season_tag: "Winter",
   pack_duration_tag: "1-3 Nights",
-  pack_miles_tag: "50 Miles",
+  pack_distance_tag: "50 Miles",
   pack_index: 1,
 };
 
@@ -72,7 +72,7 @@ export const notSeededPackItem = {
 };
 export const notSeededUser = {
   name: "Sarah Collins",
-  email: "scollins@tidytrek.com",
+  email: "scollins@tidytrek.co",
   password: "newtohiking123!",
   username: "sarahLovesHiking123",
 };

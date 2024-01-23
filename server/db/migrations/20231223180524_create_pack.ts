@@ -16,7 +16,7 @@ export async function up(knex: Knex): Promise<void> {
     table.string("pack_location_tag").nullable();
     table.string("pack_duration_tag").nullable();
     table.string("pack_season_tag").nullable();
-    table.string("pack_miles_tag").nullable();
+    table.string("pack_distance_tag").nullable();
     table.boolean("pack_public").defaultTo(false).notNullable();
     table.boolean("pack_affiliate").defaultTo(false).notNullable();
     table.text("pack_affiliate_description").nullable();
