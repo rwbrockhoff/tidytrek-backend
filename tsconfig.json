@@ -17,6 +17,6 @@
 		"noUnusedLocals": true,
 		"noUnusedParameters": true
 	},
-	"include": ["server/**/*", "package.json"],
+	"include": ["server/**/*", "package.json", "package-lock.json"],
 	"exclude": ["server/**/*.test.ts"]
 }
