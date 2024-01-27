@@ -52,16 +52,14 @@ async function getPackById(userId: number, packId: string) {
 	// Groups all pack items for each category into an object {pack_items: []}
 	const categories = await knex.raw(
 		`select 
-    pack_categories.pack_category_id, pack_categories.pack_id, pack_categories.pack_category_name, pack_categories.pack_category_color,
-    array_agg(row_to_json(ordered_pack_items)) as pack_items from pack_categories
+    pc.*, array_agg(row_to_json(ordered_pack_items)) as pack_items from pack_categories pc
     left outer join
-    (
-      select * from pack_items where pack_items.user_id = ${userId} order by pack_items.pack_item_index
-      
-    ) ordered_pack_items on pack_categories.pack_category_id = ordered_pack_items.pack_category_id
-    where pack_categories.user_id = ${userId} and pack_categories.pack_id = ${packId}
-    group by pack_categories.pack_category_id
-    order by pack_categories.pack_category_index`,
+    ( select * from pack_items where pack_items.user_id = ${userId} 
+	  order by pack_items.pack_item_index
+    ) ordered_pack_items on pc.pack_category_id = ordered_pack_items.pack_category_id
+    where pc.user_id = ${userId} and pc.pack_id = ${packId}
+    group by pc.pack_category_id
+    order by pc.pack_category_index`,
 	);
 	return { pack, categories: categories || [] };
 }
