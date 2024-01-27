@@ -28,4 +28,36 @@ describe('Gear Closet Routes: ', () => {
 		const response = await request.get('/closet').send();
 		expect(response.statusCode).toEqual(400);
 	});
+
+	it('POST / -> Should post an item to gear closet', async () => {
+		const userAgent = await loginMockUser();
+		const response = await userAgent.post('/closet/items');
+		const getItemsResponse = await userAgent.get('/closet');
+
+		expect(response.statusCode).toEqual(200);
+		expect(getItemsResponse.statusCode).toEqual(200);
+		expect(getItemsResponse.body.gearClosetList).toHaveLength(1);
+	});
+
+	it('PUT / -> Should post an item to gear closet', async () => {
+		const userAgent = await loginMockUser();
+		const postItemResponse = await userAgent.post('/closet/items');
+		const getItemsResponse = await userAgent.get('/closet');
+
+		expect(postItemResponse.statusCode).toEqual(200);
+		expect(getItemsResponse.body.gearClosetList).toHaveLength(1);
+	});
+
+	it('DELETE / -> Should delete a posted item from gear closet', async () => {
+		const userAgent = await loginMockUser();
+		await userAgent.post('/closet/items');
+		const getItemsResponse = await userAgent.get('/closet');
+
+		expect(getItemsResponse.body.gearClosetList).toHaveLength(1);
+
+		const { packItemId } = getItemsResponse.body.gearClosetList[0];
+		const deleteItemResponse = await userAgent.delete(`/closet/items/${packItemId}`);
+
+		expect(deleteItemResponse.statusCode).toEqual(200);
+	});
 });

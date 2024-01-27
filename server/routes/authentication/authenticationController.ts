@@ -168,7 +168,6 @@ async function confirmResetPassword(req: Request, res: Response) {
 
 		return res.status(200).json({ user });
 	} catch (err) {
-		console.log('err', err);
 		return res.status(400).json({ error: 'There was an error reseting your password.' });
 	}
 }
