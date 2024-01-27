@@ -333,6 +333,23 @@ async function movePackItem(req: Request, res: Response) {
 	}
 }
 
+async function moveItemToCloset(req: Request, res: Response) {
+	try {
+		const { userId } = req;
+		const { packItemId } = req.params;
+
+		await knex('pack_items')
+			.update({ pack_id: null, pack_category_id: null })
+			.where({ user_id: userId, pack_item_id: packItemId });
+
+		return res.status(200).send();
+	} catch (err) {
+		return res
+			.status(400)
+			.json({ error: 'There was an error moving your item to your gear closet.' });
+	}
+}
+
 async function deletePackItem(req: Request, res: Response) {
 	try {
 		const { packItemId } = req.params;
@@ -471,6 +488,7 @@ export default {
 	addPackItem,
 	editPackItem,
 	movePackItem,
+	moveItemToCloset,
 	deletePackItem,
 	deleteCategoryAndItems,
 	addPackCategory,
