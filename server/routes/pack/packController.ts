@@ -1,6 +1,7 @@
 import knex from '../../db/connection.js';
 import { generateIndex, changeItemOrder } from './packUtils.js';
 import { Request, Response } from 'express';
+import { createRandomId } from '../../utils/utils.js';
 
 async function getDefaultPack(req: Request, res: Response) {
 	try {
@@ -23,6 +24,7 @@ async function getDefaultPack(req: Request, res: Response) {
 			return res.status(200).send();
 		}
 	} catch (err) {
+		console.log('err: ', err);
 		res.status(400).json({ error: "We're having trouble loading your packs right now." });
 	}
 }
@@ -57,7 +59,7 @@ async function getPackById(userId: number, packId: string) {
     ( select * from pack_items where pack_items.user_id = ${userId} 
 	  order by pack_items.pack_item_index
     ) ordered_pack_items on pc.pack_category_id = ordered_pack_items.pack_category_id
-    where pc.user_id = ${userId} and pc.pack_id = ${packId}
+    where pc.user_id = ${userId} and pc.pack_id = '${packId}'
     group by pc.pack_category_id
     order by pc.pack_category_index`,
 	);
@@ -98,10 +100,13 @@ async function createNewPack(userId: number) {
 		const packIndex = await generateIndex('packs', 'pack_index', {
 			user_id: userId,
 		});
+		``;
+		const newPackId = await createRandomId(4);
 
 		const [pack] = await knex('packs')
 			.insert({
 				user_id: userId,
+				pack_id: newPackId,
 				pack_name: 'New Pack',
 				pack_index: packIndex,
 			})
@@ -130,6 +135,7 @@ async function createNewPack(userId: number) {
 
 		return { pack, categories };
 	} catch (err) {
+		console.log('error: ', err);
 		return new Error('There was an error creating a new pack.');
 	}
 }

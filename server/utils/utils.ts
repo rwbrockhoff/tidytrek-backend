@@ -1,4 +1,5 @@
 import camelcaseKeys from 'camelcase-keys';
+import { randomBytes } from 'node:crypto';
 import { KnexResponse } from '../types/server/serverTypes.js';
 
 export const knexCamelCaseResponse = (result: KnexResponse) => {
@@ -9,4 +10,8 @@ export const knexCamelCaseResponse = (result: KnexResponse) => {
 		}
 	}
 	return result;
+};
+
+export const createRandomId = async (num: number): Promise<string> => {
+	return await randomBytes(num).toString('hex');
 };
