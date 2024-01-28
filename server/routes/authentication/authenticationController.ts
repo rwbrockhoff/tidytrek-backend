@@ -49,7 +49,10 @@ async function login(req: Request, res: Response) {
 
 		if (!email && !password) return res.status(400).json({ error: errorText });
 
-		const user = await knex('users').where({ email }).first();
+		const user = await knex('users')
+			.select('user_id', 'name', 'email', 'username', 'password')
+			.where({ email })
+			.first();
 
 		if (user === undefined)
 			return res.status(400).json({ error: 'No account found. Feel free to sign up.' });
@@ -61,13 +64,12 @@ async function login(req: Request, res: Response) {
 			const token = createWebToken(user.userId);
 			res.cookie('token', token, cookieOptions);
 			// send back user, no password attached
-			if (user.password) delete user.password;
-			if (!user.password) {
-				res.status(200).json({ user });
-			} else {
-				res.status(400).json({ error: errorText });
-			}
-		} else return res.status(400).json({ error: errorText });
+			delete user.password;
+			if (!user.password) res.status(200).json({ user });
+			else res.status(400).json({ error: errorText });
+		} else {
+			res.status(400).json({ error: errorText });
+		}
 	} catch (err) {
 		res.status(400).json({ error: errorText });
 	}
@@ -168,7 +170,6 @@ async function confirmResetPassword(req: Request, res: Response) {
 
 		return res.status(200).json({ user });
 	} catch (err) {
-		console.log('err', err);
 		return res.status(400).json({ error: 'There was an error reseting your password.' });
 	}
 }

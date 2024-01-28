@@ -1,4 +1,5 @@
 import knex from '../../db/connection.js';
+import { generateIndex, changeItemOrder } from './packUtils.js';
 import { Request, Response } from 'express';
 
 async function getDefaultPack(req: Request, res: Response) {
@@ -31,7 +32,7 @@ async function getPack(req: Request, res: Response) {
 		const { userId } = req;
 		const { packId } = req.params;
 
-		const { pack, categories } = await getPackById(userId, packId);
+		const { pack, categories } = await getPackById(userId, Number(packId));
 
 		return res.status(200).json({ pack, categories });
 	} catch (err) {
@@ -41,7 +42,7 @@ async function getPack(req: Request, res: Response) {
 	}
 }
 
-async function getPackById(userId: number, packId: string) {
+async function getPackById(userId: number, packId: number) {
 	const pack = await knex('packs')
 		.where({ user_id: userId, pack_id: packId })
 		.orderBy('created_at')
@@ -51,16 +52,14 @@ async function getPackById(userId: number, packId: string) {
 	// Groups all pack items for each category into an object {pack_items: []}
 	const categories = await knex.raw(
 		`select 
-    pack_categories.pack_category_id, pack_categories.pack_id, pack_categories.pack_category_name, pack_categories.pack_category_color,
-    array_agg(row_to_json(ordered_pack_items)) as pack_items from pack_categories
+    pc.*, array_agg(row_to_json(ordered_pack_items)) as pack_items from pack_categories pc
     left outer join
-    (
-      select * from pack_items where pack_items.user_id = ${userId} order by pack_items.pack_item_index
-      
-    ) ordered_pack_items on pack_categories.pack_category_id = ordered_pack_items.pack_category_id
-    where pack_categories.user_id = ${userId} and pack_categories.pack_id = ${packId}
-    group by pack_categories.pack_category_id
-    order by pack_categories.pack_category_index`,
+    ( select * from pack_items where pack_items.user_id = ${userId} 
+	  order by pack_items.pack_item_index
+    ) ordered_pack_items on pc.pack_category_id = ordered_pack_items.pack_category_id
+    where pc.user_id = ${userId} and pc.pack_id = ${packId}
+    group by pc.pack_category_id
+    order by pc.pack_category_index`,
 	);
 	return { pack, categories: categories || [] };
 }
@@ -80,6 +79,7 @@ async function getPackList(req: Request, res: Response) {
 }
 
 async function addNewPack(req: Request, res: Response) {
+	const errorMessage = 'There was an error adding a new pack.';
 	try {
 		const { userId } = req;
 		const response = await createNewPack(userId);
@@ -87,9 +87,9 @@ async function addNewPack(req: Request, res: Response) {
 			return res
 				.status(200)
 				.json({ pack: response['pack'], categories: response['categories'] });
-		}
+		} else return res.status(400).json({ error: errorMessage });
 	} catch (err) {
-		return res.status(400).json({ error: 'There was an error adding a new pack.' });
+		return res.status(400).json({ error: errorMessage });
 	}
 }
 
@@ -162,17 +162,12 @@ async function movePack(req: Request, res: Response) {
 	try {
 		const { userId } = req;
 		const { packId } = req.params;
-		const { new_index } = req.body;
+		const { new_index, prev_index } = req.body;
 
-		await knex.raw(`UPDATE packs 
-    SET pack_index = pack_index + 1 
-    WHERE pack_index >= ${new_index}
-    AND user_id = ${userId}`);
+		await changeItemOrder(userId, 'packs', 'pack_index', new_index, prev_index);
 
 		await knex('packs')
-			.update({
-				pack_index: new_index,
-			})
+			.update({ pack_index: new_index })
 			.where({ user_id: userId, pack_id: packId });
 
 		return res.status(200).json({ packId, newIndex: new_index });
@@ -239,7 +234,7 @@ async function addPackItem(req: Request, res: Response) {
 		const { userId } = req;
 		const { pack_id, pack_category_id } = req.body;
 
-		const packItemIndex = await generateIndex('pack_items', 'pack_item_index', {
+		const pack_item_index = await generateIndex('pack_items', 'pack_item_index', {
 			user_id: userId,
 			pack_id,
 			pack_category_id,
@@ -252,7 +247,7 @@ async function addPackItem(req: Request, res: Response) {
 					pack_id,
 					pack_category_id,
 					pack_item_name: '',
-					pack_item_index: packItemIndex,
+					pack_item_index,
 				})
 				.returning('*')) || [];
 
@@ -289,28 +284,40 @@ async function movePackItem(req: Request, res: Response) {
 			prev_pack_item_index,
 		} = req.body;
 
-		// move all items forward to make room for a packItem at new position
-		// only move indexes that are greater than or equal
-		await knex.raw(`UPDATE pack_items 
-    SET pack_item_index = pack_item_index + 1 
-    WHERE pack_item_index >= ${pack_item_index}
-    AND pack_category_id = ${pack_category_id}`);
+		if (pack_category_id === prev_pack_category_id) {
+			// higher position visually, making it a lower index in our table
+			const higherPos = pack_item_index < prev_pack_item_index;
+			// move pack item indexes to allow item at new position
+			// handle lower or higher position for items in same category
+			higherPos
+				? await knex.raw(`UPDATE pack_items
+				SET pack_item_index = pack_item_index + 1 
+				WHERE pack_item_index >= ${pack_item_index} and pack_item_index < ${prev_pack_item_index}
+				AND user_id = ${userId} AND pack_category_id = ${pack_category_id}`)
+				: await knex.raw(`UPDATE pack_items 
+				SET pack_item_index = pack_item_index - 1 
+				WHERE pack_item_index <= ${pack_item_index} AND pack_item_index > ${prev_pack_item_index}
+				AND user_id = ${userId} AND pack_category_id = ${pack_category_id}`);
+		} else {
+			// when moving to different category, we don't have to worry about previous position
+			await knex.raw(`UPDATE pack_items
+				SET pack_item_index = pack_item_index + 1
+				WHERE pack_item_index >= ${pack_item_index}
+				AND user_id = ${userId} AND pack_category_id = ${pack_category_id}`);
+		}
 
+		// update the pack items position now that we've made room
 		await knex('pack_items')
-			.update({
-				pack_item_index,
-				pack_category_id,
-			})
+			.update({ pack_item_index, pack_category_id })
 			.where({ user_id: userId, pack_item_id: packItemId });
 
 		// if packItem is dragged into a new cateogry
-		// move all items in previous category back an index to account for
-		// pack item "leaving" the category
+		// move all items in previous category back an index since item is now gone
 		if (prev_pack_category_id !== pack_category_id) {
 			await knex.raw(`UPDATE pack_items 
-        SET pack_item_index = pack_item_index - 1 
-        WHERE pack_item_index >= ${prev_pack_item_index}
-        AND pack_category_id = ${prev_pack_category_id}`);
+				SET pack_item_index = pack_item_index - 1 
+				WHERE pack_item_index >= ${prev_pack_item_index}
+				AND pack_category_id = ${prev_pack_category_id}`);
 		}
 
 		return res.status(200).json({
@@ -321,6 +328,23 @@ async function movePackItem(req: Request, res: Response) {
 		});
 	} catch (err) {
 		return res.status(400).json({ error: 'There was an error moving your pack item.' });
+	}
+}
+
+async function moveItemToCloset(req: Request, res: Response) {
+	try {
+		const { userId } = req;
+		const { packItemId } = req.params;
+
+		await knex('pack_items')
+			.update({ pack_id: null, pack_category_id: null })
+			.where({ user_id: userId, pack_item_id: packItemId });
+
+		return res.status(200).send();
+	} catch (err) {
+		return res
+			.status(400)
+			.json({ error: 'There was an error moving your item to your gear closet.' });
 	}
 }
 
@@ -400,9 +424,24 @@ async function deletePackCategory(req: Request, res: Response) {
 		const { userId } = req;
 		const { categoryId } = req.params;
 
-		await knex('pack_items')
-			.update({ pack_category_id: null, pack_id: null })
-			.where({ pack_category_id: categoryId });
+		const { max } = await knex('pack_items')
+			.select(knex.raw(`MAX(pack_item_index)`))
+			.where({ user_id: userId, pack_id: null })
+			.first();
+
+		const maxGearClosetIndex = max || 0;
+
+		await knex.raw(`update pack_items pk
+			set pack_item_index = pk2.new_index + ${maxGearClosetIndex}, 
+			pack_category_id = null, pack_id = null
+			FROM (
+			SELECT pk.pack_id, pk.pack_item_id, pk.pack_item_index, 
+			row_number() over (order by pack_item_index) as new_index
+			FROM pack_items pk
+			WHERE pack_category_id = ${categoryId} AND user_id = ${userId}
+			ORDER BY pack_item_index
+			) pk2
+			where pk.pack_item_id = pk2.pack_item_id;`);
 
 		await knex('pack_categories')
 			.del()
@@ -435,33 +474,6 @@ async function deleteCategoryAndItems(req: Request, res: Response) {
 	}
 }
 
-// Generate a new index based on the current pack context
-// used when we can't gurantee item created is the first item (0 index)
-// cannot auto increment indexes in pg because this is used for ordering purposes
-
-async function generateIndex(
-	tableName: string,
-	indexName: string,
-	conditions: {
-		user_id: number;
-		pack_id?: number | string;
-		pack_category_id?: number;
-		pack_item_id?: number;
-	},
-): Promise<number> {
-	const response = await knex(tableName)
-		.select(knex.raw(`MAX(${indexName})`))
-		.where(conditions)
-		.first();
-	if ('max' in response) {
-		if (typeof response['max'] === 'number') return response['max'] + 1;
-		else return 0;
-	}
-	return 0;
-	// if (response['max'] === null) return 0;
-	// else return response['max'] + 1;
-}
-
 export default {
 	getDefaultPack,
 	getPack,
@@ -474,6 +486,7 @@ export default {
 	addPackItem,
 	editPackItem,
 	movePackItem,
+	moveItemToCloset,
 	deletePackItem,
 	deleteCategoryAndItems,
 	addPackCategory,

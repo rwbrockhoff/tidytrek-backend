@@ -8,6 +8,7 @@ import {
 	mockPackItems,
 } from '../../utils/testUtils.js';
 import { PackItem } from '../../types/packs/packTypes.js';
+
 const { name, email, password, username } = mockUser;
 const mockUserHashedPassword = await bcrypt.hash(password, 10);
 
