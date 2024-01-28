@@ -1,5 +1,4 @@
 import knex from '../../db/connection.js';
-import { Buffer } from 'node:buffer';
 
 async function changeItemOrder(
 	userId: number,
@@ -52,13 +51,4 @@ async function generateIndex(
 	return 0;
 }
 
-function generateDisplayId(packId: number): string {
-	return Buffer.from(`p${packId}`, 'utf8').toString('base64url');
-}
-
-function decodeDisplayId(packDisplayId: string): number {
-	const rawTextId = Buffer.from(packDisplayId, 'base64url').toString('utf8');
-	return Number(rawTextId.slice(1));
-}
-
-export { generateIndex, generateDisplayId, decodeDisplayId, changeItemOrder };
+export { generateIndex, changeItemOrder };
