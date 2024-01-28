@@ -50,12 +50,15 @@ async function generateIndex(
 		else return 0;
 	}
 	return 0;
-	// if (response['max'] === null) return 0;
-	// else return response['max'] + 1;
 }
 
-function generateDisplayId(packId: number) {
+function generateDisplayId(packId: number): string {
 	return Buffer.from(`p${packId}`, 'utf8').toString('base64url');
 }
 
-export { generateIndex, generateDisplayId, changeItemOrder };
+function decodeDisplayId(packDisplayId: string): number {
+	const rawTextId = Buffer.from(packDisplayId, 'base64url').toString('utf8');
+	return Number(rawTextId.slice(1));
+}
+
+export { generateIndex, generateDisplayId, decodeDisplayId, changeItemOrder };
