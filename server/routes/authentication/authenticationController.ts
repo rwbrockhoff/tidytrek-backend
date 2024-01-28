@@ -1,7 +1,7 @@
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
 import knex from '../../db/connection.js';
-import { createRandomId } from '../../utils/utils.js';
+import { randomBytes } from 'node:crypto';
 import postmark from 'postmark';
 import { Request, Response } from 'express';
 
@@ -104,7 +104,7 @@ async function requestResetPassword(req: Request, res: Response) {
 				error: errorMessage,
 			});
 		}
-		const token = await createRandomId(16);
+		const token = await createRandomId();
 		const expiration = Date.now() + tokenExpirationWindow;
 
 		const updateUserResponse = await knex('users')
@@ -182,6 +182,10 @@ function createWebToken(userId: number) {
 	}
 }
 
+async function createRandomId(): Promise<string> {
+	return await randomBytes(16).toString('hex');
+}
+
 async function createResetPasswordEmail(name: string, email: string, token: string) {
 	try {
 		const client = new postmark.ServerClient(`${process.env.POSTMARK_TOKEN}`);
@@ -207,12 +211,9 @@ async function createResetPasswordEmail(name: string, email: string, token: stri
 
 async function createDefaultPack(userId: number) {
 	try {
-		const newPackId = await createRandomId(4);
-
 		const [{ packId }] = await knex('packs')
 			.insert({
 				user_id: userId,
-				pack_id: newPackId,
 				pack_name: 'Default Pack',
 				pack_index: 0,
 			})

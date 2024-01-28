@@ -1,6 +1,5 @@
 import { Knex } from 'knex';
 import bcrypt from 'bcrypt';
-import { createRandomId } from '../../utils/utils.js';
 import {
 	mockUser,
 	mockPack,
@@ -22,10 +21,8 @@ export async function seed(knex: Knex): Promise<void> {
 		.insert({ name, email, password: mockUserHashedPassword, username })
 		.returning('*');
 
-	const newPackId = await createRandomId(4);
-
 	const [pack] = await knex('packs')
-		.insert({ ...mockPack, user_id: dummyUser.userId, pack_id: newPackId })
+		.insert({ ...mockPack, user_id: dummyUser.userId })
 		.returning('*');
 
 	const [packCategory] = await knex('pack_categories')
@@ -45,12 +42,10 @@ export async function seed(knex: Knex): Promise<void> {
 
 	await knex('pack_items').insert(packItemsWithIds);
 
-	const secondPackId = await createRandomId(4);
 	await knex('packs')
-		.insert({ ...mockPack2, user_id: dummyUser.userId, pack_id: secondPackId })
+		.insert({ ...mockPack2, user_id: dummyUser.userId })
 		.returning('*');
 
-	// Second User
 	await knex('users').insert({
 		name: 'Justin Hill',
 		email: 'jhill@tidytrek.co',
