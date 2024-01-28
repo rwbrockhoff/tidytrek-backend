@@ -11,7 +11,7 @@ jobs:
     env:
       AWS_INSTANCE_SG_ID: ${{ secrets.AWS_INSTANCE_SG_ID }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Install modules
         run: npm ci
       - name: Build application
@@ -51,3 +51,6 @@ jobs:
             --protocol tcp \
             --port 22 \
             --cidr ${{ steps.ip.outputs.ipv4 }}/32
+
+      - name: Create CloudFront invalidation
+        run: aws cloudfront create-invalidation --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} --paths "/*"
