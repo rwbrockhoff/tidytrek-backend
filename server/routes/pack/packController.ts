@@ -1,5 +1,5 @@
 import knex from '../../db/connection.js';
-import { generateIndex, changeItemOrder } from './packUtils.js';
+import { generateIndex, generateDisplayId, changeItemOrder } from './packUtils.js';
 import { Request, Response } from 'express';
 
 async function getDefaultPack(req: Request, res: Response) {
@@ -107,6 +107,12 @@ async function createNewPack(userId: number) {
 			})
 			.returning('*');
 
+		const pack_display_id = generateDisplayId(pack.packId);
+
+		await knex('packs')
+			.update({ pack_display_id })
+			.where({ user_id: userId, pack_id: pack.packId });
+
 		const categories = await knex('pack_categories')
 			.insert({
 				user_id: userId,
@@ -126,6 +132,7 @@ async function createNewPack(userId: number) {
 			})
 			.returning('*');
 
+		pack.packDisplayId = pack_display_id;
 		categories[0].packItems = packItems;
 
 		return { pack, categories };

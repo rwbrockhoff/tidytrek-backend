@@ -1,5 +1,6 @@
 import { Knex } from 'knex';
 import bcrypt from 'bcrypt';
+import { generateDisplayId } from '../../routes/pack/packUtils.js';
 import {
 	mockUser,
 	mockPack,
@@ -8,6 +9,7 @@ import {
 	mockPackItems,
 } from '../../utils/testUtils.js';
 import { PackItem } from '../../types/packs/packTypes.js';
+
 const { name, email, password, username } = mockUser;
 const mockUserHashedPassword = await bcrypt.hash(password, 10);
 
@@ -24,6 +26,12 @@ export async function seed(knex: Knex): Promise<void> {
 	const [pack] = await knex('packs')
 		.insert({ ...mockPack, user_id: dummyUser.userId })
 		.returning('*');
+
+	const pack_display_id = generateDisplayId(pack.packId);
+
+	await knex('packs')
+		.update({ pack_display_id })
+		.where({ user_id: dummyUser.userId, pack_id: pack.packId });
 
 	const [packCategory] = await knex('pack_categories')
 		.insert({
@@ -42,8 +50,10 @@ export async function seed(knex: Knex): Promise<void> {
 
 	await knex('pack_items').insert(packItemsWithIds);
 
+	const secondDisplayId = generateDisplayId(2);
+
 	await knex('packs')
-		.insert({ ...mockPack2, user_id: dummyUser.userId })
+		.insert({ ...mockPack2, pack_display_id: secondDisplayId, user_id: dummyUser.userId })
 		.returning('*');
 
 	await knex('users').insert({
