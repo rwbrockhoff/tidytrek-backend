@@ -11,6 +11,8 @@ const cookieOptions = {
 	signed: true,
 };
 
+const saltRounds = 10;
+
 const tokenExpirationWindow = 7200000; // 2 hours
 
 async function register(req: Request, res: Response) {
@@ -21,7 +23,7 @@ async function register(req: Request, res: Response) {
 
 		if (!unique) return res.status(409).json({ error: message });
 
-		const hash = await bcrypt.hash(password, 10);
+		const hash = await bcrypt.hash(password, saltRounds);
 
 		const [user] = await knex('users').insert(
 			{ email, name, password: hash, username: username || null },
@@ -93,6 +95,33 @@ async function getAuthStatus(req: Request, res: Response) {
 	}
 }
 
+async function changePassword(req: Request, res: Response) {
+	try {
+		const { userId } = req;
+		const { current_password, new_password, confirm_new_password } = req.body;
+
+		if (new_password !== confirm_new_password) {
+			return res.status(400).json({ error: 'Passwords do not match. Please try again.' });
+		}
+		const { password } = await knex('users')
+			.select('password')
+			.where({ user_id: userId })
+			.first();
+		const correctPassword = await bcrypt.compare(current_password, password);
+		if (!correctPassword) {
+			return res.status(400).json({ error: 'Incorrect password. Please try again.' });
+		}
+
+		if (correctPassword) {
+			await knex('users').update({ password: new_password }).where({ user_id: userId });
+		}
+
+		return res.status(200).send();
+	} catch (err) {
+		res.status(400).json({ error: 'There was an error changing your password.' });
+	}
+}
+
 async function requestResetPassword(req: Request, res: Response) {
 	try {
 		const errorMessage = 'We could not verify your account information at this time.';
@@ -151,7 +180,7 @@ async function confirmResetPassword(req: Request, res: Response) {
 				error: 'Your request has expired. Reset your password and try again.',
 			});
 
-		const hash = await bcrypt.hash(password, 10);
+		const hash = await bcrypt.hash(password, saltRounds);
 
 		const [user] = await knex('users')
 			.update(
@@ -285,6 +314,7 @@ export default {
 	login,
 	logout,
 	getAuthStatus,
+	changePassword,
 	requestResetPassword,
 	confirmResetPassword,
 	deleteAccount,

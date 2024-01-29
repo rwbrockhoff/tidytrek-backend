@@ -107,6 +107,44 @@ describe('Auth Routes: ', () => {
 		expect(response.body).toHaveProperty('message');
 	});
 
+	it('PUT /password -> Should let user change password', async () => {
+		const userAgent = await loginMockUser();
+		const passwordInfo = {
+			currentPassword: mockUser.password,
+			newPassword: 'Pizza123!',
+			confirmNewPassword: 'Pizza123!',
+		};
+		const response = await userAgent.put('/auth/password').send(passwordInfo);
+
+		expect(response.statusCode).toEqual(200);
+	});
+
+	it('PUT /password -> Passwords should match', async () => {
+		const userAgent = await loginMockUser();
+		const passwordInfo = {
+			currentPassword: mockUser.password,
+			newPassword: 'Pizza123!',
+			confirmNewPassword: 'Calzones123!',
+		};
+		const response = await userAgent.put('/auth/password').send(passwordInfo);
+
+		expect(response.statusCode).toEqual(400);
+		expect(response.body).toHaveProperty('error');
+	});
+
+	it('PUT /password -> Must provide correct current password', async () => {
+		const userAgent = await loginMockUser();
+		const passwordInfo = {
+			currentPassword: 'wrongPassword345',
+			newPassword: 'Pizza123!',
+			confirmNewPassword: 'Pizza123!',
+		};
+		const response = await userAgent.put('/auth/password').send(passwordInfo);
+
+		expect(response.statusCode).toEqual(400);
+		expect(response.body).toHaveProperty('error');
+	});
+
 	// This test is skipped to avoid hitting our Postmark API repeatedly
 	it.skip('POST /reset-password -> Should allow user to reset password', async () => {
 		const response = await request
