@@ -124,4 +124,11 @@ describe('Auth Routes: ', () => {
 		expect(response.statusCode).toEqual(400);
 		expect(response.body).toHaveProperty('error');
 	});
+	it('DELETE /account -> Should allow user to delete account', async () => {
+		const userAgent = await loginMockUser();
+		const response = await userAgent.delete('/auth/account');
+
+		expect(response.statusCode).toEqual(200);
+		expect(response.body).toHaveProperty('message');
+	});
 });

@@ -174,6 +174,21 @@ async function confirmResetPassword(req: Request, res: Response) {
 	}
 }
 
+async function deleteAccount(req: Request, res: Response) {
+	try {
+		const { userId } = req;
+
+		await knex('users').del().where({ user_id: userId });
+
+		return res.status(200).clearCookie('token').json({
+			message: 'User has been logged out.',
+		});
+	} catch (err) {
+		console.log('Delete Error: ', err);
+		return res.status(400).json({ error: 'There was an error deleting your account.' });
+	}
+}
+
 function createWebToken(userId: number) {
 	if (process.env.APP_SECRET) {
 		return jwt.sign({ userId }, process.env.APP_SECRET);
@@ -272,4 +287,5 @@ export default {
 	getAuthStatus,
 	requestResetPassword,
 	confirmResetPassword,
+	deleteAccount,
 };
