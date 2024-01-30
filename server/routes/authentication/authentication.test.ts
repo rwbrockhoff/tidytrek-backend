@@ -109,14 +109,22 @@ describe('Auth Routes: ', () => {
 
 	it('PUT /password -> Should let user change password', async () => {
 		const userAgent = await loginMockUser();
+		const newPass = 'Pizza123!';
 		const passwordInfo = {
 			currentPassword: mockUser.password,
-			newPassword: 'Pizza123!',
-			confirmNewPassword: 'Pizza123!',
+			newPassword: newPass,
+			confirmNewPassword: newPass,
 		};
-		const response = await userAgent.put('/auth/password').send(passwordInfo);
+		const changePasswordResponse = await userAgent
+			.put('/auth/password')
+			.send(passwordInfo);
+		expect(changePasswordResponse.statusCode).toEqual(200);
 
-		expect(response.statusCode).toEqual(200);
+		const loginResponse = await userAgent
+			.post('/auth/login')
+			.send({ email: mockUser.email, password: newPass });
+		expect(loginResponse.statusCode).toEqual(200);
+		expect(loginResponse.body).toHaveProperty('user');
 	});
 
 	it('PUT /password -> Passwords should match', async () => {

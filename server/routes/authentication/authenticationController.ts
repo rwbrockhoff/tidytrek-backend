@@ -113,7 +113,8 @@ async function changePassword(req: Request, res: Response) {
 		}
 
 		if (correctPassword) {
-			await knex('users').update({ password: new_password }).where({ user_id: userId });
+			const hash = await bcrypt.hash(new_password, saltRounds);
+			await knex('users').update({ password: hash }).where({ user_id: userId });
 		}
 
 		return res.status(200).send();
