@@ -214,7 +214,6 @@ async function deleteAccount(req: Request, res: Response) {
 			message: 'User has been logged out.',
 		});
 	} catch (err) {
-		console.log('Delete Error: ', err);
 		return res.status(400).json({ error: 'There was an error deleting your account.' });
 	}
 }
