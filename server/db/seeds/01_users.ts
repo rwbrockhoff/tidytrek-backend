@@ -6,6 +6,7 @@ import {
 	mockPack2,
 	mockPackCategory,
 	mockPackItems,
+	mockGearClosetItems,
 } from '../../utils/testUtils.js';
 import { PackItem } from '../../types/packs/packTypes.js';
 
@@ -41,7 +42,12 @@ export async function seed(knex: Knex): Promise<void> {
 		return item;
 	});
 
-	await knex('pack_items').insert(packItemsWithIds);
+	const closetItemsWithIds = mockGearClosetItems.map((item: PackItem) => {
+		item['user_id'] = dummyUser.userId;
+		return item;
+	});
+
+	await knex('pack_items').insert([...packItemsWithIds, ...closetItemsWithIds]);
 
 	await knex('packs')
 		.insert({ ...mockPack2, user_id: dummyUser.userId })

@@ -144,8 +144,6 @@ async function editPack(req: Request, res: Response) {
 		delete modified_pack['user_id'];
 		delete modified_pack['pack_id'];
 		delete modified_pack['pack_index'];
-		delete modified_pack['created_at'];
-		delete modified_pack['updated_at'];
 
 		const [updatedPack] = await knex('packs')
 			.update({ ...modified_pack })

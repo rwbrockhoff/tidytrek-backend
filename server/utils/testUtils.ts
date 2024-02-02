@@ -78,6 +78,33 @@ export const notSeededUser = {
 	username: 'sarahLovesHiking123',
 };
 
+export const mockGearClosetItems: PackItem[] = [
+	{
+		pack_item_name: 'REI Flash',
+		pack_item_description: 'Old 55 liter pack',
+		pack_item_weight: 36,
+		pack_item_unit: 'oz',
+		pack_item_quantity: 1,
+		pack_item_index: 0,
+	},
+	{
+		pack_item_name: 'Big Agnes Copper Spur',
+		pack_item_description: '1-person tent',
+		pack_item_weight: 2.5,
+		pack_item_unit: 'lb',
+		pack_item_quantity: 1,
+		pack_item_index: 1,
+	},
+	{
+		pack_item_name: 'Klymit Insulated Pad',
+		pack_item_description: 'Sleeping Pad',
+		pack_item_weight: 18,
+		pack_item_unit: 'oz',
+		pack_item_quantity: 1,
+		pack_item_index: 2,
+	},
+];
+
 export const loginMockUser = async () => {
 	try {
 		const agent = supertest.agent(server);
