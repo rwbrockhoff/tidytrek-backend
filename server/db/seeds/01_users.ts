@@ -7,7 +7,7 @@ import {
 	mockPackCategory,
 	mockPackItems,
 	mockGearClosetItems,
-} from '../../utils/testUtils.js';
+} from '../mock/mockData.js';
 import { PackItem } from '../../types/packs/packTypes.js';
 
 const { name, email, password, username } = mockUser;
