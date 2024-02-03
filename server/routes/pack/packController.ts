@@ -67,10 +67,7 @@ async function getPackById(userId: number, packId: number) {
 async function getPackList(req: Request, res: Response) {
 	try {
 		const { userId } = req;
-		const packList = await knex('packs')
-			.select(['pack_id', 'pack_name'])
-			.where({ user_id: userId })
-			.orderBy('pack_index');
+		const packList = await getAvailablePacks(userId);
 
 		return res.status(200).json({ packList });
 	} catch (err) {
@@ -469,6 +466,23 @@ async function deleteCategoryAndItems(req: Request, res: Response) {
 		return res
 			.status(400)
 			.json({ error: 'There was an error deleting your pack items.' });
+	}
+}
+
+async function getAvailablePacks(userId: number) {
+	try {
+		return await knex.raw(`
+			select packs.pack_id, pack_name, pack_index,
+			array_agg(row_to_json(ordered_categories)) as pack_categories from packs
+				left outer join
+					( select * from pack_categories where pack_categories.user_id = ${userId} 
+					order by pack_categories.pack_category_index
+					) ordered_categories on packs.pack_id = ordered_categories.pack_id
+			where packs.user_id = ${userId} 
+			group by packs.pack_id
+			order by packs.pack_index`);
+	} catch (err) {
+		return new Error('Error getting available packs.');
 	}
 }
 

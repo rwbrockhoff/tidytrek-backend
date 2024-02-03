@@ -21,7 +21,6 @@ describe('Gear Closet Routes: ', () => {
 
 		expect(response.statusCode).toEqual(200);
 		expect(response.body).toHaveProperty('gearClosetList');
-		expect(response.body).toHaveProperty('availablePacks');
 	});
 
 	it('GET / -> Should be a user-only protected route', async () => {
