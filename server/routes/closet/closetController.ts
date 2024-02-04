@@ -12,9 +12,8 @@ async function getGearCloset(req: Request, res: Response) {
 				pack_id: null,
 			})
 			.orderBy('pack_item_index');
-		const availablePacks = await getAvailablePacks(userId);
 
-		return res.status(200).json({ gearClosetList, availablePacks });
+		return res.status(200).json({ gearClosetList });
 	} catch (err) {
 		return res
 			.status(400)
@@ -120,18 +119,6 @@ async function deleteGearClosetItem(req: Request, res: Response) {
 	} catch (err) {
 		return res.status(400).json({ error: 'There was an error deleting your item.' });
 	}
-}
-
-async function getAvailablePacks(userId: number) {
-	return await knex.raw(`select pack_name, packs.user_id, packs.pack_id, 
-	array_agg(row_to_json(cat)) as available_categories from packs 
-		left outer join 
-		( select * from pack_categories 
-		where user_id = ${userId} order by pack_category_index ) 
-		cat on cat.pack_id = packs.pack_id
-		where packs.user_id = ${userId}
-		group by pack_name, packs.pack_id
-		order by packs.pack_index;`);
 }
 
 export default {

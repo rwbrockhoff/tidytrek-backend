@@ -2,12 +2,8 @@ import server from '../../server.js';
 import initialRequest from 'supertest';
 const request = initialRequest(server);
 import knex from '../../db/connection.js';
-import {
-	loginMockUser,
-	registerNewUser,
-	mockUser,
-	notSeededUser,
-} from '../../utils/testUtils.js';
+import { loginMockUser, registerNewUser } from '../../utils/testUtils.js';
+import { mockUser, notSeededUser } from '../../db/mock/mockData.js';
 
 beforeEach(async () => {
 	await knex.migrate.rollback();
@@ -107,6 +103,52 @@ describe('Auth Routes: ', () => {
 		expect(response.body).toHaveProperty('message');
 	});
 
+	it('PUT /password -> Should let user change password', async () => {
+		const userAgent = await loginMockUser();
+		const newPass = 'Pizza123!';
+		const passwordInfo = {
+			currentPassword: mockUser.password,
+			newPassword: newPass,
+			confirmNewPassword: newPass,
+		};
+		const changePasswordResponse = await userAgent
+			.put('/auth/password')
+			.send(passwordInfo);
+		expect(changePasswordResponse.statusCode).toEqual(200);
+
+		const loginResponse = await userAgent
+			.post('/auth/login')
+			.send({ email: mockUser.email, password: newPass });
+		expect(loginResponse.statusCode).toEqual(200);
+		expect(loginResponse.body).toHaveProperty('user');
+	});
+
+	it('PUT /password -> Passwords should match', async () => {
+		const userAgent = await loginMockUser();
+		const passwordInfo = {
+			currentPassword: mockUser.password,
+			newPassword: 'Pizza123!',
+			confirmNewPassword: 'Calzones123!',
+		};
+		const response = await userAgent.put('/auth/password').send(passwordInfo);
+
+		expect(response.statusCode).toEqual(400);
+		expect(response.body).toHaveProperty('error');
+	});
+
+	it('PUT /password -> Must provide correct current password', async () => {
+		const userAgent = await loginMockUser();
+		const passwordInfo = {
+			currentPassword: 'wrongPassword345',
+			newPassword: 'Pizza123!',
+			confirmNewPassword: 'Pizza123!',
+		};
+		const response = await userAgent.put('/auth/password').send(passwordInfo);
+
+		expect(response.statusCode).toEqual(400);
+		expect(response.body).toHaveProperty('error');
+	});
+
 	// This test is skipped to avoid hitting our Postmark API repeatedly
 	it.skip('POST /reset-password -> Should allow user to reset password', async () => {
 		const response = await request
@@ -123,5 +165,12 @@ describe('Auth Routes: ', () => {
 
 		expect(response.statusCode).toEqual(400);
 		expect(response.body).toHaveProperty('error');
+	});
+	it('DELETE /account -> Should allow user to delete account', async () => {
+		const userAgent = await loginMockUser();
+		const response = await userAgent.delete('/auth/account');
+
+		expect(response.statusCode).toEqual(200);
+		expect(response.body).toHaveProperty('message');
 	});
 });

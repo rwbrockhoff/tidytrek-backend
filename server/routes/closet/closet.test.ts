@@ -21,7 +21,6 @@ describe('Gear Closet Routes: ', () => {
 
 		expect(response.statusCode).toEqual(200);
 		expect(response.body).toHaveProperty('gearClosetList');
-		expect(response.body).toHaveProperty('availablePacks');
 	});
 
 	it('GET / -> Should be a user-only protected route', async () => {
@@ -31,29 +30,34 @@ describe('Gear Closet Routes: ', () => {
 
 	it('POST / -> Should post an item to gear closet', async () => {
 		const userAgent = await loginMockUser();
+		const defaultClosetResponse = await userAgent.get('/closet').send();
+		const { gearClosetList } = defaultClosetResponse.body;
+		const defaultLength = gearClosetList.length;
 		const response = await userAgent.post('/closet/items');
 		const getItemsResponse = await userAgent.get('/closet');
 
 		expect(response.statusCode).toEqual(200);
 		expect(getItemsResponse.statusCode).toEqual(200);
-		expect(getItemsResponse.body.gearClosetList).toHaveLength(1);
+		expect(getItemsResponse.body.gearClosetList).toHaveLength(defaultLength + 1);
 	});
 
-	it('PUT / -> Should post an item to gear closet', async () => {
+	it('PUT / -> Should edit an item in gear closet', async () => {
 		const userAgent = await loginMockUser();
-		const postItemResponse = await userAgent.post('/closet/items');
 		const getItemsResponse = await userAgent.get('/closet');
+		const { gearClosetList } = getItemsResponse.body;
+		const firstClosetItem = gearClosetList[0];
 
-		expect(postItemResponse.statusCode).toEqual(200);
-		expect(getItemsResponse.body.gearClosetList).toHaveLength(1);
+		const editItemResponse = await userAgent
+			.put(`/closet/items/${firstClosetItem.packItemId}`)
+			.send({ packItemName: 'Osprey Exos 55L' });
+
+		expect(editItemResponse.statusCode).toEqual(200);
 	});
 
 	it('DELETE / -> Should delete a posted item from gear closet', async () => {
 		const userAgent = await loginMockUser();
 		await userAgent.post('/closet/items');
 		const getItemsResponse = await userAgent.get('/closet');
-
-		expect(getItemsResponse.body.gearClosetList).toHaveLength(1);
 
 		const { packItemId } = getItemsResponse.body.gearClosetList[0];
 		const deleteItemResponse = await userAgent.delete(`/closet/items/${packItemId}`);
