@@ -18,6 +18,7 @@ router.put('/pack-items/closet/:packItemId', packController.moveItemToCloset);
 router.delete('/pack-items/:packItemId', packController.deletePackItem);
 router.post('/categories/:packId', packController.addPackCategory);
 router.put('/categories/:categoryId', packController.editPackCategory);
+router.put('/categories/index/:categoryId', packController.movePackCategory);
 router.delete('/categories/:categoryId', packController.deletePackCategory);
 router.delete('/categories/items/:categoryId', packController.deleteCategoryAndItems);
 

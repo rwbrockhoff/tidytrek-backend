@@ -414,6 +414,32 @@ async function editPackCategory(req: Request, res: Response) {
 	}
 }
 
+async function movePackCategory(req: Request, res: Response) {
+	try {
+		const { userId } = req;
+		const { categoryId } = req.params;
+		const { new_index, prev_index } = req.body;
+
+		await changeItemOrder(
+			userId,
+			'pack_categories',
+			'pack_category_index',
+			new_index,
+			prev_index,
+		);
+
+		await knex('pack_categories')
+			.update({ pack_category_index: new_index })
+			.where({ user_id: userId, pack_category_id: categoryId });
+
+		return res.status(200).send();
+	} catch (err) {
+		return res
+			.status(400)
+			.json({ error: 'There was an error changing your pack order.' });
+	}
+}
+
 async function deletePackCategory(req: Request, res: Response) {
 	try {
 		const { userId } = req;
@@ -503,5 +529,6 @@ export default {
 	deleteCategoryAndItems,
 	addPackCategory,
 	editPackCategory,
+	movePackCategory,
 	deletePackCategory,
 };
