@@ -22,7 +22,7 @@ export const mockPack = {
 export const mockPack2 = {
 	pack_name: 'Utah Pack',
 	pack_description: 'This is the pack used for backpacking in Utah in the winter.',
-	pack_public: true,
+	pack_public: false,
 	pack_location_tag: 'Utah',
 	pack_season_tag: 'Winter',
 	pack_duration_tag: '1-3 Nights',
