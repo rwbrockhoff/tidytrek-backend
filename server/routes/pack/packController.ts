@@ -1,5 +1,10 @@
 import knex from '../../db/connection.js';
-import { generateIndex, changeItemOrder, getMaxItemIndex } from './packUtils.js';
+import {
+	generateIndex,
+	changeItemOrder,
+	getMaxItemIndex,
+	shiftPackItems,
+} from './packUtils.js';
 import { Request, Response } from 'express';
 
 async function getDefaultPack(req: Request, res: Response) {
@@ -178,10 +183,21 @@ async function deletePack(req: Request, res: Response) {
 		const { userId } = req;
 		const { packId } = req.params;
 
+		const maxGearClosetIndex = await getMaxItemIndex(userId, null);
 		// unattach pack items (keep in garage)
-		await knex('pack_items')
-			.update({ pack_category_id: null, pack_id: null })
-			.where({ pack_id: packId });
+		// update indexes to start at highest index in gear closet
+		await knex.raw(`
+			update pack_items pk
+			set pack_item_index = pk2.new_index + ${maxGearClosetIndex}, 
+			pack_category_id = null, pack_id = null
+				FROM (
+					SELECT pk.pack_id, pk.pack_item_id, pk.pack_item_index, 
+					row_number() over (order by pack_item_index) as new_index
+					FROM pack_items pk
+					WHERE user_id = ${userId} AND pack_id = ${packId}
+					ORDER BY pack_category_id
+				) pk2
+			where pk.pack_item_id = pk2.pack_item_id;`);
 
 		await knex('pack_categories').del().where({ user_id: userId, pack_id: packId });
 
@@ -310,10 +326,7 @@ async function movePackItem(req: Request, res: Response) {
 		// if packItem is dragged into a new cateogry
 		// move all items in previous category back an index since item is now gone
 		if (prevPackCategoryId !== pack_category_id) {
-			await knex.raw(`UPDATE pack_items 
-				SET pack_item_index = pack_item_index - 1 
-				WHERE pack_item_index >= ${prev_pack_item_index}
-				AND pack_category_id = ${prevPackCategoryId}`);
+			await shiftPackItems(userId, prevPackCategoryId, prev_pack_item_index);
 		}
 
 		return res.status(200).send();
@@ -342,10 +355,7 @@ async function moveItemToCloset(req: Request, res: Response) {
 			})
 			.where({ user_id: userId, pack_item_id: packItemId });
 
-		await knex.raw(`UPDATE pack_items 
-				SET pack_item_index = pack_item_index - 1 
-				WHERE pack_item_index >= ${packItemIndex}
-				AND pack_category_id = ${packCategoryId}`);
+		await shiftPackItems(userId, packCategoryId, packItemIndex);
 
 		return res.status(200).send();
 	} catch (err) {
@@ -357,12 +367,17 @@ async function moveItemToCloset(req: Request, res: Response) {
 
 async function deletePackItem(req: Request, res: Response) {
 	try {
+		const { userId } = req;
 		const { packItemId } = req.params;
-		const [deletedItemIds = {}] = await knex('pack_items')
+
+		const [{ packCategoryId, packItemIndex }] = await knex('pack_items')
 			.delete()
 			.where({ pack_item_id: packItemId })
-			.returning(['pack_category_id', 'pack_item_id']);
-		return res.status(200).json({ deletedItemIds });
+			.returning(['pack_category_id', 'pack_item_index']);
+
+		await shiftPackItems(userId, packCategoryId, packItemIndex);
+
+		return res.status(200).send();
 	} catch (err) {
 		return res.status(400).json({ error: 'There was an error deleting your pack item.' });
 	}
@@ -472,9 +487,7 @@ async function moveCategoryToCloset(req: Request, res: Response) {
 				) pk2
 			where pk.pack_item_id = pk2.pack_item_id;`);
 
-		await knex('pack_categories')
-			.del()
-			.where({ user_id: userId, pack_category_id: categoryId });
+		await deleteCategory(userId, categoryId);
 
 		return res.status(200).json({ deletedId: categoryId });
 	} catch (err) {
@@ -491,9 +504,7 @@ async function deleteCategoryAndItems(req: Request, res: Response) {
 			.del()
 			.where({ user_id: userId, pack_category_id: categoryId });
 
-		await knex('pack_categories')
-			.del()
-			.where({ user_id: userId, pack_category_id: categoryId });
+		await deleteCategory(userId, categoryId);
 
 		return res.status(200).json({ deletedId: categoryId });
 	} catch (err) {
@@ -518,6 +529,18 @@ async function getAvailablePacks(userId: number) {
 	} catch (err) {
 		return new Error('Error getting available packs.');
 	}
+}
+
+async function deleteCategory(user_id: number, pack_category_id: number | string) {
+	const [{ packCategoryIndex, packId }] = await knex('pack_categories')
+		.del()
+		.where({ user_id, pack_category_id })
+		.returning(['pack_category_index', 'pack_id']);
+
+	await knex.raw(`UPDATE pack_categories
+		SET pack_category_index = pack_category_index - 1
+		WHERE pack_category_index >= ${packCategoryIndex}
+		AND pack_id = ${packId}`);
 }
 
 export default {

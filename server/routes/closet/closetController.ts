@@ -1,5 +1,5 @@
 import knex from '../../db/connection.js';
-import { changeItemOrder, generateIndex } from '../pack/packUtils.js';
+import { changeItemOrder, generateIndex, shiftPackItems } from '../pack/packUtils.js';
 import { Request, Response } from 'express';
 
 async function getGearCloset(req: Request, res: Response) {
@@ -83,7 +83,6 @@ async function moveGearClosetItem(req: Request, res: Response) {
 	}
 }
 
-//to test?
 async function moveItemToPack(req: Request, res: Response) {
 	try {
 		const { userId } = req;
@@ -100,10 +99,7 @@ async function moveItemToPack(req: Request, res: Response) {
 			.update({ pack_id, pack_category_id, pack_item_index: newPackItemIndex })
 			.where({ user_id: userId, pack_item_id: packItemId });
 
-		await knex.raw(`UPDATE pack_items 
-				SET pack_item_index = pack_item_index - 1 
-				WHERE pack_item_index >= ${pack_item_index}
-				AND pack_category_id IS NULL`);
+		await shiftPackItems(userId, null, pack_item_index);
 
 		return res.status(200).send();
 	} catch (err) {
@@ -117,10 +113,12 @@ async function deleteGearClosetItem(req: Request, res: Response) {
 		const { userId } = req;
 		const { packItemId } = req.params;
 
-		await knex('pack_items')
+		const [{ packItemIndex }] = await knex('pack_items')
 			.delete()
-			.where({ pack_item_id: packItemId, user_id: userId });
+			.where({ pack_item_id: packItemId, user_id: userId })
+			.returning('pack_item_index');
 
+		await shiftPackItems(userId, null, packItemIndex);
 		return res.status(200).send();
 	} catch (err) {
 		return res.status(400).json({ error: 'There was an error deleting your item.' });

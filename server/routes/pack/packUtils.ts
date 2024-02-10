@@ -42,15 +42,6 @@ async function generateIndex(
 ): Promise<number> {
 	const maxResult = await knex(tableName).max(indexName).where(conditions).first();
 	return maxResult?.max + 1 || 0;
-	// const response = await knex(tableName)
-	// 	.select(knex.raw(`MAX(${indexName})`))
-	// 	.where(conditions)
-	// 	.first();
-	// if ('max' in response) {
-	// 	if (typeof response['max'] === 'number') return response['max'] + 1;
-	// 	else return 0;
-	// }
-	// return 0;
 }
 
 async function getMaxItemIndex(user_id: number, pack_id: string | number | null) {
@@ -62,8 +53,24 @@ async function getMaxItemIndex(user_id: number, pack_id: string | number | null)
 
 		return maxResult?.max || 0;
 	} catch (err) {
-		return new Error('');
+		return new Error('Error geting max index for item.');
 	}
 }
 
-export { generateIndex, changeItemOrder, getMaxItemIndex };
+async function shiftPackItems(
+	userId: number,
+	packCategoryId: number | null,
+	packItemIndex: number,
+) {
+	try {
+		await knex.raw(`UPDATE pack_items
+			SET pack_item_index = pack_item_index - 1
+			WHERE user_id = ${userId} AND 
+			${packCategoryId ? `pack_category_id = ${packCategoryId}` : `pack_category_id IS NULL`}
+			AND pack_item_index >= ${packItemIndex}`);
+	} catch (err) {
+		return new Error('Error shifting item indexes.');
+	}
+}
+
+export { generateIndex, changeItemOrder, getMaxItemIndex, shiftPackItems };
