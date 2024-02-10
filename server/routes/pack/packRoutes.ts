@@ -19,7 +19,7 @@ router.delete('/pack-items/:packItemId', packController.deletePackItem);
 router.post('/categories/:packId', packController.addPackCategory);
 router.put('/categories/:categoryId', packController.editPackCategory);
 router.put('/categories/index/:categoryId', packController.movePackCategory);
-router.delete('/categories/:categoryId', packController.deletePackCategory);
+router.delete('/categories/:categoryId', packController.moveCategoryToCloset);
 router.delete('/categories/items/:categoryId', packController.deleteCategoryAndItems);
 
 export default router;

@@ -20,7 +20,7 @@ async function getPack(req: Request, res: Response) {
 		if (req.userId && req.userId !== pack.userId) await addPackViewCount(pack);
 		if (!req.userId) await addPackViewCount(pack);
 
-		const categories = (await getCategories(packId)) || [];
+		const categories = await getCategories(packId);
 
 		return res.status(200).json({ pack, categories });
 	} catch (err) {
@@ -31,7 +31,7 @@ async function getPack(req: Request, res: Response) {
 async function addPackViewCount(pack: Pack) {
 	try {
 		const { packId, packViews } = pack;
-		await knex('packs')
+		return await knex('packs')
 			.update({ pack_views: packViews + 1 })
 			.where({ pack_id: packId });
 	} catch (err) {
@@ -45,7 +45,7 @@ async function getCategories(packId: string) {
 		// Groups all pack items for each category into an object {pack_items: []}
 		return await knex.raw(
 			`select 
-            pc.*, array_agg(row_to_json(ordered_pack_items)) as pack_items from pack_categories pc
+            pc.*, array_remove(array_agg(to_jsonb(ordered_pack_items)), NULL) as pack_items from pack_categories pc
                 left outer join
                 ( select * from pack_items where pack_items.pack_id = ${packId} 
                 order by pack_items.pack_item_index
