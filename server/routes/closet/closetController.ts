@@ -83,21 +83,27 @@ async function moveGearClosetItem(req: Request, res: Response) {
 	}
 }
 
+//to test?
 async function moveItemToPack(req: Request, res: Response) {
 	try {
 		const { userId } = req;
 		const { packItemId } = req.params;
-		const { pack_id, pack_category_id } = req.body;
+		const { pack_id, pack_category_id, pack_item_index } = req.body;
 
-		const pack_item_index = await generateIndex('pack_items', 'pack_item_index', {
+		const newPackItemIndex = await generateIndex('pack_items', 'pack_item_index', {
 			user_id: userId,
 			pack_id,
 			pack_category_id,
 		});
 
 		await knex('pack_items')
-			.update({ pack_id, pack_category_id, pack_item_index })
+			.update({ pack_id, pack_category_id, pack_item_index: newPackItemIndex })
 			.where({ user_id: userId, pack_item_id: packItemId });
+
+		await knex.raw(`UPDATE pack_items 
+				SET pack_item_index = pack_item_index - 1 
+				WHERE pack_item_index >= ${pack_item_index}
+				AND pack_category_id IS NULL`);
 
 		return res.status(200).send();
 	} catch (err) {

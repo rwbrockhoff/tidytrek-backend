@@ -40,15 +40,30 @@ async function generateIndex(
 		pack_item_id?: number;
 	},
 ): Promise<number> {
-	const response = await knex(tableName)
-		.select(knex.raw(`MAX(${indexName})`))
-		.where(conditions)
-		.first();
-	if ('max' in response) {
-		if (typeof response['max'] === 'number') return response['max'] + 1;
-		else return 0;
-	}
-	return 0;
+	const maxResult = await knex(tableName).max(indexName).where(conditions).first();
+	return maxResult?.max + 1 || 0;
+	// const response = await knex(tableName)
+	// 	.select(knex.raw(`MAX(${indexName})`))
+	// 	.where(conditions)
+	// 	.first();
+	// if ('max' in response) {
+	// 	if (typeof response['max'] === 'number') return response['max'] + 1;
+	// 	else return 0;
+	// }
+	// return 0;
 }
 
-export { generateIndex, changeItemOrder };
+async function getMaxItemIndex(user_id: number, pack_id: string | number | null) {
+	try {
+		const maxResult = await knex('pack_items')
+			.max('pack_item_index')
+			.where({ user_id, pack_id })
+			.first();
+
+		return maxResult?.max || 0;
+	} catch (err) {
+		return new Error('');
+	}
+}
+
+export { generateIndex, changeItemOrder, getMaxItemIndex };
