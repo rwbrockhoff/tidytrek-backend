@@ -289,14 +289,14 @@ async function movePackItem(req: Request, res: Response) {
 		const { userId } = req;
 		const { packItemId } = req.params;
 
-		const { pack_category_id, pack_item_index, prev_pack_item_index } = req.body;
+		const {
+			pack_category_id,
+			pack_item_index,
+			prev_pack_item_index,
+			prev_pack_category_id,
+		} = req.body;
 
-		const { packCategoryId: prevPackCategoryId } = await knex('pack_items')
-			.select('pack_category_id')
-			.where({ pack_item_id: packItemId })
-			.first();
-
-		if (prevPackCategoryId === pack_category_id) {
+		if (prev_pack_category_id === pack_category_id) {
 			// higher position visually, making it a lower index in our table
 			const higherPos = pack_item_index < prev_pack_item_index;
 			// move pack item indexes to allow item at new position
@@ -325,12 +325,13 @@ async function movePackItem(req: Request, res: Response) {
 
 		// if packItem is dragged into a new cateogry
 		// move all items in previous category back an index since item is now gone
-		if (prevPackCategoryId !== pack_category_id) {
-			await shiftPackItems(userId, prevPackCategoryId, prev_pack_item_index);
+		if (prev_pack_category_id !== pack_category_id) {
+			await shiftPackItems(userId, prev_pack_category_id, prev_pack_item_index);
 		}
 
 		return res.status(200).send();
 	} catch (err) {
+		console.log('error: ', err);
 		return res.status(400).json({ error: 'There was an error moving your pack item.' });
 	}
 }
