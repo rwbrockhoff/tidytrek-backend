@@ -1,4 +1,5 @@
 import knex from '../../db/connection.js';
+import { themeColors } from '../../utils/themeColors.js';
 
 async function changeItemOrder(
 	userId: number,
@@ -73,4 +74,8 @@ async function shiftPackItems(
 	}
 }
 
-export { generateIndex, changeItemOrder, getMaxItemIndex, shiftPackItems };
+function getThemeColor(index: number) {
+	return themeColors.earthTones[index % 10];
+}
+
+export { generateIndex, changeItemOrder, getMaxItemIndex, shiftPackItems, getThemeColor };

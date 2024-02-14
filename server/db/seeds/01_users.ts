@@ -10,7 +10,7 @@ import {
 } from '../mock/mockData.js';
 import { PackItem } from '../../types/packs/packTypes.js';
 
-const { name, email, password, username } = mockUser;
+const { name, email, password, username, userId } = mockUser;
 const mockUserHashedPassword = await bcrypt.hash(password, 10);
 
 export async function seed(knex: Knex): Promise<void> {
@@ -20,7 +20,7 @@ export async function seed(knex: Knex): Promise<void> {
 	await knex('pack_items').del();
 
 	const [dummyUser] = await knex('users')
-		.insert({ name, email, password: mockUserHashedPassword, username })
+		.insert({ name, email, password: mockUserHashedPassword, username, user_id: userId })
 		.returning('*');
 
 	const [pack] = await knex('packs')
@@ -52,10 +52,4 @@ export async function seed(knex: Knex): Promise<void> {
 	await knex('packs')
 		.insert({ ...mockPack2, user_id: dummyUser.userId })
 		.returning('*');
-
-	await knex('users').insert({
-		name: 'Justin Hill',
-		email: 'jhill@tidytrek.co',
-		password: mockUserHashedPassword,
-	});
 }

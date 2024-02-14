@@ -4,6 +4,7 @@ import {
 	changeItemOrder,
 	getMaxItemIndex,
 	shiftPackItems,
+	getThemeColor,
 } from './packUtils.js';
 import { Request, Response } from 'express';
 
@@ -85,10 +86,9 @@ async function addNewPack(req: Request, res: Response) {
 	try {
 		const { userId } = req;
 		const response = await createNewPack(userId);
-		if ('pack' in response) {
-			return res
-				.status(200)
-				.json({ pack: response['pack'], categories: response['categories'] });
+		if ('pack' in response && 'categories' in response) {
+			const { pack, categories } = response;
+			return res.status(200).json({ pack, categories });
 		} else return res.status(400).json({ error: errorMessage });
 	} catch (err) {
 		return res.status(400).json({ error: errorMessage });
@@ -109,12 +109,15 @@ async function createNewPack(userId: number) {
 			})
 			.returning('*');
 
+		const packCategoryColor = getThemeColor(0);
+
 		const categories = await knex('pack_categories')
 			.insert({
 				user_id: userId,
 				pack_id: pack.packId,
 				pack_category_name: 'Default Category',
 				pack_category_index: 0,
+				pack_category_color: packCategoryColor,
 			})
 			.returning('*');
 
@@ -395,12 +398,15 @@ async function addPackCategory(req: Request & { params: number }, res: Response)
 			{ user_id: userId, pack_id: packId },
 		);
 
+		const packCategoryColor = getThemeColor(packCategoryIndex);
+
 		const [packCategory] = await knex('pack_categories')
 			.insert({
 				pack_category_name: 'Category',
 				user_id: userId,
 				pack_id: packId,
 				pack_category_index: packCategoryIndex,
+				pack_category_color: packCategoryColor,
 			})
 			.returning('*');
 

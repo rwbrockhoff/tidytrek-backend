@@ -86,13 +86,32 @@ async function logout(_req: Request, res: Response) {
 async function getAuthStatus(req: Request, res: Response) {
 	try {
 		if (req.user && req.userId) {
-			res.status(200).json({ isAuthenticated: true, user: req.user });
+			// attach settings
+			const [settings] = await getUserSettings(req.userId);
+			res.status(200).json({ isAuthenticated: true, user: req.user, settings });
 		} else {
 			res.status(200).json({ isAuthenticated: req.userId !== undefined });
 		}
 	} catch (err) {
+		console.log('Error: ', err);
 		res.status(400).json({ error: 'There was an error checking your log in status.' });
 	}
+}
+
+async function getUserSettings(userId: number) {
+	return await knex.raw(`
+		select us.public_profile, us.topo_background, us.dark_theme, us.weight_unit, 
+		theme_info.theme_name, theme_info.theme_colors from user_settings us
+			left outer join (
+				select th.theme_id, th.theme_name, th.tidytrek_theme, 
+				array_agg(to_jsonb(theme_colors)) as theme_colors from themes th
+				left outer join 
+				(select tc.theme_id, tc.theme_color, tc.theme_color_name from theme_colors tc
+				) theme_colors on th.theme_id = theme_colors.theme_id
+			group by th.theme_id
+			) theme_info on us.theme_id = theme_info.theme_id
+			where us.user_id = ${userId} AND us.theme_id = theme_info.theme_id;
+	`);
 }
 
 async function changePassword(req: Request, res: Response) {

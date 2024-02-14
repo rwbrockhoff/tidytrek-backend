@@ -28,9 +28,7 @@ export const attachUserToRequest = async (req: Request, _res: Response, next: Ne
 	if (user) {
 		//no pass is returned from query, just added layer of caution
 		delete user.password;
-		if (!user.password) {
-			req.user = user;
-		}
+		if (!user.password) req.user = user;
 	}
 	next();
 };
