@@ -30,16 +30,19 @@ async function register(req: Request, res: Response) {
 			['user_id', 'name', 'email', 'username'],
 		);
 
+		// set up defaults
+		await createDefaultPack(user.userId);
+		await createUserSettings(user.userId);
+
 		// add jwt + signed cookie
 		const token = createWebToken(user.userId);
 		res.cookie('token', token, cookieOptions);
-
-		await createDefaultPack(user.userId);
 
 		// just an extra precaution, password should never exist on user object in register fn()
 		if (user.password) delete user.password;
 		res.status(200).json({ user });
 	} catch (err) {
+		console.log('Error: ', err);
 		res.status(400).json({ error: err });
 	}
 }
@@ -93,7 +96,6 @@ async function getAuthStatus(req: Request, res: Response) {
 			res.status(200).json({ isAuthenticated: req.userId !== undefined });
 		}
 	} catch (err) {
-		console.log('Error: ', err);
 		res.status(400).json({ error: 'There was an error checking your log in status.' });
 	}
 }
@@ -272,6 +274,14 @@ async function createResetPasswordEmail(name: string, email: string, token: stri
 	}
 }
 
+async function createUserSettings(userId: number) {
+	const { themeId } = await knex('themes')
+		.select('theme_id')
+		.where({ tidytrek_theme: true })
+		.first();
+	await knex('user_settings').insert({ user_id: userId, theme_id: themeId });
+}
+
 async function createDefaultPack(userId: number) {
 	try {
 		const [{ packId }] = await knex('packs')
@@ -288,6 +298,7 @@ async function createDefaultPack(userId: number) {
 				pack_id: packId,
 				pack_category_name: 'Default Category',
 				pack_category_index: 0,
+				pack_category_color: 'primary',
 			})
 			.returning('pack_category_id');
 

@@ -4,8 +4,8 @@ import {
 	changeItemOrder,
 	getMaxItemIndex,
 	shiftPackItems,
-	getThemeColor,
 } from './packUtils.js';
+import { themeColorNames } from '../../utils/themeColors.js';
 import { Request, Response } from 'express';
 
 async function getDefaultPack(req: Request, res: Response) {
@@ -109,15 +109,13 @@ async function createNewPack(userId: number) {
 			})
 			.returning('*');
 
-		const packCategoryColor = getThemeColor(0);
-
 		const categories = await knex('pack_categories')
 			.insert({
 				user_id: userId,
 				pack_id: pack.packId,
 				pack_category_name: 'Default Category',
 				pack_category_index: 0,
-				pack_category_color: packCategoryColor,
+				pack_category_color: 'primary',
 			})
 			.returning('*');
 
@@ -398,7 +396,20 @@ async function addPackCategory(req: Request & { params: number }, res: Response)
 			{ user_id: userId, pack_id: packId },
 		);
 
-		const packCategoryColor = getThemeColor(packCategoryIndex);
+		//get user's theme ID from user_settings
+		const { themeId } = await knex('user_settings')
+			.select('theme_id')
+			.where({ user_id: userId })
+			.first();
+
+		// get nth number from theme_colors using pack category index
+		const themeColorIndex = packCategoryIndex % themeColorNames.length;
+		const { themeColorName } = await knex('theme_colors')
+			.select('theme_color_name')
+			.where({ theme_id: themeId })
+			.offset(themeColorIndex)
+			.limit(1)
+			.first();
 
 		const [packCategory] = await knex('pack_categories')
 			.insert({
@@ -406,7 +417,7 @@ async function addPackCategory(req: Request & { params: number }, res: Response)
 				user_id: userId,
 				pack_id: packId,
 				pack_category_index: packCategoryIndex,
-				pack_category_color: packCategoryColor,
+				pack_category_color: themeColorName,
 			})
 			.returning('*');
 

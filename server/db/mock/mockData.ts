@@ -5,7 +5,6 @@ export const mockUser = {
 	email: 'ryan@tidytrek.co',
 	password: 'ilovehiking',
 	username: 'tidyTrekHiker171',
-	userId: 1,
 };
 
 export const mockPack = {

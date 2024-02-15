@@ -13,11 +13,11 @@ export const themeColors = {
 
 export const themeColorNames = [
 	'primary',
-	'first',
-	'second',
-	'third',
-	'fourth',
-	'fifth',
-	'sixth',
-	'seventh',
+	'color-one',
+	'color-two',
+	'color-three',
+	'color-four',
+	'color-five',
+	'color-six',
+	'color-seven',
 ];

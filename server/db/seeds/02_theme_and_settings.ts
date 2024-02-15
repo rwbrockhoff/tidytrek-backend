@@ -2,7 +2,7 @@ import { Knex } from 'knex';
 import { mockUser } from '../mock/mockData.js';
 import { themeColors, themeColorNames } from '../../utils/themeColors.js';
 
-const { userId } = mockUser;
+const { email, username } = mockUser;
 
 export async function seed(knex: Knex): Promise<void> {
 	await knex('user_settings').del();
@@ -19,7 +19,6 @@ export async function seed(knex: Knex): Promise<void> {
 
 	const dbReadyThemeColors = themeColors.earthTones.map((color, index) => {
 		return {
-			user_id: userId,
 			theme_id: themeId,
 			theme_color: color,
 			theme_color_name: themeColorNames[index],
@@ -29,5 +28,9 @@ export async function seed(knex: Knex): Promise<void> {
 	await knex('theme_colors').insert(dbReadyThemeColors);
 
 	// create default user settings
+	const { userId } = await knex('users')
+		.select('user_id')
+		.where({ email, username })
+		.first();
 	await knex('user_settings').insert({ user_id: userId, theme_id: themeId });
 }
