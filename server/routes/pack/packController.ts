@@ -442,16 +442,14 @@ async function addPackCategory(req: Request & { params: number }, res: Response)
 
 async function editPackCategory(req: Request, res: Response) {
 	try {
-		const { userId } = req;
+		const { userId, body } = req;
 		const { categoryId } = req.params;
-		const { pack_category_name } = req.body;
 
-		const [packCategory] = await knex('pack_categories')
-			.update({ pack_category_name })
-			.where({ user_id: userId, pack_category_id: categoryId })
-			.returning('*');
+		await knex('pack_categories')
+			.update(body)
+			.where({ user_id: userId, pack_category_id: categoryId });
 
-		return res.status(200).json({ packCategory });
+		return res.status(200).send();
 	} catch (err) {
 		return res
 			.status(400)
