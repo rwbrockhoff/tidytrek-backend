@@ -90,7 +90,7 @@ async function getAuthStatus(req: Request, res: Response) {
 	try {
 		if (req.user && req.userId) {
 			// attach settings
-			const [settings] = await getUserSettings(req.userId);
+			const settings = await getUserSettings(req.userId);
 			res.status(200).json({ isAuthenticated: true, user: req.user, settings });
 		} else {
 			res.status(200).json({ isAuthenticated: req.userId !== undefined });
@@ -100,8 +100,8 @@ async function getAuthStatus(req: Request, res: Response) {
 	}
 }
 
-async function getUserSettings(userId: number) {
-	return await knex.raw(`
+export async function getUserSettings(userId: number) {
+	const [settings] = await knex.raw(`
 		select us.public_profile, us.topo_background, us.dark_theme, us.weight_unit, 
 		theme_info.theme_name, theme_info.theme_colors from user_settings us
 			left outer join (
@@ -114,6 +114,7 @@ async function getUserSettings(userId: number) {
 			) theme_info on us.theme_id = theme_info.theme_id
 			where us.user_id = ${userId} AND us.theme_id = theme_info.theme_id;
 	`);
+	return settings;
 }
 
 async function changePassword(req: Request, res: Response) {
