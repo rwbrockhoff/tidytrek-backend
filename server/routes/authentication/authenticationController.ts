@@ -4,6 +4,7 @@ import knex from '../../db/connection.js';
 import { randomBytes } from 'node:crypto';
 import postmark from 'postmark';
 import { Request, Response } from 'express';
+import { tables as t } from '../../../knexfile.js';
 
 const cookieOptions = {
 	httpOnly: true,
@@ -25,7 +26,7 @@ async function register(req: Request, res: Response) {
 
 		const hash = await bcrypt.hash(password, saltRounds);
 
-		const [user] = await knex('users').insert(
+		const [user] = await knex(t.user).insert(
 			{ email, first_name, last_name, password: hash, username: username || null },
 			['user_id', 'first_name', 'last_name', 'email', 'username'],
 		);
@@ -42,7 +43,6 @@ async function register(req: Request, res: Response) {
 		if (user.password) delete user.password;
 		res.status(200).json({ user });
 	} catch (err) {
-		console.log('Error: ', err);
 		res.status(400).json({ error: err });
 	}
 }
@@ -54,7 +54,7 @@ async function login(req: Request, res: Response) {
 
 		if (!email && !password) return res.status(400).json({ error: errorText });
 
-		const user = await knex('users')
+		const user = await knex(t.user)
 			.select('user_id', 'first_name', 'last_name', 'email', 'username', 'password')
 			.where({ email })
 			.first();
@@ -106,9 +106,9 @@ export async function getUserSettings(userId: number) {
 		theme_info.theme_name, theme_info.theme_colors from user_settings us
 			left outer join (
 				select th.theme_id, th.theme_name, th.tidytrek_theme, 
-				array_agg(to_jsonb(theme_colors)) as theme_colors from themes th
+				array_agg(to_jsonb(theme_colors)) as theme_colors from theme th
 				left outer join 
-				(select tc.theme_id, tc.theme_color, tc.theme_color_name from theme_colors tc
+				(select tc.theme_id, tc.theme_color, tc.theme_color_name from theme_color tc
 				) theme_colors on th.theme_id = theme_colors.theme_id
 			group by th.theme_id
 			) theme_info on us.theme_id = theme_info.theme_id
@@ -125,7 +125,7 @@ async function changePassword(req: Request, res: Response) {
 		if (new_password !== confirm_new_password) {
 			return res.status(400).json({ error: 'Passwords do not match. Please try again.' });
 		}
-		const { password } = await knex('users')
+		const { password } = await knex(t.user)
 			.select('password')
 			.where({ user_id: userId })
 			.first();
@@ -136,7 +136,7 @@ async function changePassword(req: Request, res: Response) {
 
 		if (correctPassword) {
 			const hash = await bcrypt.hash(new_password, saltRounds);
-			await knex('users').update({ password: hash }).where({ user_id: userId });
+			await knex(t.user).update({ password: hash }).where({ user_id: userId });
 		}
 
 		return res.status(200).send();
@@ -149,7 +149,7 @@ async function requestResetPassword(req: Request, res: Response) {
 	try {
 		const errorMessage = 'We could not verify your account information at this time.';
 		const { email } = req.body;
-		const [user] = await knex('users').select('first_name', 'email').where({ email });
+		const [user] = await knex(t.user).select('first_name', 'email').where({ email });
 
 		if (!user.email) {
 			return res.status(400).json({
@@ -159,7 +159,7 @@ async function requestResetPassword(req: Request, res: Response) {
 		const token = await createRandomId();
 		const expiration = Date.now() + tokenExpirationWindow;
 
-		const updateUserResponse = await knex('users')
+		const updateUserResponse = await knex(t.user)
 			.update({
 				reset_password_token: token,
 				reset_password_token_expiration: expiration,
@@ -184,7 +184,7 @@ async function confirmResetPassword(req: Request, res: Response) {
 		if (password !== confirm_password)
 			return res.status(400).json({ error: 'Passwords do not match.' });
 
-		const resetTokenInfo = await knex('users')
+		const resetTokenInfo = await knex(t.user)
 			.select('reset_password_token_expiration')
 			.where({ reset_password_token: reset_token })
 			.first();
@@ -205,7 +205,7 @@ async function confirmResetPassword(req: Request, res: Response) {
 
 		const hash = await bcrypt.hash(password, saltRounds);
 
-		const [user] = await knex('users')
+		const [user] = await knex(t.user)
 			.update(
 				{
 					password: hash,
@@ -230,7 +230,7 @@ async function deleteAccount(req: Request, res: Response) {
 	try {
 		const { userId } = req;
 
-		await knex('users').del().where({ user_id: userId });
+		await knex(t.user).del().where({ user_id: userId });
 
 		return res.status(200).clearCookie('token').json({
 			message: 'User has been logged out.',
@@ -276,16 +276,16 @@ async function createResetPasswordEmail(name: string, email: string, token: stri
 }
 
 async function createUserSettings(userId: number) {
-	const { themeId } = await knex('themes')
+	const { themeId } = await knex(t.theme)
 		.select('theme_id')
 		.where({ tidytrek_theme: true })
 		.first();
-	await knex('user_settings').insert({ user_id: userId, theme_id: themeId });
+	await knex(t.userSettings).insert({ user_id: userId, theme_id: themeId });
 }
 
 async function createDefaultPack(userId: number) {
 	try {
-		const [{ packId }] = await knex('packs')
+		const [{ packId }] = await knex(t.pack)
 			.insert({
 				user_id: userId,
 				pack_name: 'Default Pack',
@@ -293,7 +293,7 @@ async function createDefaultPack(userId: number) {
 			})
 			.returning('pack_id');
 
-		const [{ packCategoryId }] = await knex('pack_categories')
+		const [{ packCategoryId }] = await knex(t.packCategory)
 			.insert({
 				user_id: userId,
 				pack_id: packId,
@@ -303,7 +303,7 @@ async function createDefaultPack(userId: number) {
 			})
 			.returning('pack_category_id');
 
-		await knex('pack_items').insert({
+		await knex(t.packItem).insert({
 			user_id: userId,
 			pack_id: packId,
 			pack_category_id: packCategoryId,
@@ -316,7 +316,7 @@ async function createDefaultPack(userId: number) {
 }
 
 async function isUniqueAccount(email: string, username: string) {
-	const existingEmail = await knex('users').select('email').where({ email }).first();
+	const existingEmail = await knex(t.user).select('email').where({ email }).first();
 
 	if (existingEmail) {
 		return {
@@ -326,7 +326,7 @@ async function isUniqueAccount(email: string, username: string) {
 	}
 
 	if (username && username.length) {
-		const existingUsername = await knex('users')
+		const existingUsername = await knex(t.user)
 			.select('username')
 			.where({ username })
 			.first();

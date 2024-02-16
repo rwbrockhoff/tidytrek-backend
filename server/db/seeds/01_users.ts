@@ -1,4 +1,5 @@
 import { Knex } from 'knex';
+import { tables as t } from '../../../knexfile.js';
 import bcrypt from 'bcrypt';
 import {
 	mockUser,
@@ -14,20 +15,20 @@ const { first_name, last_name, email, password, username } = mockUser;
 const mockUserHashedPassword = await bcrypt.hash(password, 10);
 
 export async function seed(knex: Knex): Promise<void> {
-	await knex('users').del();
-	await knex('packs').del();
-	await knex('pack_categories').del();
-	await knex('pack_items').del();
+	await knex(t.user).del();
+	await knex(t.pack).del();
+	await knex(t.packCategory).del();
+	await knex(t.packItem).del();
 
-	const [dummyUser] = await knex('users')
+	const [dummyUser] = await knex(t.user)
 		.insert({ first_name, last_name, email, password: mockUserHashedPassword, username })
 		.returning('*');
 
-	const [pack] = await knex('packs')
+	const [pack] = await knex(t.pack)
 		.insert({ ...mockPack, user_id: dummyUser.userId })
 		.returning('*');
 
-	const [packCategory] = await knex('pack_categories')
+	const [packCategory] = await knex(t.packCategory)
 		.insert({
 			...mockPackCategory,
 			user_id: dummyUser.userId,
@@ -48,9 +49,9 @@ export async function seed(knex: Knex): Promise<void> {
 		return item;
 	});
 
-	await knex('pack_items').insert([...packItemsWithIds, ...closetItemsWithIds]);
+	await knex(t.packItem).insert([...packItemsWithIds, ...closetItemsWithIds]);
 
-	await knex('packs')
+	await knex(t.pack)
 		.insert({ ...mockPack2, user_id: dummyUser.userId })
 		.returning('*');
 }

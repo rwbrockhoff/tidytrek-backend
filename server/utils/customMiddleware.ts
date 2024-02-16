@@ -1,6 +1,7 @@
 import jwt from 'jsonwebtoken';
 import knex from '../db/connection.js';
 import snakeCaseKeys from 'snakecase-keys';
+import { tables as t } from '../../knexfile.js';
 import { Request, Response, NextFunction as Next } from 'express';
 
 type JwtPayload = { userId: number };
@@ -20,7 +21,7 @@ export const attachUserToRequest = async (req: Request, _res: Response, next: Ne
 	//don't attach user if not logged in
 	if (!req.userId) return next();
 
-	const user = await knex('users')
+	const user = await knex(t.user)
 		.select('user_id', 'first_name', 'last_name', 'email', 'username')
 		.where({ user_id: req.userId })
 		.first();

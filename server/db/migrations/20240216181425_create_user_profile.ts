@@ -1,11 +1,11 @@
 import type { Knex } from 'knex';
-const tableName = 'user_profile';
+import { tables as t } from '../../../knexfile.js';
 
 export async function up(knex: Knex): Promise<void> {
-	await knex.schema.createTable(tableName, (table) => {
+	await knex.schema.createTable(t.userProfile, (table) => {
 		table.increments('user_profile_id').unsigned().primary();
 		table.integer('user_id').unsigned().notNullable();
-		table.foreign('user_id').references('user_id').inTable('users').onDelete('CASCADE');
+		table.foreign('user_id').references('user_id').inTable(t.user).onDelete('CASCADE');
 		table.string('profile_photo_url').nullable();
 		table.string('background_photo_url').nullable();
 		table.text('user_bio').nullable();
@@ -20,5 +20,5 @@ export async function up(knex: Knex): Promise<void> {
 }
 
 export async function down(knex: Knex): Promise<void> {
-	await knex.schema.dropTable(tableName);
+	await knex.schema.dropTable(t.userProfile);
 }

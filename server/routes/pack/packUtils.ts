@@ -1,5 +1,5 @@
 import knex from '../../db/connection.js';
-
+import { tables as t } from '../../../knexfile.js';
 async function changeItemOrder(
 	userId: number,
 	table: string,
@@ -46,7 +46,7 @@ async function generateIndex(
 
 async function getMaxItemIndex(user_id: number, pack_id: string | number | null) {
 	try {
-		const maxResult = await knex('pack_items')
+		const maxResult = await knex(t.packItem)
 			.max('pack_item_index')
 			.where({ user_id, pack_id })
 			.first();
@@ -63,7 +63,7 @@ async function shiftPackItems(
 	packItemIndex: number,
 ) {
 	try {
-		await knex.raw(`UPDATE pack_items
+		await knex.raw(`UPDATE pack_item
 			SET pack_item_index = pack_item_index - 1
 			WHERE user_id = ${userId} AND 
 			${packCategoryId ? `pack_category_id = ${packCategoryId}` : `pack_category_id IS NULL`}

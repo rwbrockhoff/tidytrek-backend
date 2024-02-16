@@ -1,13 +1,14 @@
 import knex from '../../db/connection.js';
 import { Request, Response } from 'express';
 import { Pack } from '../../types/packs/packTypes.js';
+import { tables as t } from '../../../knexfile.js';
 import { getUserSettings } from '../authentication/authenticationController.js';
 
 async function getPack(req: Request, res: Response) {
 	try {
 		const { packId } = req.params;
 
-		const pack: Pack = await knex('packs')
+		const pack: Pack = await knex(t.pack)
 			.where({ pack_id: packId, pack_public: true })
 			.orderBy('created_at')
 			.first();
@@ -34,7 +35,7 @@ async function getPack(req: Request, res: Response) {
 async function addPackViewCount(pack: Pack) {
 	try {
 		const { packId, packViews } = pack;
-		return await knex('packs')
+		return await knex(t.pack)
 			.update({ pack_views: packViews + 1 })
 			.where({ pack_id: packId });
 	} catch (err) {

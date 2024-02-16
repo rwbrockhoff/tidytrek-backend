@@ -1,12 +1,13 @@
 import knex from '../../db/connection.js';
 import { changeItemOrder, generateIndex, shiftPackItems } from '../pack/packUtils.js';
+import { tables as t } from '../../../knexfile.js';
 import { Request, Response } from 'express';
 
 async function getGearCloset(req: Request, res: Response) {
 	try {
 		const { userId } = req;
 
-		const gearClosetList = await knex('pack_items')
+		const gearClosetList = await knex(t.packItem)
 			.where({
 				user_id: userId,
 				pack_id: null,
@@ -25,12 +26,12 @@ async function addGearClosetItem(req: Request, res: Response) {
 	try {
 		const { userId } = req;
 
-		const pack_item_index = await generateIndex('pack_items', 'pack_item_index', {
+		const pack_item_index = await generateIndex(t.packItem, 'pack_item_index', {
 			user_id: userId,
 			pack_id: null,
 		});
 
-		await knex('pack_items').insert({
+		await knex(t.packItem).insert({
 			user_id: userId,
 			pack_item_name: '',
 			pack_item_index,
@@ -49,7 +50,7 @@ async function editGearClosetItem(req: Request, res: Response) {
 		const { userId } = req;
 		const { packItemId } = req.params;
 
-		await knex('pack_items')
+		await knex(t.packItem)
 			.update({ ...req.body })
 			.where({ pack_item_id: packItemId, user_id: userId });
 
@@ -67,13 +68,13 @@ async function moveGearClosetItem(req: Request, res: Response) {
 
 		await changeItemOrder(
 			userId,
-			'pack_items',
+			t.packItem,
 			'pack_item_index',
 			new_index,
 			previous_index,
 		);
 
-		await knex('pack_items')
+		await knex(t.packItem)
 			.update({ pack_item_index: new_index })
 			.where({ pack_item_id: packItemId, user_id: userId });
 
@@ -89,13 +90,13 @@ async function moveItemToPack(req: Request, res: Response) {
 		const { packItemId } = req.params;
 		const { pack_id, pack_category_id, pack_item_index } = req.body;
 
-		const newPackItemIndex = await generateIndex('pack_items', 'pack_item_index', {
+		const newPackItemIndex = await generateIndex(t.packItem, 'pack_item_index', {
 			user_id: userId,
 			pack_id,
 			pack_category_id,
 		});
 
-		await knex('pack_items')
+		await knex(t.packItem)
 			.update({ pack_id, pack_category_id, pack_item_index: newPackItemIndex })
 			.where({ user_id: userId, pack_item_id: packItemId });
 
@@ -113,7 +114,7 @@ async function deleteGearClosetItem(req: Request, res: Response) {
 		const { userId } = req;
 		const { packItemId } = req.params;
 
-		const [{ packItemIndex }] = await knex('pack_items')
+		const [{ packItemIndex }] = await knex(t.packItem)
 			.delete()
 			.where({ pack_item_id: packItemId, user_id: userId })
 			.returning('pack_item_index');
