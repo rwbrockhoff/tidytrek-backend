@@ -21,7 +21,7 @@ export const attachUserToRequest = async (req: Request, _res: Response, next: Ne
 	if (!req.userId) return next();
 
 	const user = await knex('users')
-		.select('user_id', 'name', 'email', 'username')
+		.select('user_id', 'first_name', 'last_name', 'email', 'username')
 		.where({ user_id: req.userId })
 		.first();
 

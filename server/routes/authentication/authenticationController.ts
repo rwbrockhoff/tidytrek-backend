@@ -17,7 +17,7 @@ const tokenExpirationWindow = 7200000; // 2 hours
 
 async function register(req: Request, res: Response) {
 	try {
-		const { email, password, name, username } = req.body;
+		const { email, password, first_name, last_name, username } = req.body;
 
 		const { unique, message } = await isUniqueAccount(email, username);
 
@@ -26,8 +26,8 @@ async function register(req: Request, res: Response) {
 		const hash = await bcrypt.hash(password, saltRounds);
 
 		const [user] = await knex('users').insert(
-			{ email, name, password: hash, username: username || null },
-			['user_id', 'name', 'email', 'username'],
+			{ email, first_name, last_name, password: hash, username: username || null },
+			['user_id', 'first_name', 'last_name', 'email', 'username'],
 		);
 
 		// set up defaults
@@ -55,7 +55,7 @@ async function login(req: Request, res: Response) {
 		if (!email && !password) return res.status(400).json({ error: errorText });
 
 		const user = await knex('users')
-			.select('user_id', 'name', 'email', 'username', 'password')
+			.select('user_id', 'first_name', 'last_name', 'email', 'username', 'password')
 			.where({ email })
 			.first();
 
@@ -149,7 +149,7 @@ async function requestResetPassword(req: Request, res: Response) {
 	try {
 		const errorMessage = 'We could not verify your account information at this time.';
 		const { email } = req.body;
-		const [user] = await knex('users').select('email', 'name').where({ email });
+		const [user] = await knex('users').select('first_name', 'email').where({ email });
 
 		if (!user.email) {
 			return res.status(400).json({
@@ -167,7 +167,7 @@ async function requestResetPassword(req: Request, res: Response) {
 			.where({ email });
 
 		if (updateUserResponse) {
-			await createResetPasswordEmail(user.name, user.email, token);
+			await createResetPasswordEmail(user.firstName, user.email, token);
 			return res.status(200).send();
 		} else {
 			return res.status(400).json({ error: errorMessage });
@@ -212,7 +212,7 @@ async function confirmResetPassword(req: Request, res: Response) {
 					reset_password_token: null,
 					reset_password_token_expiration: null,
 				},
-				['user_id', 'name', 'email', 'username'],
+				['user_id', 'first_name', 'last_name', 'email', 'username'],
 			)
 			.where({ reset_password_token: reset_token });
 
