@@ -44,23 +44,19 @@ async function addPackViewCount(pack: Pack) {
 }
 
 async function getCategories(packId: string) {
-	try {
-		// Gets categories for a pack ordered by index
-		// Groups all pack items for each category into an object {pack_items: []}
-		return await knex.raw(
-			`select 
-            pc.*, array_remove(array_agg(to_jsonb(ordered_pack_items)), NULL) as pack_items from pack_categories pc
+	// Gets categories for a pack ordered by index
+	// Groups all pack items for each category into an object {pack_items: []}
+	return await knex.raw(
+		`select 
+            pc.*, array_remove(array_agg(to_jsonb(ordered_pack_items)), NULL) as pack_items from pack_category pc
                 left outer join
-                ( select * from pack_items where pack_items.pack_id = ${packId} 
-                order by pack_items.pack_item_index
+                ( select * from pack_item where pack_item.pack_id = ${packId} 
+                order by pack_item.pack_item_index
                 ) ordered_pack_items on pc.pack_category_id = ordered_pack_items.pack_category_id
             where pc.pack_id = ${packId}
             group by pc.pack_category_id
             order by pc.pack_category_index`,
-		);
-	} catch (err) {
-		return new Error('There was an error getting the pack categories.');
-	}
+	);
 }
 
 export default { getPack };
