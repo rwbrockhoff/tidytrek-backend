@@ -50,6 +50,10 @@ export default {
 		migrations: {
 			directory: `${process.cwd()}/server/db/migrations`,
 		},
+		seeds: {
+			extension: 'ts',
+			directory: `${process.cwd()}/server/db/seeds`,
+		},
 	},
 	test: {
 		client: 'pg',
