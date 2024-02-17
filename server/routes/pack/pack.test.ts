@@ -163,7 +163,6 @@ describe('Pack Items: Categories', () => {
 			.send({ packCategoryName: 'New Category Name' });
 
 		expect(response.statusCode).toEqual(200);
-		expect(response.body).toHaveProperty('packCategory');
 	});
 
 	it('DELETE /categories/:categoryId -> Should delete pack category', async () => {

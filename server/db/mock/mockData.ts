@@ -1,7 +1,8 @@
 import { PackItem } from '../../types/packs/packTypes.js';
 
 export const mockUser = {
-	name: 'Ryan Brockhoff',
+	first_name: 'Ryan',
+	last_name: 'Brockhoff',
 	email: 'ryan@tidytrek.co',
 	password: 'ilovehiking',
 	username: 'tidyTrekHiker171',
@@ -70,7 +71,8 @@ export const notSeededPackItem = {
 	pack_item_quantity: 1,
 };
 export const notSeededUser = {
-	name: 'Sarah Collins',
+	first_name: 'Sarah',
+	last_name: 'Collins',
 	email: 'scollins@tidytrek.co',
 	password: 'newtohiking123!',
 	username: 'sarahLovesHiking123',

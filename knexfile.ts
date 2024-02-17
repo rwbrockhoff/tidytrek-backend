@@ -6,6 +6,17 @@ dotenv.config({
 });
 const dbName = 'tidytrek_db';
 
+export const tables = {
+	user: 'user',
+	pack: 'pack',
+	packCategory: 'pack_category',
+	packItem: 'pack_item',
+	theme: 'theme',
+	themeColor: 'theme_color',
+	userSettings: 'user_settings',
+	userProfile: 'user_profile',
+};
+
 export default {
 	development: {
 		client: 'pg',
