@@ -1,6 +1,6 @@
 import { Knex } from 'knex';
 import { mockUser } from '../mock/mockData.js';
-import { themeColors, themeColorNames } from '../../utils/themeColors.js';
+import { themeColors, themeColorNames, socialLinkList } from '../../utils/constraints.js';
 import { tables as t } from '../../../knexfile.js';
 
 const { email, username } = mockUser;
@@ -9,6 +9,7 @@ export async function seed(knex: Knex): Promise<void> {
 	await knex(t.userSettings).del();
 	await knex(t.theme).del();
 	await knex(t.themeColor).del();
+	await knex(t.socialLinkList).del();
 
 	// create default theme
 	const [{ themeId }] = await knex(t.theme)
@@ -27,6 +28,12 @@ export async function seed(knex: Knex): Promise<void> {
 	});
 	// create default theme colors
 	await knex(t.themeColor).insert(dbReadyThemeColors);
+
+	// create social media link options
+	const dbReadyLinks = socialLinkList.map((link) => ({
+		social_link_name: link,
+	}));
+	await knex(t.socialLinkList).insert(dbReadyLinks);
 
 	// create default user settings
 	const { userId } = await knex(t.user)

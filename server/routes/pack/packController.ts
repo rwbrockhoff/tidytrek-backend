@@ -6,7 +6,7 @@ import {
 	shiftPackItems,
 } from './packUtils.js';
 import { tables as t } from '../../../knexfile.js';
-import { themeColorNames } from '../../utils/themeColors.js';
+import { themeColorNames } from '../../utils/constraints.js';
 import { Request, Response } from 'express';
 
 async function getDefaultPack(req: Request, res: Response) {
