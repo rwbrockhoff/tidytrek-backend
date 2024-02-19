@@ -58,4 +58,19 @@ async function addSocialLink(req: Request, res: Response) {
 	}
 }
 
-export default { getProfileSettings, addSocialLink };
+async function deleteSocialLink(req: Request, res: Response) {
+	try {
+		const { userId } = req;
+		const { socialLinkId } = req.params;
+
+		await knex(t.socialLink)
+			.del()
+			.where({ user_id: userId, social_link_id: socialLinkId });
+
+		return res.status(200).send();
+	} catch (err) {
+		return res.status(400).json({ error: 'There was an error deleting your link.' });
+	}
+}
+
+export default { getProfileSettings, addSocialLink, deleteSocialLink };

@@ -34,7 +34,7 @@ describe('User Profile Routes ', () => {
 	});
 
 	it('GET / -> Should be a user-only protected route', async () => {
-		const response = await request.get('/closet').send();
+		const response = await request.get('/user-profile/').send();
 		expect(response.statusCode).toEqual(400);
 	});
 
@@ -71,5 +71,21 @@ describe('User Profile Routes ', () => {
 
 		expect(fourthLink.statusCode).toEqual(200);
 		expect(fifthLink.statusCode).toEqual(400);
+	});
+
+	it('DELETE / -> Should delete social link', async () => {
+		const userAgent = await loginMockUser();
+		await userAgent.post('/user-profile/social-link').send(validSocialLink);
+		const {
+			body: { socialLinks },
+		} = await userAgent.get('/user-profile/');
+
+		const socialLinkId = socialLinks[0].socialLinkId;
+		const deleteResponse = await userAgent.delete(
+			`/user-profile/social-link/${socialLinkId}`,
+		);
+
+		expect(socialLinks).toHaveLength(1);
+		expect(deleteResponse.statusCode).toEqual(200);
 	});
 });

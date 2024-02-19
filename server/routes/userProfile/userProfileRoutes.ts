@@ -5,5 +5,6 @@ const router = express.Router();
 
 router.get('/', userProfileController.getProfileSettings);
 router.post('/social-link', userProfileController.addSocialLink);
+router.delete('/social-link/:socialLinkId', userProfileController.deleteSocialLink);
 
 export default router;
