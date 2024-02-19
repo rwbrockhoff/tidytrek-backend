@@ -55,4 +55,21 @@ describe('User Profile Routes ', () => {
 
 		expect(response.statusCode).toEqual(400);
 	});
+
+	it('POST / -> Should only allow four social links', async () => {
+		const userAgent = await loginMockUser();
+
+		await userAgent.post('/user-profile/social-link').send(validSocialLink);
+		await userAgent.post('/user-profile/social-link').send(validSocialLink);
+		await userAgent.post('/user-profile/social-link').send(validSocialLink);
+		const fourthLink = await userAgent
+			.post('/user-profile/social-link')
+			.send(validSocialLink);
+		const fifthLink = await userAgent
+			.post('/user-profile/social-link')
+			.send(validSocialLink);
+
+		expect(fourthLink.statusCode).toEqual(200);
+		expect(fifthLink.statusCode).toEqual(400);
+	});
 });

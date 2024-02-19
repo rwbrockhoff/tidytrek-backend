@@ -36,6 +36,17 @@ async function addSocialLink(req: Request, res: Response) {
 			.where({ social_link_name: service })
 			.first();
 
+		const countResponse = await knex(t.socialLink)
+			.count()
+			.where({ user_id: userId })
+			.first();
+
+		if (countResponse && Number(countResponse.count) >= 4) {
+			return res
+				.status(400)
+				.json({ error: 'You already have four links in your profile' });
+		}
+
 		await knex(t.socialLink).insert({
 			user_id: userId,
 			social_link_url: social_link,
