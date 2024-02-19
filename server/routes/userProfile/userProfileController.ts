@@ -26,6 +26,18 @@ async function getProfileSettings(req: Request, res: Response) {
 	}
 }
 
+async function editProfileSettings(req: Request, res: Response) {
+	try {
+		const { userId } = req;
+		await knex(t.userProfile)
+			.update({ ...req.body })
+			.where({ user_id: userId });
+		return res.status(200).send();
+	} catch (err) {
+		return res.status(400).json({ error: 'There was an error updating your profile.' });
+	}
+}
+
 async function addSocialLink(req: Request, res: Response) {
 	try {
 		const { userId } = req;
@@ -73,4 +85,9 @@ async function deleteSocialLink(req: Request, res: Response) {
 	}
 }
 
-export default { getProfileSettings, addSocialLink, deleteSocialLink };
+export default {
+	getProfileSettings,
+	editProfileSettings,
+	addSocialLink,
+	deleteSocialLink,
+};

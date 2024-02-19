@@ -24,6 +24,11 @@ const invalidSocialLink = {
 	social_link: 'www.mobysocialisfake.com/@tidytrek',
 };
 
+const updatedProfileInfo = {
+	user_location: 'Seattle, WA',
+	user_bio: 'Just your average backpacker exploring the PNW!',
+};
+
 describe('User Profile Routes ', () => {
 	it('GET / -> Should get profile settings', async () => {
 		const userAgent = await loginMockUser();
@@ -87,5 +92,12 @@ describe('User Profile Routes ', () => {
 
 		expect(socialLinks).toHaveLength(1);
 		expect(deleteResponse.statusCode).toEqual(200);
+	});
+
+	it('PUT / -> Should allow user to update profile info', async () => {
+		const userAgent = await loginMockUser();
+		const response = await userAgent.put('/user-profile/').send(updatedProfileInfo);
+
+		expect(response.statusCode).toEqual(200);
 	});
 });
