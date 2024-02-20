@@ -1,6 +1,10 @@
 import knex from '../../db/connection.js';
 import { tables as t } from '../../../knexfile.js';
 import { Request, Response } from 'express';
+import {
+	createProfilePhotoUrlForCloudfront,
+	deleteProfilePhotoFromS3,
+} from '../../utils/s3.js';
 
 const linkListId = 'social_link_list_id';
 
@@ -35,6 +39,48 @@ async function editProfileSettings(req: Request, res: Response) {
 		return res.status(200).send();
 	} catch (err) {
 		return res.status(400).json({ error: 'There was an error updating your profile.' });
+	}
+}
+
+async function uploadProfilePhoto(req: Request, res: Response) {
+	try {
+		const { userId } = req;
+		if (!req.file) {
+			return res
+				.status(400)
+				.json({ error: 'Please include an image (jpg/png) for your profile.' });
+		}
+		// @ts-expect-error: key value exists for File type
+		const profile_photo_url = createProfilePhotoUrlForCloudfront(req.file?.key);
+
+		await knex(t.userProfile).update({ profile_photo_url }).where({ user_id: userId });
+
+		return res.status(200).send();
+	} catch (err) {
+		return res.status(400).json({ error: 'There was an error updating your profile.' });
+	}
+}
+
+async function deleteProfilePhoto(req: Request, res: Response) {
+	try {
+		const { userId } = req;
+
+		const { profilePhotoUrl } = await knex(t.userProfile)
+			.select('profile_photo_url')
+			.where({ user_id: userId })
+			.first();
+
+		// delete from S3
+		await deleteProfilePhotoFromS3(profilePhotoUrl);
+
+		// delete from DB
+		await knex(t.userProfile)
+			.update({ profile_photo_url: '' })
+			.where({ user_id: userId });
+
+		return res.status(200).send();
+	} catch (err) {
+		return res.status(400).json({ error: 'There was an error deleting your photo.' });
 	}
 }
 
@@ -88,6 +134,8 @@ async function deleteSocialLink(req: Request, res: Response) {
 export default {
 	getProfileSettings,
 	editProfileSettings,
+	uploadProfilePhoto,
+	deleteProfilePhoto,
 	addSocialLink,
 	deleteSocialLink,
 };
