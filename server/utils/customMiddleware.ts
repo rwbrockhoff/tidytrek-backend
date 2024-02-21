@@ -20,10 +20,11 @@ export const getUserId = async (req: Request, _res: Response, next: Next) => {
 export const attachUserToRequest = async (req: Request, _res: Response, next: Next) => {
 	//don't attach user if not logged in
 	if (!req.userId) return next();
-
+	const userId = `${t.user}.user_id`;
 	const user = await knex(t.user)
-		.select('user_id', 'first_name', 'last_name', 'email', 'username')
-		.where({ user_id: req.userId })
+		.leftJoin(t.userProfile, userId, `${t.userProfile}.user_id`)
+		.select(userId, 'first_name', 'last_name', 'email', 'username', 'profile_photo_url')
+		.where({ 'user.user_id': req.userId })
 		.first();
 
 	if (user) {
