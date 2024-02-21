@@ -33,7 +33,7 @@ async function register(req: Request, res: Response) {
 
 		// set up defaults
 		await createDefaultPack(user.userId);
-		await createUserSettings(user.userId);
+		await createUserSettingsAndProfile(user.userId);
 
 		// add jwt + signed cookie
 		const token = createWebToken(user.userId);
@@ -275,12 +275,14 @@ async function createResetPasswordEmail(name: string, email: string, token: stri
 	}
 }
 
-async function createUserSettings(userId: number) {
+async function createUserSettingsAndProfile(userId: number) {
 	const { themeId } = await knex(t.theme)
 		.select('theme_id')
 		.where({ tidytrek_theme: true })
 		.first();
+
 	await knex(t.userSettings).insert({ user_id: userId, theme_id: themeId });
+	await knex(t.userProfile).insert({ user_id: userId });
 }
 
 async function createDefaultPack(userId: number) {

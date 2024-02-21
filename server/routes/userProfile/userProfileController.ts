@@ -53,6 +53,14 @@ async function uploadProfilePhoto(req: Request, res: Response) {
 		// @ts-expect-error: key value exists for File type
 		const profile_photo_url = createProfilePhotoUrlForCloudfront(req.file?.key);
 
+		// check for previous photo url
+		const { profilePhotoUrl: prevUrl } = await knex(t.userProfile)
+			.select('profile_photo_url')
+			.where({ user_id: userId })
+			.first();
+
+		if (prevUrl) await deleteProfilePhotoFromS3(prevUrl);
+
 		await knex(t.userProfile).update({ profile_photo_url }).where({ user_id: userId });
 
 		return res.status(200).send();

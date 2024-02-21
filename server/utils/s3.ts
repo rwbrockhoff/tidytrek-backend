@@ -39,12 +39,14 @@ export const s3UploadProfilePhoto = multer({
 
 export const deleteProfilePhotoFromS3 = async (photoUrl: string) => {
 	try {
-		const keyName = photoUrl.replace(`${profilePhotoCloudfrontUrl}/`, '');
+		const object = photoUrl.replace(`${profilePhotoCloudfrontUrl}/`, '');
+		const { bucket, key } = JSON.parse(atob(object));
 
 		const photoParams = {
-			Bucket: bucketName,
-			Key: keyName,
+			Bucket: bucket,
+			Key: key,
 		};
+
 		const deleteCommand = new DeleteObjectCommand(photoParams);
 		return await s3.send(deleteCommand);
 	} catch (err) {
@@ -53,6 +55,15 @@ export const deleteProfilePhotoFromS3 = async (photoUrl: string) => {
 };
 
 export const createProfilePhotoUrlForCloudfront = (key: string | undefined) => {
-	if (!key) return '';
-	else return `${process.env.CLOUDFRONT_PROFILE_PHOTO_URL}/${key}`;
+	const imageRequest = JSON.stringify({
+		bucket: 'tidytrek-profile-photos',
+		key: key,
+		edits: {
+			resize: {
+				width: 200,
+			},
+		},
+	});
+	const encodedObject = btoa(imageRequest);
+	return `${process.env.CLOUDFRONT_PROFILE_PHOTO_URL}/${encodedObject}`;
 };
