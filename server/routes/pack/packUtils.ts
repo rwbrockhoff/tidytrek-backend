@@ -41,7 +41,8 @@ async function generateIndex(
 	},
 ): Promise<number> {
 	const maxResult = await knex(tableName).max(indexName).where(conditions).first();
-	return maxResult?.max + 1 || 0;
+	if (maxResult?.max) return maxResult.max + 1;
+	else return 0;
 }
 
 async function getMaxItemIndex(user_id: number, pack_id: string | number | null) {

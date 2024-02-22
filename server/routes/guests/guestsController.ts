@@ -15,6 +15,8 @@ async function getPack(req: Request, res: Response) {
 
 		const settings = await getUserSettings(pack.userId);
 
+		const profile = await knex(t.userProfile).where({ user_id: pack.userId }).first();
+
 		if (pack === undefined) {
 			return res
 				.status(400)
@@ -26,7 +28,7 @@ async function getPack(req: Request, res: Response) {
 
 		const categories = await getCategories(packId);
 
-		return res.status(200).json({ pack, categories, settings });
+		return res.status(200).json({ pack, categories, settings, profile });
 	} catch (err) {
 		return res.status(400).json({ error: 'There was an error getting this pack.' });
 	}
