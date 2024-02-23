@@ -11,16 +11,8 @@ const linkListId = 'social_link_list_id';
 async function getProfileSettings(req: Request, res: Response) {
 	try {
 		const { userId } = req;
-		const profileSettings =
-			(await knex(t.userProfile).where({ user_id: userId }).first()) || {};
 
-		const socialLinks = await knex(t.socialLinkList)
-			.leftOuterJoin(
-				t.socialLink,
-				`${t.socialLinkList}.${linkListId}`,
-				`${t.socialLink}.${linkListId}`,
-			)
-			.where({ user_id: userId });
+		const { profileSettings, socialLinks } = await getUserProfileInfo(userId);
 
 		return res.status(200).json({ profileSettings, socialLinks });
 	} catch (err) {
@@ -29,6 +21,21 @@ async function getProfileSettings(req: Request, res: Response) {
 			.json({ error: 'There was an error getting your profile settings.' });
 	}
 }
+
+export const getUserProfileInfo = async (userId: number) => {
+	const profileSettings =
+		(await knex(t.userProfile).where({ user_id: userId }).first()) || {};
+
+	const socialLinks = await knex(t.socialLinkList)
+		.leftOuterJoin(
+			t.socialLink,
+			`${t.socialLinkList}.${linkListId}`,
+			`${t.socialLink}.${linkListId}`,
+		)
+		.where({ user_id: userId });
+
+	return { profileSettings, socialLinks };
+};
 
 async function editProfileSettings(req: Request, res: Response) {
 	try {

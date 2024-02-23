@@ -3,6 +3,7 @@ import { Request, Response } from 'express';
 import { Pack } from '../../types/packs/packTypes.js';
 import { tables as t } from '../../../knexfile.js';
 import { getUserSettings } from '../authentication/authenticationController.js';
+import { getUserProfileInfo } from '../userProfile/userProfileController.js';
 
 async function getPack(req: Request, res: Response) {
 	try {
@@ -10,12 +11,7 @@ async function getPack(req: Request, res: Response) {
 
 		const pack: Pack = await knex(t.pack)
 			.where({ pack_id: packId, pack_public: true })
-			.orderBy('created_at')
 			.first();
-
-		const settings = await getUserSettings(pack.userId);
-
-		const profile = await knex(t.userProfile).where({ user_id: pack.userId }).first();
 
 		if (pack === undefined) {
 			return res
@@ -26,9 +22,20 @@ async function getPack(req: Request, res: Response) {
 		if (req.userId && req.userId !== pack.userId) await addPackViewCount(pack);
 		if (!req.userId) await addPackViewCount(pack);
 
+		const settings = await getUserSettings(pack.userId);
+
+		const { profileSettings, socialLinks } = await getUserProfileInfo(pack.userId);
+
+		const user = await knex(t.user)
+			.select('first_name', 'username')
+			.where({ user_id: pack.userId })
+			.first();
+
 		const categories = await getCategories(packId);
 
-		return res.status(200).json({ pack, categories, settings, profile });
+		return res
+			.status(200)
+			.json({ user, pack, categories, settings, profileSettings, socialLinks });
 	} catch (err) {
 		return res.status(400).json({ error: 'There was an error getting this pack.' });
 	}
