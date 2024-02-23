@@ -3,7 +3,7 @@ import { Request, Response } from 'express';
 import { Pack } from '../../types/packs/packTypes.js';
 import { tables as t } from '../../../knexfile.js';
 import { getUserSettings } from '../authentication/authenticationController.js';
-import { getUserProfileInfo } from '../userProfile/userProfileController.js';
+import { getUserProfileInfo } from '../profileSettings/profileSettingsController.js';
 
 async function getPack(req: Request, res: Response) {
 	try {
@@ -24,12 +24,7 @@ async function getPack(req: Request, res: Response) {
 
 		const settings = await getUserSettings(pack.userId);
 
-		const { profileSettings, socialLinks } = await getUserProfileInfo(pack.userId);
-
-		const user = await knex(t.user)
-			.select('first_name', 'username')
-			.where({ user_id: pack.userId })
-			.first();
+		const { profileSettings, socialLinks, user } = await getUserProfileInfo(pack.userId);
 
 		const categories = await getCategories(packId);
 
@@ -68,4 +63,12 @@ async function getCategories(packId: string) {
 	);
 }
 
-export default { getPack };
+async function getUserProfile(_req: Request, res: Response) {
+	try {
+		return res.status(200).send();
+	} catch (err) {
+		return res.status(400).json({ error: 'There was an error loading the profile.' });
+	}
+}
+
+export default { getPack, getUserProfile };

@@ -34,7 +34,12 @@ export const getUserProfileInfo = async (userId: number) => {
 		)
 		.where({ user_id: userId });
 
-	return { profileSettings, socialLinks };
+	const user = await knex(t.user)
+		.select('first_name', 'username')
+		.where({ user_id: userId })
+		.first();
+
+	return { profileSettings, socialLinks, user };
 };
 
 async function editProfileSettings(req: Request, res: Response) {
