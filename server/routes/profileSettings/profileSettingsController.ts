@@ -35,7 +35,7 @@ export const getUserProfileInfo = async (userId: number) => {
 		.where({ user_id: userId });
 
 	const user = await knex(t.user)
-		.select('first_name', 'username')
+		.select('first_name', 'username', 'user_id')
 		.where({ user_id: userId })
 		.first();
 

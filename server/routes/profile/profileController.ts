@@ -7,20 +7,26 @@ async function getProfile(req: Request, res: Response) {
 	try {
 		const { userId } = req;
 
-		const { profileSettings, socialLinks, user } = await getUserProfileInfo(userId);
+		const profile = await getProfileAndPacks(userId, true);
 
-		const packThumbnailList = await getPackThumbnailList(userId);
-
-		return res
-			.status(200)
-			.json({ userProfile: { profileSettings, socialLinks, user }, packThumbnailList });
+		return res.status(200).json(profile);
 	} catch (err) {
 		return res.status(400).json({ error: 'There was an error loading your profile.' });
 	}
 }
 
-async function getPackThumbnailList(userId: number) {
-	return await knex(t.pack).where({ user_id: userId }).orderBy('pack_index');
-}
+export const getProfileAndPacks = async (userId: number, isPackOwner: boolean) => {
+	const { profileSettings, socialLinks, user } = await getUserProfileInfo(userId);
+
+	const packThumbnailList = await getPackThumbnailList(userId, isPackOwner);
+	return { userProfile: { profileSettings, socialLinks, user }, packThumbnailList };
+};
+
+export const getPackThumbnailList = async (userId: number, isPackOwner: boolean) => {
+	const publicCondition = isPackOwner ? {} : { pack_public: true };
+	return await knex(t.pack)
+		.where({ user_id: userId, ...publicCondition })
+		.orderBy('pack_index');
+};
 
 export default { getProfile };
