@@ -3,7 +3,8 @@ import { tables as t } from '../../../knexfile.js';
 import { Request, Response } from 'express';
 import {
 	createProfilePhotoUrlForCloudfront,
-	deleteProfilePhotoFromS3,
+	createBannerPhotoUrlForCloudfront,
+	deletePhotoFromS3,
 } from '../../utils/s3.js';
 
 const linkListId = 'social_link_list_id';
@@ -71,7 +72,7 @@ async function uploadProfilePhoto(req: Request, res: Response) {
 			.where({ user_id: userId })
 			.first();
 
-		if (prevUrl) await deleteProfilePhotoFromS3(prevUrl);
+		if (prevUrl) await deletePhotoFromS3(prevUrl);
 
 		await knex(t.userProfile).update({ profile_photo_url }).where({ user_id: userId });
 
@@ -91,7 +92,7 @@ async function deleteProfilePhoto(req: Request, res: Response) {
 			.first();
 
 		// delete from S3
-		await deleteProfilePhotoFromS3(profilePhotoUrl);
+		await deletePhotoFromS3(profilePhotoUrl);
 
 		// delete from DB
 		await knex(t.userProfile)
@@ -101,6 +102,33 @@ async function deleteProfilePhoto(req: Request, res: Response) {
 		return res.status(200).send();
 	} catch (err) {
 		return res.status(400).json({ error: 'There was an error deleting your photo.' });
+	}
+}
+
+async function uploadBannerPhoto(req: Request, res: Response) {
+	try {
+		const { userId } = req;
+		if (!req.file) {
+			return res
+				.status(400)
+				.json({ error: 'Please include an image (jpg/png) for your profile.' });
+		}
+		// @ts-expect-error: key value exists for File type
+		const background_photo_url = createBannerPhotoUrlForCloudfront(req.file?.key);
+
+		// check for previous photo url
+		const { backgroundPhotoUrl: prevUrl } = await knex(t.userProfile)
+			.select('background_photo_url')
+			.where({ user_id: userId })
+			.first();
+
+		if (prevUrl) await deletePhotoFromS3(prevUrl);
+
+		await knex(t.userProfile).update({ background_photo_url }).where({ user_id: userId });
+
+		return res.status(200).send();
+	} catch (err) {
+		return res.status(400).json({ error: 'There was an error updating your profile.' });
 	}
 }
 
@@ -156,6 +184,7 @@ export default {
 	editProfileSettings,
 	uploadProfilePhoto,
 	deleteProfilePhoto,
+	uploadBannerPhoto,
 	addSocialLink,
 	deleteSocialLink,
 };
