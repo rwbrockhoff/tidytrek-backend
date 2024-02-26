@@ -3,7 +3,7 @@ import { mockUser } from '../mock/mockData.js';
 import { themeColors, themeColorNames, socialLinkList } from '../../utils/constraints.js';
 import { tables as t } from '../../../knexfile.js';
 
-const { email } = mockUser;
+const { email, username, trailName } = mockUser;
 
 export async function seed(knex: Knex): Promise<void> {
 	await knex(t.userProfile).del();
@@ -15,7 +15,7 @@ export async function seed(knex: Knex): Promise<void> {
 	// create user settings
 	const { userId } = await knex(t.user).select('user_id').where({ email }).first();
 
-	await knex(t.userProfile).insert({ user_id: userId });
+	await knex(t.userProfile).insert({ user_id: userId, username, trail_name: trailName });
 
 	// create default theme
 	const [{ themeId }] = await knex(t.theme)

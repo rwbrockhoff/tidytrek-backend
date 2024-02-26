@@ -1,8 +1,7 @@
 import jwt from 'jsonwebtoken';
-import knex from '../db/connection.js';
 import snakeCaseKeys from 'snakecase-keys';
-import { tables as t } from '../../knexfile.js';
 import { Request, Response, NextFunction as Next } from 'express';
+import { getUser } from '../routes/authentication/authenticationController.js';
 
 type JwtPayload = { userId: number };
 
@@ -20,20 +19,8 @@ export const getUserId = async (req: Request, _res: Response, next: Next) => {
 export const attachUserToRequest = async (req: Request, _res: Response, next: Next) => {
 	//don't attach user if not logged in
 	if (!req.userId) return next();
-	const userId = `${t.user}.user_id`;
-	const user = await knex(t.user)
-		.leftJoin(t.userProfile, userId, `${t.userProfile}.user_id`)
-		.select(
-			userId,
-			'first_name',
-			'last_name',
-			'email',
-			'username',
-			'trail_name',
-			'profile_photo_url',
-		)
-		.where({ 'user.user_id': req.userId })
-		.first();
+
+	const user = await getUser(req.userId);
 
 	if (user) {
 		//no pass is returned from query, just added layer of caution

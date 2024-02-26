@@ -6,6 +6,7 @@ export const mockUser = {
 	email: 'ryan@tidytrek.co',
 	password: 'ilovehiking',
 	username: 'tidyTrekHiker171',
+	trailName: 'Rocket',
 };
 
 export const mockPack = {

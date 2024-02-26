@@ -13,9 +13,9 @@ async function getProfileSettings(req: Request, res: Response) {
 	try {
 		const { userId } = req;
 
-		const { profileSettings, socialLinks } = await getUserProfileInfo(userId);
+		const { profileSettings, socialLinks, user } = await getUserProfileInfo(userId);
 
-		return res.status(200).json({ profileSettings, socialLinks });
+		return res.status(200).json({ profileSettings, socialLinks, user });
 	} catch (err) {
 		return res
 			.status(400)
@@ -36,7 +36,7 @@ export const getUserProfileInfo = async (userId: number) => {
 		.where({ user_id: userId });
 
 	const user = await knex(t.user)
-		.select('first_name', 'username', 'trail_name', 'user_id')
+		.select('first_name', 'user_id')
 		.where({ user_id: userId })
 		.first();
 
