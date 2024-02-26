@@ -37,7 +37,7 @@ jobs:
       - name: Rsync Deployments
         uses: burnett01/rsync-deployments@6.0.0
         with:
-          switches: -avzr --delete --exclude="${{secrets.DEPLOY_EXCLUDED_FILES}}" --exclude="/node_modules"
+          switches: -avzr --delete --exclude="${{secrets.DEPLOY_EXCLUDED_FILES}}"
           path: dist/
           remote_path: ${{ secrets.DEPLOY_PATH }}
           remote_host: ${{ secrets.DEPLOY_HOST }}
