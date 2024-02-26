@@ -36,7 +36,7 @@ export const getUserProfileInfo = async (userId: number) => {
 		.where({ user_id: userId });
 
 	const user = await knex(t.user)
-		.select('first_name', 'username', 'user_id')
+		.select('first_name', 'username', 'trail_name', 'user_id')
 		.where({ user_id: userId })
 		.first();
 
@@ -114,17 +114,17 @@ async function uploadBannerPhoto(req: Request, res: Response) {
 				.json({ error: 'Please include an image (jpg/png) for your profile.' });
 		}
 		// @ts-expect-error: key value exists for File type
-		const background_photo_url = createBannerPhotoUrlForCloudfront(req.file?.key);
+		const banner_photo_url = createBannerPhotoUrlForCloudfront(req.file?.key);
 
 		// check for previous photo url
-		const { backgroundPhotoUrl: prevUrl } = await knex(t.userProfile)
-			.select('background_photo_url')
+		const { bannerPhotoUrl: prevUrl } = await knex(t.userProfile)
+			.select('banner_photo_url')
 			.where({ user_id: userId })
 			.first();
 
 		if (prevUrl) await deletePhotoFromS3(prevUrl);
 
-		await knex(t.userProfile).update({ background_photo_url }).where({ user_id: userId });
+		await knex(t.userProfile).update({ banner_photo_url }).where({ user_id: userId });
 
 		return res.status(200).send();
 	} catch (err) {

@@ -21,7 +21,7 @@ export async function up(knex: Knex): Promise<void> {
 		table.integer('pack_item_quantity').defaultTo(1).notNullable();
 		table.decimal('pack_item_weight').nullable().defaultTo(0);
 		table.string('pack_item_unit').notNullable().defaultTo('oz');
-		table.bigint('pack_item_price').nullable().defaultTo(0);
+		table.decimal('pack_item_price', 10, 4).nullable().defaultTo(0);
 		table.string('pack_item_url').nullable();
 		table.boolean('worn_weight').defaultTo(false).notNullable();
 		table.boolean('consumable').defaultTo(false).notNullable();

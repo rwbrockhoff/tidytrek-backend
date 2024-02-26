@@ -26,8 +26,8 @@ export async function up(knex: Knex): Promise<void> {
 		table.increments('user_profile_id').unsigned().primary();
 		table.integer('user_id').unsigned().notNullable();
 		table.foreign('user_id').references('user_id').inTable(t.user).onDelete('CASCADE');
-		table.string('profile_photo_url').nullable();
-		table.string('background_photo_url').nullable();
+		table.text('profile_photo_url').nullable();
+		table.text('banner_photo_url').nullable();
 		table.text('user_bio').nullable();
 		table.string('user_location').nullable();
 	});

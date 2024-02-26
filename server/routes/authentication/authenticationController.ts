@@ -28,7 +28,7 @@ async function register(req: Request, res: Response) {
 
 		const [user] = await knex(t.user).insert(
 			{ email, first_name, last_name, password: hash, username: username || null },
-			['user_id', 'first_name', 'last_name', 'email', 'username'],
+			['user_id', 'first_name', 'last_name', 'email', 'username', 'trail_name'],
 		);
 
 		// set up defaults
@@ -55,7 +55,15 @@ async function login(req: Request, res: Response) {
 		if (!email && !password) return res.status(400).json({ error: errorText });
 
 		const user = await knex(t.user)
-			.select('user_id', 'first_name', 'last_name', 'email', 'username', 'password')
+			.select(
+				'user_id',
+				'first_name',
+				'last_name',
+				'email',
+				'username',
+				'trail_name',
+				'password',
+			)
 			.where({ email })
 			.first();
 
@@ -212,7 +220,7 @@ async function confirmResetPassword(req: Request, res: Response) {
 					reset_password_token: null,
 					reset_password_token_expiration: null,
 				},
-				['user_id', 'first_name', 'last_name', 'email', 'username'],
+				['user_id', 'first_name', 'last_name', 'email', 'username', 'trail_name'],
 			)
 			.where({ reset_password_token: reset_token });
 

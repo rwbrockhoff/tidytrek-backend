@@ -23,7 +23,15 @@ export const attachUserToRequest = async (req: Request, _res: Response, next: Ne
 	const userId = `${t.user}.user_id`;
 	const user = await knex(t.user)
 		.leftJoin(t.userProfile, userId, `${t.userProfile}.user_id`)
-		.select(userId, 'first_name', 'last_name', 'email', 'username', 'profile_photo_url')
+		.select(
+			userId,
+			'first_name',
+			'last_name',
+			'email',
+			'username',
+			'trail_name',
+			'profile_photo_url',
+		)
 		.where({ 'user.user_id': req.userId })
 		.first();
 

@@ -19,7 +19,9 @@ export async function up(knex: Knex): Promise<void> {
 		table.text('pack_affiliate_description').nullable();
 		table.string('pack_url_name').nullable();
 		table.text('pack_url').nullable();
+		table.text('pack_photo_url').nullable();
 		table.integer('pack_views').defaultTo(0).notNullable();
+		table.integer('pack_bookmark_count').defaultTo(0).notNullable();
 		table.timestamp('created_at').notNullable().defaultTo(knex.fn.now());
 		table.timestamp('updated_at').nullable().defaultTo(knex.fn.now());
 	});
