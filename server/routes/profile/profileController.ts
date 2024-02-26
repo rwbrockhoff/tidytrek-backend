@@ -16,10 +16,10 @@ async function getProfile(req: Request, res: Response) {
 }
 
 export const getProfileAndPacks = async (userId: number, isPackOwner: boolean) => {
-	const { profileSettings, socialLinks, user } = await getUserProfileInfo(userId);
+	const { profileInfo, socialLinks } = await getUserProfileInfo(userId);
 
 	const packThumbnailList = await getPackThumbnailList(userId, isPackOwner);
-	return { userProfile: { profileSettings, socialLinks, user }, packThumbnailList };
+	return { userProfile: { profileInfo, socialLinks }, packThumbnailList };
 };
 
 export const getPackThumbnailList = async (userId: number, isPackOwner: boolean) => {

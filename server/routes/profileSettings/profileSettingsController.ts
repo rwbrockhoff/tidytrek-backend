@@ -13,9 +13,9 @@ async function getProfileSettings(req: Request, res: Response) {
 	try {
 		const { userId } = req;
 
-		const { profileSettings, socialLinks, user } = await getUserProfileInfo(userId);
+		const { profileInfo, socialLinks } = await getUserProfileInfo(userId);
 
-		return res.status(200).json({ profileSettings, socialLinks, user });
+		return res.status(200).json({ profileInfo, socialLinks });
 	} catch (err) {
 		return res
 			.status(400)
@@ -24,8 +24,19 @@ async function getProfileSettings(req: Request, res: Response) {
 }
 
 export const getUserProfileInfo = async (userId: number) => {
-	const profileSettings =
-		(await knex(t.userProfile).where({ user_id: userId }).first()) || {};
+	const profileInfo = await knex(t.user)
+		.leftJoin(t.userProfile, `${t.user}.user_id`, `${t.userProfile}.user_id`)
+		.select(
+			'first_name',
+			'trail_name',
+			'username',
+			'profile_photo_url',
+			'banner_photo_url',
+			'user_bio',
+			'user_location',
+		)
+		.where({ 'user.user_id': userId })
+		.first();
 
 	const socialLinks = await knex(t.socialLinkList)
 		.leftOuterJoin(
@@ -35,22 +46,31 @@ export const getUserProfileInfo = async (userId: number) => {
 		)
 		.where({ user_id: userId });
 
-	const user = await knex(t.user)
-		.select('first_name', 'user_id')
-		.where({ user_id: userId })
-		.first();
-
-	return { profileSettings, socialLinks, user };
+	return { profileInfo, socialLinks };
 };
 
 async function editProfileSettings(req: Request, res: Response) {
 	try {
 		const { userId } = req;
+		const { username } = req.body;
+
+		// username must be unique
+		const { username: existingUsername, userId: existingUser } =
+			(await knex(t.userProfile)
+				.select('username', 'user_id')
+				.where({ username })
+				.first()) || {};
+		if (existingUsername && userId !== existingUser) {
+			return res.status(409).json({ error: 'This username is already in use.' });
+		}
+
 		await knex(t.userProfile)
 			.update({ ...req.body })
 			.where({ user_id: userId });
+
 		return res.status(200).send();
 	} catch (err) {
+		console.log('err: ', err);
 		return res.status(400).json({ error: 'There was an error updating your profile.' });
 	}
 }
