@@ -32,21 +32,22 @@ const updatedProfileInfo = {
 describe('User Profile Routes ', () => {
 	it('GET / -> Should get profile settings', async () => {
 		const userAgent = await loginMockUser();
-		const response = await userAgent.get('/user-profile/');
+		const response = await userAgent.get('/profile-settings/');
 
 		expect(response.statusCode).toEqual(200);
-		expect(response.body).toHaveProperty('profileSettings');
+		expect(response.body).toHaveProperty('profileInfo');
+		expect(response.body).toHaveProperty('socialLinks');
 	});
 
 	it('GET / -> Should be a user-only protected route', async () => {
-		const response = await request.get('/user-profile/').send();
+		const response = await request.get('/profile-settings/').send();
 		expect(response.statusCode).toEqual(400);
 	});
 
 	it('POST / -> Should add a valid social link', async () => {
 		const userAgent = await loginMockUser();
 		const response = await userAgent
-			.post('/user-profile/social-link')
+			.post('/profile-settings/social-link')
 			.send(validSocialLink);
 
 		expect(response.statusCode).toEqual(200);
@@ -55,7 +56,7 @@ describe('User Profile Routes ', () => {
 	it('POST / -> Should reject unknown social media name', async () => {
 		const userAgent = await loginMockUser();
 		const response = await userAgent
-			.post('/user-profile/social-link')
+			.post('/profile-settings/social-link')
 			.send(invalidSocialLink);
 
 		expect(response.statusCode).toEqual(400);
@@ -64,14 +65,14 @@ describe('User Profile Routes ', () => {
 	it('POST / -> Should only allow four social links', async () => {
 		const userAgent = await loginMockUser();
 
-		await userAgent.post('/user-profile/social-link').send(validSocialLink);
-		await userAgent.post('/user-profile/social-link').send(validSocialLink);
-		await userAgent.post('/user-profile/social-link').send(validSocialLink);
+		await userAgent.post('/profile-settings/social-link').send(validSocialLink);
+		await userAgent.post('/profile-settings/social-link').send(validSocialLink);
+		await userAgent.post('/profile-settings/social-link').send(validSocialLink);
 		const fourthLink = await userAgent
-			.post('/user-profile/social-link')
+			.post('/profile-settings/social-link')
 			.send(validSocialLink);
 		const fifthLink = await userAgent
-			.post('/user-profile/social-link')
+			.post('/profile-settings/social-link')
 			.send(validSocialLink);
 
 		expect(fourthLink.statusCode).toEqual(200);
@@ -80,14 +81,14 @@ describe('User Profile Routes ', () => {
 
 	it('DELETE / -> Should delete social link', async () => {
 		const userAgent = await loginMockUser();
-		await userAgent.post('/user-profile/social-link').send(validSocialLink);
+		await userAgent.post('/profile-settings/social-link').send(validSocialLink);
 		const {
 			body: { socialLinks },
-		} = await userAgent.get('/user-profile/');
+		} = await userAgent.get('/profile-settings/');
 
 		const socialLinkId = socialLinks[0].socialLinkId;
 		const deleteResponse = await userAgent.delete(
-			`/user-profile/social-link/${socialLinkId}`,
+			`/profile-settings/social-link/${socialLinkId}`,
 		);
 
 		expect(socialLinks).toHaveLength(1);
@@ -96,7 +97,7 @@ describe('User Profile Routes ', () => {
 
 	it('PUT / -> Should allow user to update profile info', async () => {
 		const userAgent = await loginMockUser();
-		const response = await userAgent.put('/user-profile/').send(updatedProfileInfo);
+		const response = await userAgent.put('/profile-settings/').send(updatedProfileInfo);
 
 		expect(response.statusCode).toEqual(200);
 	});

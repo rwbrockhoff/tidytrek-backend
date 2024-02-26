@@ -76,7 +76,6 @@ export const notSeededUser = {
 	last_name: 'Collins',
 	email: 'scollins@tidytrek.co',
 	password: 'newtohiking123!',
-	username: 'sarahLovesHiking123',
 };
 
 export const mockGearClosetItems: PackItem[] = [

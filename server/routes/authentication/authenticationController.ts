@@ -26,7 +26,7 @@ async function register(req: Request, res: Response) {
 
 		const hash = await bcrypt.hash(password, saltRounds);
 
-		const [userId] = await knex(t.user)
+		const [{ userId }] = await knex(t.user)
 			.insert({
 				email,
 				first_name,
@@ -35,7 +35,7 @@ async function register(req: Request, res: Response) {
 			})
 			.returning('user_id');
 
-		await knex(t.userProfile).insert({ username, trail_name });
+		await knex(t.userProfile).insert({ user_id: userId, username, trail_name });
 
 		const user = await getUser(userId);
 
@@ -51,6 +51,7 @@ async function register(req: Request, res: Response) {
 		if (user.password) delete user.password;
 		res.status(200).json({ user });
 	} catch (err) {
+		console.log('ERROR: ', err);
 		res.status(400).json({ error: err });
 	}
 }

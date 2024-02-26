@@ -54,14 +54,16 @@ async function editProfileSettings(req: Request, res: Response) {
 		const { userId } = req;
 		const { username } = req.body;
 
-		// username must be unique
-		const { username: existingUsername, userId: existingUser } =
-			(await knex(t.userProfile)
-				.select('username', 'user_id')
-				.where({ username })
-				.first()) || {};
-		if (existingUsername && userId !== existingUser) {
-			return res.status(409).json({ error: 'This username is already in use.' });
+		if (username) {
+			// username must be unique
+			const { username: existingUsername, userId: existingUser } =
+				(await knex(t.userProfile)
+					.select('username', 'user_id')
+					.where({ username })
+					.first()) || {};
+			if (existingUsername && userId !== existingUser) {
+				return res.status(409).json({ error: 'This username is already in use.' });
+			}
 		}
 
 		await knex(t.userProfile)
