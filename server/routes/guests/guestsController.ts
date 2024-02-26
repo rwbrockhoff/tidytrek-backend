@@ -25,13 +25,13 @@ async function getPack(req: Request, res: Response) {
 
 		const settings = await getUserSettings(pack.userId);
 
-		const { profileSettings, socialLinks, user } = await getUserProfileInfo(pack.userId);
+		const { profileInfo, socialLinks } = await getUserProfileInfo(pack.userId);
 
 		const categories = await getCategories(packId);
 
 		return res
 			.status(200)
-			.json({ user, pack, categories, settings, profileSettings, socialLinks });
+			.json({ pack, categories, settings, userProfile: { profileInfo, socialLinks } });
 	} catch (err) {
 		return res.status(400).json({ error: 'There was an error getting this pack.' });
 	}
@@ -91,7 +91,10 @@ async function getUserProfile(req: Request, res: Response) {
 }
 
 async function getIdFromUsername(username: string) {
-	const { userId } = await knex(t.user).select('user_id').where({ username }).first();
+	const { userId } = await knex(t.userProfile)
+		.select('user_id')
+		.where({ username })
+		.first();
 	return userId;
 }
 
