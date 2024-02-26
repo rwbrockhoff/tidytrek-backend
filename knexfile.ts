@@ -14,6 +14,8 @@ export const tables = {
 	theme: 'theme',
 	themeColor: 'theme_color',
 	userSettings: 'user_settings',
+	socialLinkList: 'social_link_list',
+	socialLink: 'social_link',
 	userProfile: 'user_profile',
 };
 

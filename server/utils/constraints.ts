@@ -41,3 +41,16 @@ export const themeColorNames = [
 	'color-six',
 	'color-seven',
 ];
+
+export const socialLinkList = [
+	'custom',
+	'instagram',
+	'tiktok',
+	'twitter',
+	'facebook',
+	'reddit',
+	'youtube',
+	'venmo',
+	'paypal',
+	'patreon',
+];

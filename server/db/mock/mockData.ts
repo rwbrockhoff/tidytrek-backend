@@ -6,6 +6,7 @@ export const mockUser = {
 	email: 'ryan@tidytrek.co',
 	password: 'ilovehiking',
 	username: 'tidyTrekHiker171',
+	trailName: 'Rocket',
 };
 
 export const mockPack = {
@@ -75,7 +76,6 @@ export const notSeededUser = {
 	last_name: 'Collins',
 	email: 'scollins@tidytrek.co',
 	password: 'newtohiking123!',
-	username: 'sarahLovesHiking123',
 };
 
 export const mockGearClosetItems: PackItem[] = [

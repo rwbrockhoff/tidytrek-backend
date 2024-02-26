@@ -18,7 +18,7 @@ const tokenExpirationWindow = 7200000; // 2 hours
 
 async function register(req: Request, res: Response) {
 	try {
-		const { email, password, first_name, last_name, username } = req.body;
+		const { email, password, first_name, last_name, username, trail_name } = req.body;
 
 		const { unique, message } = await isUniqueAccount(email, username);
 
@@ -26,10 +26,18 @@ async function register(req: Request, res: Response) {
 
 		const hash = await bcrypt.hash(password, saltRounds);
 
-		const [user] = await knex(t.user).insert(
-			{ email, first_name, last_name, password: hash, username: username || null },
-			['user_id', 'first_name', 'last_name', 'email', 'username'],
-		);
+		const [{ userId }] = await knex(t.user)
+			.insert({
+				email,
+				first_name,
+				last_name,
+				password: hash,
+			})
+			.returning('user_id');
+
+		await knex(t.userProfile).insert({ user_id: userId, username, trail_name });
+
+		const user = await getUser(userId);
 
 		// set up defaults
 		await createDefaultPack(user.userId);
@@ -43,6 +51,7 @@ async function register(req: Request, res: Response) {
 		if (user.password) delete user.password;
 		res.status(200).json({ user });
 	} catch (err) {
+		console.log('ERROR: ', err);
 		res.status(400).json({ error: err });
 	}
 }
@@ -54,17 +63,18 @@ async function login(req: Request, res: Response) {
 
 		if (!email && !password) return res.status(400).json({ error: errorText });
 
-		const user = await knex(t.user)
-			.select('user_id', 'first_name', 'last_name', 'email', 'username', 'password')
+		const initialUser = await knex(t.user)
+			.select('user_id', 'password')
 			.where({ email })
 			.first();
 
-		if (user === undefined)
+		if (initialUser === undefined)
 			return res.status(400).json({ error: 'No account found. Feel free to sign up.' });
 
-		const passwordsMatch = await bcrypt.compare(password, user.password);
+		const passwordsMatch = await bcrypt.compare(password, initialUser.password);
 
 		if (passwordsMatch) {
+			const user = await getUser(initialUser.userId);
 			// create token + cookie
 			const token = createWebToken(user.userId);
 			res.cookie('token', token, cookieOptions);
@@ -98,6 +108,23 @@ async function getAuthStatus(req: Request, res: Response) {
 	} catch (err) {
 		res.status(400).json({ error: 'There was an error checking your log in status.' });
 	}
+}
+
+export async function getUser(userId: number) {
+	return await knex(t.user)
+		.leftJoin(t.userProfile, `${t.user}.user_id`, `${t.userProfile}.user_id`)
+		.select(
+			'user.user_id',
+			'first_name',
+			'last_name',
+			'email',
+			'username',
+			'trail_name',
+			'profile_photo_url',
+			'password',
+		)
+		.where({ 'user.user_id': userId })
+		.first();
 }
 
 export async function getUserSettings(userId: number) {
@@ -212,7 +239,7 @@ async function confirmResetPassword(req: Request, res: Response) {
 					reset_password_token: null,
 					reset_password_token_expiration: null,
 				},
-				['user_id', 'first_name', 'last_name', 'email', 'username'],
+				['user_id', 'first_name', 'last_name', 'email', 'username', 'trail_name'],
 			)
 			.where({ reset_password_token: reset_token });
 
@@ -280,6 +307,7 @@ async function createUserSettings(userId: number) {
 		.select('theme_id')
 		.where({ tidytrek_theme: true })
 		.first();
+
 	await knex(t.userSettings).insert({ user_id: userId, theme_id: themeId });
 }
 
@@ -326,7 +354,7 @@ async function isUniqueAccount(email: string, username: string) {
 	}
 
 	if (username && username.length) {
-		const existingUsername = await knex(t.user)
+		const existingUsername = await knex(t.userProfile)
 			.select('username')
 			.where({ username })
 			.first();

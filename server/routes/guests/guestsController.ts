@@ -3,6 +3,8 @@ import { Request, Response } from 'express';
 import { Pack } from '../../types/packs/packTypes.js';
 import { tables as t } from '../../../knexfile.js';
 import { getUserSettings } from '../authentication/authenticationController.js';
+import { getProfileAndPacks } from '../profile/profileController.js';
+import { getUserProfileInfo } from '../profileSettings/profileSettingsController.js';
 
 async function getPack(req: Request, res: Response) {
 	try {
@@ -10,10 +12,7 @@ async function getPack(req: Request, res: Response) {
 
 		const pack: Pack = await knex(t.pack)
 			.where({ pack_id: packId, pack_public: true })
-			.orderBy('created_at')
 			.first();
-
-		const settings = await getUserSettings(pack.userId);
 
 		if (pack === undefined) {
 			return res
@@ -24,9 +23,15 @@ async function getPack(req: Request, res: Response) {
 		if (req.userId && req.userId !== pack.userId) await addPackViewCount(pack);
 		if (!req.userId) await addPackViewCount(pack);
 
+		const settings = await getUserSettings(pack.userId);
+
+		const { profileInfo, socialLinks } = await getUserProfileInfo(pack.userId);
+
 		const categories = await getCategories(packId);
 
-		return res.status(200).json({ pack, categories, settings });
+		return res
+			.status(200)
+			.json({ pack, categories, settings, userProfile: { profileInfo, socialLinks } });
 	} catch (err) {
 		return res.status(400).json({ error: 'There was an error getting this pack.' });
 	}
@@ -59,4 +64,38 @@ async function getCategories(packId: string) {
 	);
 }
 
-export default { getPack };
+async function getUserProfile(req: Request, res: Response) {
+	try {
+		const { userId, username } = req.params;
+		// determine type of identifier sent via params
+		const resolvedId =
+			userId !== 'undefined' ? userId : await getIdFromUsername(username);
+		//use userId or username to figure out if user has public profile
+		const { publicProfile } = await knex(t.userSettings)
+			.select('public_profile')
+			.where({ user_id: resolvedId })
+			.first();
+		// handle private profiles or non-existent users
+		if (!publicProfile) {
+			return res
+				.status(400)
+				.json({ error: "The user doesn't exist or doesn't have a public profile." });
+		}
+		const isPackOwner = req.userId === resolvedId;
+		const profile = await getProfileAndPacks(resolvedId, isPackOwner);
+
+		return res.status(200).json(profile);
+	} catch (err) {
+		return res.status(400).json({ error: 'There was an error loading the profile.' });
+	}
+}
+
+async function getIdFromUsername(username: string) {
+	const { userId } = await knex(t.userProfile)
+		.select('user_id')
+		.where({ username })
+		.first();
+	return userId;
+}
+
+export default { getPack, getUserProfile };
