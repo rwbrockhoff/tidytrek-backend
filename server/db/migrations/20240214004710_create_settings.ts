@@ -18,7 +18,7 @@ export async function up(knex: Knex): Promise<void> {
 			.checkIn(weightUnitConstraints)
 			.defaultTo('lb')
 			.notNullable();
-		table.string('currency_unit').defaultTo('$').notNullable();
+		table.string('currency_unit').defaultTo('USD').notNullable();
 	});
 }
 
