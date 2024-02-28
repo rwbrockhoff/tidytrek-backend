@@ -8,6 +8,7 @@ import {
 import { tables as t } from '../../../knexfile.js';
 import { themeColorNames } from '../../utils/constraints.js';
 import { Request, Response } from 'express';
+import { createPackPhotoUrlForCloudfront, deletePhotoFromS3 } from '../../utils/s3.js';
 
 async function getDefaultPack(req: Request, res: Response) {
 	try {
@@ -135,6 +136,58 @@ async function createNewPack(userId: number) {
 		return { pack, categories };
 	} catch (err) {
 		return new Error('There was an error creating a new pack.');
+	}
+}
+
+async function uploadPackPhoto(req: Request, res: Response) {
+	try {
+		const { userId } = req;
+		const { packId } = req.params;
+
+		// @ts-expect-error: key value exists for File type
+		const pack_photo_url = createPackPhotoUrlForCloudfront(req.file?.key);
+
+		// check for previous pack photo url
+		const { packPhotoUrl: prevUrl } = await knex(t.pack)
+			.select('pack_photo_url')
+			.where({ user_id: userId, pack_id: packId })
+			.first();
+
+		if (prevUrl) await deletePhotoFromS3(prevUrl);
+
+		await knex(t.pack)
+			.update({ pack_photo_url })
+			.where({ user_id: userId, pack_id: packId });
+
+		return res.status(200).send();
+	} catch (err) {
+		return res
+			.status(400)
+			.json({ error: 'There was an error uploading your pack photo.' });
+	}
+}
+
+async function deletePackPhoto(req: Request, res: Response) {
+	try {
+		const { userId } = req;
+		const { packId } = req.params;
+
+		const { packPhotoUrl } = await knex(t.pack)
+			.select('pack_photo_url')
+			.where({ user_id: userId, pack_id: packId })
+			.first();
+
+		// delete from S3
+		await deletePhotoFromS3(packPhotoUrl);
+
+		// delete from DB
+		await knex(t.pack).update({ pack_photo_url: '' }).where({ user_id: userId });
+
+		return res.status(200).send();
+	} catch (err) {
+		return res
+			.status(400)
+			.json({ error: 'There was an error uploading your pack photo.' });
 	}
 }
 
@@ -561,8 +614,10 @@ export default {
 	getPack,
 	getPackList,
 	addNewPack,
+	uploadPackPhoto,
 	editPack,
 	movePack,
+	deletePackPhoto,
 	deletePack,
 	deletePackAndItems,
 	addPackItem,

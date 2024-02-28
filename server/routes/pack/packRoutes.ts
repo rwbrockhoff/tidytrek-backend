@@ -1,5 +1,6 @@
 import express from 'express';
 import packController from './packController.js';
+import { s3UploadPackPhoto } from '../../utils/s3.js';
 
 const router = express.Router();
 
@@ -7,9 +8,15 @@ router.get('/', packController.getDefaultPack);
 router.get('/pack-list', packController.getPackList);
 router.get('/:packId', packController.getPack);
 router.post('/', packController.addNewPack);
+router.post(
+	'/:packId/pack-photo',
+	s3UploadPackPhoto.single('packPhoto'),
+	packController.uploadPackPhoto,
+);
 router.put('/:packId', packController.editPack);
 router.put('/index/:packId', packController.movePack);
 router.delete('/:packId', packController.deletePack);
+router.delete('/:packId/pack-photo', packController.deletePackPhoto);
 router.delete('/items/:packId', packController.deletePackAndItems);
 router.post('/pack-items', packController.addPackItem);
 router.put('/pack-items/:packItemId', packController.editPackItem);
