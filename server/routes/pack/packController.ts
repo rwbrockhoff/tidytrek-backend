@@ -8,7 +8,7 @@ import {
 import { tables as t } from '../../../knexfile.js';
 import { themeColorNames } from '../../utils/constraints.js';
 import { Request, Response } from 'express';
-import { createPackPhotoUrlForCloudfront, deletePhotoFromS3 } from '../../utils/s3.js';
+import { createCloudfrontUrlForPhoto, s3DeletePhoto } from '../../utils/s3.js';
 
 async function getDefaultPack(req: Request, res: Response) {
 	try {
@@ -145,7 +145,7 @@ async function uploadPackPhoto(req: Request, res: Response) {
 		const { packId } = req.params;
 
 		// @ts-expect-error: key value exists for File type
-		const pack_photo_url = createPackPhotoUrlForCloudfront(req.file?.key);
+		const pack_photo_url = createCloudfrontUrlForPhoto(req.file?.key, 'packPhotoBucket');
 
 		// check for previous pack photo url
 		const { packPhotoUrl: prevUrl } = await knex(t.pack)
@@ -153,7 +153,7 @@ async function uploadPackPhoto(req: Request, res: Response) {
 			.where({ user_id: userId, pack_id: packId })
 			.first();
 
-		if (prevUrl) await deletePhotoFromS3(prevUrl);
+		if (prevUrl) await s3DeletePhoto(prevUrl);
 
 		await knex(t.pack)
 			.update({ pack_photo_url })
@@ -178,10 +178,12 @@ async function deletePackPhoto(req: Request, res: Response) {
 			.first();
 
 		// delete from S3
-		await deletePhotoFromS3(packPhotoUrl);
+		await s3DeletePhoto(packPhotoUrl);
 
 		// delete from DB
-		await knex(t.pack).update({ pack_photo_url: '' }).where({ user_id: userId });
+		await knex(t.pack)
+			.update({ pack_photo_url: '' })
+			.where({ user_id: userId, pack_id: packId });
 
 		return res.status(200).send();
 	} catch (err) {

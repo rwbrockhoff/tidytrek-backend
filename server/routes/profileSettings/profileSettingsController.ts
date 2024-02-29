@@ -1,11 +1,7 @@
 import knex from '../../db/connection.js';
 import { tables as t } from '../../../knexfile.js';
 import { Request, Response } from 'express';
-import {
-	createProfilePhotoUrlForCloudfront,
-	createBannerPhotoUrlForCloudfront,
-	deletePhotoFromS3,
-} from '../../utils/s3.js';
+import { createCloudfrontUrlForPhoto, s3DeletePhoto } from '../../utils/s3.js';
 
 const linkListId = 'social_link_list_id';
 
@@ -80,13 +76,18 @@ async function editProfileSettings(req: Request, res: Response) {
 async function uploadProfilePhoto(req: Request, res: Response) {
 	try {
 		const { userId } = req;
+
 		if (!req.file) {
 			return res
 				.status(400)
 				.json({ error: 'Please include an image (jpg/png) for your profile.' });
 		}
-		// @ts-expect-error: key value exists for File type
-		const profile_photo_url = createProfilePhotoUrlForCloudfront(req.file?.key);
+
+		const profile_photo_url = createCloudfrontUrlForPhoto(
+			// @ts-expect-error: key value exists for File type
+			req.file?.key,
+			'profilePhotoBucket',
+		);
 
 		// check for previous photo url
 		const { profilePhotoUrl: prevUrl } = await knex(t.userProfile)
@@ -94,7 +95,7 @@ async function uploadProfilePhoto(req: Request, res: Response) {
 			.where({ user_id: userId })
 			.first();
 
-		if (prevUrl) await deletePhotoFromS3(prevUrl);
+		if (prevUrl) await s3DeletePhoto(prevUrl);
 
 		await knex(t.userProfile).update({ profile_photo_url }).where({ user_id: userId });
 
@@ -114,7 +115,7 @@ async function deleteProfilePhoto(req: Request, res: Response) {
 			.first();
 
 		// delete from S3
-		await deletePhotoFromS3(profilePhotoUrl);
+		await s3DeletePhoto(profilePhotoUrl);
 
 		// delete from DB
 		await knex(t.userProfile)
@@ -135,8 +136,12 @@ async function uploadBannerPhoto(req: Request, res: Response) {
 				.status(400)
 				.json({ error: 'Please include an image (jpg/png) for your profile.' });
 		}
-		// @ts-expect-error: key value exists for File type
-		const banner_photo_url = createBannerPhotoUrlForCloudfront(req.file?.key);
+
+		const banner_photo_url = createCloudfrontUrlForPhoto(
+			// @ts-expect-error: key value exists for File type
+			req.file?.key,
+			'bannerPhotoBucket',
+		);
 
 		// check for previous photo url
 		const { bannerPhotoUrl: prevUrl } = await knex(t.userProfile)
@@ -144,7 +149,7 @@ async function uploadBannerPhoto(req: Request, res: Response) {
 			.where({ user_id: userId })
 			.first();
 
-		if (prevUrl) await deletePhotoFromS3(prevUrl);
+		if (prevUrl) await s3DeletePhoto(prevUrl);
 
 		await knex(t.userProfile).update({ banner_photo_url }).where({ user_id: userId });
 

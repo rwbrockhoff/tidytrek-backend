@@ -1,6 +1,6 @@
 import express from 'express';
 import packController from './packController.js';
-import { s3UploadPackPhoto } from '../../utils/s3.js';
+import { s3UploadPhoto } from '../../utils/s3.js';
 
 const router = express.Router();
 
@@ -10,7 +10,7 @@ router.get('/:packId', packController.getPack);
 router.post('/', packController.addNewPack);
 router.post(
 	'/:packId/pack-photo',
-	s3UploadPackPhoto.single('packPhoto'),
+	s3UploadPhoto('packPhotoBucket').single('packPhoto'),
 	packController.uploadPackPhoto,
 );
 router.put('/:packId', packController.editPack);
