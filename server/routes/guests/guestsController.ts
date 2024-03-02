@@ -83,8 +83,9 @@ async function getUserProfile(req: Request, res: Response) {
 		}
 		const isPackOwner = req.userId === resolvedId;
 		const profile = await getProfileAndPacks(resolvedId, isPackOwner);
+		const settings = await getUserSettings(resolvedId);
 
-		return res.status(200).json(profile);
+		return res.status(200).json({ ...profile, settings });
 	} catch (err) {
 		return res.status(400).json({ error: 'There was an error loading the profile.' });
 	}
