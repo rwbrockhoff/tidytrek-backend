@@ -2,6 +2,7 @@ import jwt from 'jsonwebtoken';
 import snakeCaseKeys from 'snakecase-keys';
 import { Request, Response, NextFunction as Next } from 'express';
 import { getUser } from '../routes/authentication/authenticationController.js';
+import { cookieName } from './utils.js';
 
 type JwtPayload = { userId: string };
 
@@ -29,7 +30,7 @@ export const getUserId = async (req: Request, _res: Response, next: Next) => {
 
 export const attachCookie = (req: Request, _res: Response, next: Next) => {
 	// get token from signedCookies and verify jwt
-	const token = req.signedCookies?.tidyToken;
+	const token = req.signedCookies[cookieName] || null;
 
 	if (token && process.env.APP_SECRET) {
 		const { userId } = jwt.verify(token, process.env.APP_SECRET) as JwtPayload;

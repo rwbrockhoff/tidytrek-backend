@@ -2,12 +2,7 @@ import jwt from 'jsonwebtoken';
 import knex from '../../db/connection.js';
 import { Request, Response } from 'express';
 import { tables as t } from '../../../knexfile.js';
-
-const cookieOptions = {
-	httpOnly: true,
-	maxAge: 1000 * 60 * 60 * 24 * 180, // 180 days
-	signed: true,
-};
+import { cookieName, cookieOptions } from '../../utils/utils.js';
 
 async function register(req: Request, res: Response) {
 	try {
@@ -32,7 +27,7 @@ async function register(req: Request, res: Response) {
 
 		// add jwt + signed cookie
 		const token = createWebToken(user_id);
-		res.cookie('tidyToken', token, cookieOptions);
+		res.cookie(cookieName, token, cookieOptions);
 
 		return res.status(200).send();
 	} catch (err) {
@@ -58,7 +53,7 @@ async function login(req: Request, res: Response) {
 		// create token + cookie
 		const token = createWebToken(user_id);
 
-		res.cookie('tidyToken', token, cookieOptions);
+		res.cookie(cookieName, token, cookieOptions);
 
 		res.status(200).send();
 	} catch (err) {
@@ -67,7 +62,7 @@ async function login(req: Request, res: Response) {
 }
 
 async function logout(_req: Request, res: Response) {
-	return res.status(200).clearCookie('tidyToken').json({
+	return res.status(200).clearCookie(cookieName).json({
 		message: 'User has been logged out.',
 	});
 }
