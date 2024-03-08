@@ -6,21 +6,22 @@ const router = express.Router();
 
 router.get('/', userProfileController.getProfileSettings);
 
+router.post('/social-link', userProfileController.addSocialLink);
 router.post(
 	'/profile-photo',
 	s3UploadPhoto('profilePhotoBucket').single('profilePhoto'),
 	userProfileController.uploadProfilePhoto,
 );
-router.delete('/profile-photo/', userProfileController.deleteProfilePhoto);
-
 router.post(
 	'/banner-photo',
 	s3UploadPhoto('bannerPhotoBucket').single('bannerPhoto'),
 	userProfileController.uploadBannerPhoto,
 );
 
+router.put('/username', userProfileController.updateUsername);
 router.put('/', userProfileController.editProfileSettings);
-router.post('/social-link', userProfileController.addSocialLink);
+
 router.delete('/social-link/:socialLinkId', userProfileController.deleteSocialLink);
+router.delete('/profile-photo/', userProfileController.deleteProfilePhoto);
 
 export default router;

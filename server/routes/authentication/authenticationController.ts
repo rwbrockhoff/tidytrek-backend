@@ -7,10 +7,9 @@ import { supabase } from '../../db/supabaseClient.js';
 
 async function register(req: Request, res: Response) {
 	try {
-		const { user_id, email, first_name, last_name, username, trail_name } = req.body;
+		const { user_id, email, first_name, last_name } = req.body;
 
-		const { unique, message } = await isUniqueAccount(email, username);
-
+		const { unique, message } = await isUniqueEmail(email);
 		if (!unique) return res.status(409).json({ error: message });
 
 		await knex(t.user).insert({
@@ -19,8 +18,6 @@ async function register(req: Request, res: Response) {
 			first_name,
 			last_name,
 		});
-
-		await knex(t.userProfile).insert({ user_id, username: username || null, trail_name });
 
 		// set up defaults
 		await createDefaultPack(user_id);
@@ -143,13 +140,14 @@ function createWebToken(userId: string) {
 	}
 }
 
-async function createUserSettings(userId: string) {
+async function createUserSettings(user_id: string) {
 	const { themeId } = await knex(t.theme)
 		.select('theme_id')
 		.where({ tidytrek_theme: true })
 		.first();
 
-	await knex(t.userSettings).insert({ user_id: userId, theme_id: themeId });
+	await knex(t.userSettings).insert({ user_id, theme_id: themeId });
+	await knex(t.userProfile).insert({ user_id });
 }
 
 async function createDefaultPack(userId: string) {
@@ -184,27 +182,13 @@ async function createDefaultPack(userId: string) {
 	}
 }
 
-async function isUniqueAccount(email: string, username: string) {
+async function isUniqueEmail(email: string) {
 	const existingEmail = await knex(t.user).select('email').where({ email }).first();
-
 	if (existingEmail) {
 		return {
 			unique: false,
 			message: 'Account is already registered. Please log in.',
 		};
-	}
-
-	if (username && username.length) {
-		const existingUsername = await knex(t.userProfile)
-			.select('username')
-			.where({ username })
-			.first();
-
-		if (existingUsername)
-			return {
-				unique: false,
-				message: 'That username is already taken. Good choice but try again!',
-			};
 	}
 	return { unique: true };
 }

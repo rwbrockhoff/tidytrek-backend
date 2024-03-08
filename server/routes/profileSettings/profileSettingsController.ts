@@ -51,15 +51,9 @@ async function editProfileSettings(req: Request, res: Response) {
 		const { username } = req.body;
 
 		if (username) {
-			// username must be unique
-			const { username: existingUsername, userId: existingUser } =
-				(await knex(t.userProfile)
-					.select('username', 'user_id')
-					.where({ username })
-					.first()) || {};
-			if (existingUsername && userId !== existingUser) {
-				return res.status(409).json({ error: 'This username is already in use.' });
-			}
+			// check for existing username
+			const { unique, message } = await isUniqueUsername(username);
+			if (!unique) return res.status(409).json({ error: message });
 		}
 
 		await knex(t.userProfile)
@@ -158,6 +152,26 @@ async function uploadBannerPhoto(req: Request, res: Response) {
 	}
 }
 
+async function updateUsername(req: Request, res: Response) {
+	try {
+		const { userId } = req;
+		const { username, trail_name } = req.body;
+
+		if (username) {
+			// check for existing username
+			const { unique, message } = await isUniqueUsername(username);
+			if (!unique) return res.status(409).json({ error: message });
+		}
+
+		await knex(t.userProfile)
+			.update({ username: username || null, trail_name })
+			.where({ user_id: userId });
+		return res.status(200).send();
+	} catch (err) {
+		return res.status(400).json({ error: 'There was an error saving your username.' });
+	}
+}
+
 async function addSocialLink(req: Request, res: Response) {
 	try {
 		const { userId } = req;
@@ -205,12 +219,29 @@ async function deleteSocialLink(req: Request, res: Response) {
 	}
 }
 
+async function isUniqueUsername(username: string) {
+	if (username && username.length) {
+		const existingUsername = await knex(t.userProfile)
+			.select('username')
+			.where({ username })
+			.first();
+
+		if (existingUsername)
+			return {
+				unique: false,
+				message: 'That username is already taken. Good choice but try again!',
+			};
+	}
+	return { unique: true };
+}
+
 export default {
 	getProfileSettings,
 	editProfileSettings,
 	uploadProfilePhoto,
 	deleteProfilePhoto,
 	uploadBannerPhoto,
+	updateUsername,
 	addSocialLink,
 	deleteSocialLink,
 };
