@@ -3,6 +3,7 @@ import knex from '../../db/connection.js';
 import { Request, Response } from 'express';
 import { tables as t } from '../../../knexfile.js';
 import { cookieName, cookieOptions } from '../../utils/utils.js';
+import { supabase } from '../../db/supabaseClient.js';
 
 async function register(req: Request, res: Response) {
 	try {
@@ -117,10 +118,17 @@ export async function getUserSettings(userId: string) {
 async function deleteAccount(req: Request, res: Response) {
 	try {
 		const { userId } = req;
+		const { error } = await supabase.auth.admin.deleteUser(userId);
+
+		if (error)
+			return res
+				.status(400)
+				.json({ error: 'There was an error deleting your account at this time.' });
+
 		await knex(t.user).del().where({ user_id: userId });
 
-		return res.status(200).clearCookie('tidyToken').json({
-			message: 'User has been logged out.',
+		return res.status(200).clearCookie(cookieName).json({
+			message: 'User account has been deleted.',
 		});
 	} catch (err) {
 		return res.status(400).json({ error: 'There was an error deleting your account.' });
