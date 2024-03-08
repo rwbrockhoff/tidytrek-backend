@@ -7,14 +7,19 @@ export type KnexResponse = {
 
 // Middleware types
 export interface UserAttachedToMiddleware {
-	user_id: number;
+	user_id: string;
 	name: string;
 	email: string;
 	username: string;
 }
 
+export interface CookieAttachedToMiddleware {
+	cookie: string;
+}
+
 // Middleware types
 export interface UserAttachedToRequest {
 	user: UserAttachedToMiddleware;
-	userId: number;
+	userId: string;
+	cookie: string;
 }

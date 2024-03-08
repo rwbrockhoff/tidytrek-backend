@@ -26,8 +26,7 @@ async function getDefaultPack(req: Request, res: Response) {
 
 			return res.status(200).json({ pack, categories });
 		} else {
-			// UI can handle not having a default pack. However, this is just an extra layer of caution.
-			// User should always have at least a default pack.
+			// UI can handle not having a default pack.
 			return res.status(200).send();
 		}
 	} catch (err) {
@@ -50,7 +49,7 @@ async function getPack(req: Request, res: Response) {
 	}
 }
 
-async function getPackById(userId: number, packId: number) {
+async function getPackById(userId: string, packId: number) {
 	const pack = await knex(t.pack)
 		.where({ user_id: userId, pack_id: packId })
 		.orderBy('created_at')
@@ -62,10 +61,10 @@ async function getPackById(userId: number, packId: number) {
 		`select 
 		pc.*, array_remove(array_agg(to_jsonb(ordered_pack_items)), NULL) as pack_items from pack_category pc
 			left outer join
-			( select * from pack_item where pack_item.user_id = ${userId} 
+			( select * from pack_item where pack_item.user_id = '${userId}'
 			order by pack_item.pack_item_index
 			) ordered_pack_items on pc.pack_category_id = ordered_pack_items.pack_category_id
-		where pc.user_id = ${userId} and pc.pack_id = ${packId}
+		where pc.user_id = '${userId}' and pc.pack_id = ${packId}
 		group by pc.pack_category_id
 		order by pc.pack_category_index`,
 	);
@@ -97,7 +96,7 @@ async function addNewPack(req: Request, res: Response) {
 	}
 }
 
-async function createNewPack(userId: number) {
+async function createNewPack(userId: string) {
 	try {
 		const packIndex = await generateIndex(t.pack, 'pack_index', {
 			user_id: userId,
@@ -251,7 +250,7 @@ async function deletePack(req: Request, res: Response) {
 					SELECT pk.pack_id, pk.pack_item_id, pk.pack_item_index, 
 					row_number() over (order by pack_item_index) as new_index
 					FROM pack_item pk
-					WHERE user_id = ${userId} AND pack_id = ${packId}
+					WHERE user_id = '${userId}' AND pack_id = ${packId}
 					ORDER BY pack_category_id
 				) pk2
 			where pk.pack_item_id = pk2.pack_item_id;`);
@@ -552,7 +551,7 @@ async function moveCategoryToCloset(req: Request, res: Response) {
 					SELECT pk.pack_id, pk.pack_item_id, pk.pack_item_index, 
 					row_number() over (order by pack_item_index) as new_index
 					FROM pack_item pk
-					WHERE user_id = ${userId} AND pack_category_id = ${categoryId}
+					WHERE user_id = '${userId}' AND pack_category_id = ${categoryId}
 					ORDER BY pack_item_index
 				) pk2
 			where pk.pack_item_id = pk2.pack_item_id;`);
@@ -582,16 +581,16 @@ async function deleteCategoryAndItems(req: Request, res: Response) {
 	}
 }
 
-async function getAvailablePacks(userId: number) {
+async function getAvailablePacks(userId: string) {
 	try {
 		return await knex.raw(`
 			select pack.pack_id, pack_name, pack_index,
 			array_remove(array_agg(to_jsonb(ordered_categories)), NULL) as pack_categories from pack
 				left outer join
-					( select * from pack_category where pack_category.user_id = ${userId} 
+					( select * from pack_category where pack_category.user_id = '${userId}'
 					order by pack_category.pack_category_index
 					) ordered_categories on pack.pack_id = ordered_categories.pack_id
-			where pack.user_id = ${userId} 
+			where pack.user_id = '${userId}' 
 			group by pack.pack_id
 			order by pack.pack_index`);
 	} catch (err) {
@@ -599,7 +598,7 @@ async function getAvailablePacks(userId: number) {
 	}
 }
 
-async function deleteCategory(user_id: number, pack_category_id: number | string) {
+async function deleteCategory(user_id: string, pack_category_id: number | string) {
 	const [{ packCategoryIndex, packId }] = await knex(t.packCategory)
 		.del()
 		.where({ user_id, pack_category_id })

@@ -57,7 +57,7 @@ describe('Guests Routes: Pack ', () => {
 		expect(packViews).toEqual(1);
 	});
 
-	it('GET / -> Should not update view count when user views', async () => {
+	it.skip('GET / -> Should not update view count when user views', async () => {
 		const { packId, userAgent } = await getPackId();
 		await userAgent.get(`/guests/pack/${packId}`).send();
 

@@ -6,7 +6,7 @@ const weightUnitConstraints = ['lb', 'kg', 'oz', 'g'];
 export async function up(knex: Knex): Promise<void> {
 	await knex.schema.createTable(t.userSettings, (table) => {
 		table.increments('user_settings_id').unsigned().primary();
-		table.integer('user_id').unsigned().notNullable();
+		table.uuid('user_id').unsigned().notNullable();
 		table.foreign('user_id').references('user_id').inTable(t.user).onDelete('CASCADE');
 		table.integer('theme_id').unsigned();
 		table.foreign('theme_id').references('theme_id').inTable(t.theme);

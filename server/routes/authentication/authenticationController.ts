@@ -1,8 +1,5 @@
 import jwt from 'jsonwebtoken';
-import bcrypt from 'bcrypt';
 import knex from '../../db/connection.js';
-import { randomBytes } from 'node:crypto';
-import postmark from 'postmark';
 import { Request, Response } from 'express';
 import { tables as t } from '../../../knexfile.js';
 
@@ -12,46 +9,33 @@ const cookieOptions = {
 	signed: true,
 };
 
-const saltRounds = 10;
-
-const tokenExpirationWindow = 7200000; // 2 hours
-
 async function register(req: Request, res: Response) {
 	try {
-		const { email, password, first_name, last_name, username, trail_name } = req.body;
+		const { user_id, email, first_name, last_name, username, trail_name } = req.body;
 
 		const { unique, message } = await isUniqueAccount(email, username);
 
 		if (!unique) return res.status(409).json({ error: message });
 
-		const hash = await bcrypt.hash(password, saltRounds);
+		await knex(t.user).insert({
+			user_id,
+			email,
+			first_name,
+			last_name,
+		});
 
-		const [{ userId }] = await knex(t.user)
-			.insert({
-				email,
-				first_name,
-				last_name,
-				password: hash,
-			})
-			.returning('user_id');
-
-		await knex(t.userProfile).insert({ user_id: userId, username, trail_name });
-
-		const user = await getUser(userId);
+		await knex(t.userProfile).insert({ user_id, username: username || null, trail_name });
 
 		// set up defaults
-		await createDefaultPack(user.userId);
-		await createUserSettings(user.userId);
+		await createDefaultPack(user_id);
+		await createUserSettings(user_id);
 
 		// add jwt + signed cookie
-		const token = createWebToken(user.userId);
-		res.cookie('token', token, cookieOptions);
+		const token = createWebToken(user_id);
+		res.cookie('tidyToken', token, cookieOptions);
 
-		// just an extra precaution, password should never exist on user object in register fn()
-		if (user.password) delete user.password;
-		res.status(200).json({ user });
+		return res.status(200).send();
 	} catch (err) {
-		console.log('ERROR: ', err);
 		res.status(400).json({ error: err });
 	}
 }
@@ -59,39 +43,31 @@ async function register(req: Request, res: Response) {
 async function login(req: Request, res: Response) {
 	const errorText = 'Invaid login information.';
 	try {
-		const { email, password } = req.body;
-
-		if (!email && !password) return res.status(400).json({ error: errorText });
+		const { user_id, email } = req.body;
+		// if (!req.userId || req.userId !== user_id)
+		// 	return res.status(400).json({ error: errorText });
 
 		const initialUser = await knex(t.user)
-			.select('user_id', 'password')
-			.where({ email })
+			.select('user_id')
+			.where({ user_id, email })
 			.first();
 
 		if (initialUser === undefined)
 			return res.status(400).json({ error: 'No account found. Feel free to sign up.' });
 
-		const passwordsMatch = await bcrypt.compare(password, initialUser.password);
+		// create token + cookie
+		const token = createWebToken(user_id);
 
-		if (passwordsMatch) {
-			const user = await getUser(initialUser.userId);
-			// create token + cookie
-			const token = createWebToken(user.userId);
-			res.cookie('token', token, cookieOptions);
-			// send back user, no password attached
-			delete user.password;
-			if (!user.password) res.status(200).json({ user });
-			else res.status(400).json({ error: errorText });
-		} else {
-			res.status(400).json({ error: errorText });
-		}
+		res.cookie('tidyToken', token, cookieOptions);
+
+		res.status(200).send();
 	} catch (err) {
 		res.status(400).json({ error: errorText });
 	}
 }
 
 async function logout(_req: Request, res: Response) {
-	return res.status(200).clearCookie('token').json({
+	return res.status(200).clearCookie('tidyToken').json({
 		message: 'User has been logged out.',
 	});
 }
@@ -110,7 +86,7 @@ async function getAuthStatus(req: Request, res: Response) {
 	}
 }
 
-export async function getUser(userId: number) {
+export async function getUser(userId: string) {
 	return await knex(t.user)
 		.leftJoin(t.userProfile, `${t.user}.user_id`, `${t.userProfile}.user_id`)
 		.select(
@@ -121,13 +97,12 @@ export async function getUser(userId: number) {
 			'username',
 			'trail_name',
 			'profile_photo_url',
-			'password',
 		)
 		.where({ 'user.user_id': userId })
 		.first();
 }
 
-export async function getUserSettings(userId: number) {
+export async function getUserSettings(userId: string) {
 	const [settings] = await knex.raw(`
 		select us.public_profile, us.topo_background, us.dark_theme, us.weight_unit, 
 		theme_info.theme_name, theme_info.theme_colors from user_settings us
@@ -139,127 +114,17 @@ export async function getUserSettings(userId: number) {
 				) theme_colors on th.theme_id = theme_colors.theme_id
 			group by th.theme_id
 			) theme_info on us.theme_id = theme_info.theme_id
-			where us.user_id = ${userId} AND us.theme_id = theme_info.theme_id;
+			where us.user_id = '${userId}' AND us.theme_id = theme_info.theme_id;
 	`);
 	return settings;
-}
-
-async function changePassword(req: Request, res: Response) {
-	try {
-		const { userId } = req;
-		const { current_password, new_password, confirm_new_password } = req.body;
-
-		if (new_password !== confirm_new_password) {
-			return res.status(400).json({ error: 'Passwords do not match. Please try again.' });
-		}
-		const { password } = await knex(t.user)
-			.select('password')
-			.where({ user_id: userId })
-			.first();
-		const correctPassword = await bcrypt.compare(current_password, password);
-		if (!correctPassword) {
-			return res.status(400).json({ error: 'Incorrect password. Please try again.' });
-		}
-
-		if (correctPassword) {
-			const hash = await bcrypt.hash(new_password, saltRounds);
-			await knex(t.user).update({ password: hash }).where({ user_id: userId });
-		}
-
-		return res.status(200).send();
-	} catch (err) {
-		res.status(400).json({ error: 'There was an error changing your password.' });
-	}
-}
-
-async function requestResetPassword(req: Request, res: Response) {
-	try {
-		const errorMessage = 'We could not verify your account information at this time.';
-		const { email } = req.body;
-		const [user] = await knex(t.user).select('first_name', 'email').where({ email });
-
-		if (!user.email) {
-			return res.status(400).json({
-				error: errorMessage,
-			});
-		}
-		const token = await createRandomId();
-		const expiration = Date.now() + tokenExpirationWindow;
-
-		const updateUserResponse = await knex(t.user)
-			.update({
-				reset_password_token: token,
-				reset_password_token_expiration: expiration,
-			})
-			.where({ email });
-
-		if (updateUserResponse) {
-			await createResetPasswordEmail(user.firstName, user.email, token);
-			return res.status(200).send();
-		} else {
-			return res.status(400).json({ error: errorMessage });
-		}
-	} catch (err) {
-		res.status(400).json({ error: 'There was an error reseting your password.' });
-	}
-}
-
-async function confirmResetPassword(req: Request, res: Response) {
-	try {
-		const { password, confirm_password, reset_token } = req.body;
-
-		if (password !== confirm_password)
-			return res.status(400).json({ error: 'Passwords do not match.' });
-
-		const resetTokenInfo = await knex(t.user)
-			.select('reset_password_token_expiration')
-			.where({ reset_password_token: reset_token })
-			.first();
-
-		if (!resetTokenInfo) {
-			return res.status(400).json({
-				error: 'We could not confirm your password reset. Please try again.',
-			});
-		}
-		// if token is expired
-		const { resetPasswordTokenExpiration } = resetTokenInfo;
-		const current = Date.now();
-		const diff = tokenExpirationWindow - Math.abs(current - resetPasswordTokenExpiration);
-		if (diff <= 0)
-			return res.status(400).json({
-				error: 'Your request has expired. Reset your password and try again.',
-			});
-
-		const hash = await bcrypt.hash(password, saltRounds);
-
-		const [user] = await knex(t.user)
-			.update(
-				{
-					password: hash,
-					reset_password_token: null,
-					reset_password_token_expiration: null,
-				},
-				['user_id', 'first_name', 'last_name', 'email', 'username', 'trail_name'],
-			)
-			.where({ reset_password_token: reset_token });
-
-		// add jwt + signed cookie
-		const jwtToken = createWebToken(user.userId);
-		res.cookie('token', jwtToken, cookieOptions);
-
-		return res.status(200).json({ user });
-	} catch (err) {
-		return res.status(400).json({ error: 'There was an error reseting your password.' });
-	}
 }
 
 async function deleteAccount(req: Request, res: Response) {
 	try {
 		const { userId } = req;
-
 		await knex(t.user).del().where({ user_id: userId });
 
-		return res.status(200).clearCookie('token').json({
+		return res.status(200).clearCookie('tidyToken').json({
 			message: 'User has been logged out.',
 		});
 	} catch (err) {
@@ -267,7 +132,7 @@ async function deleteAccount(req: Request, res: Response) {
 	}
 }
 
-function createWebToken(userId: number) {
+function createWebToken(userId: string) {
 	if (process.env.APP_SECRET) {
 		return jwt.sign({ userId }, process.env.APP_SECRET);
 	} else {
@@ -275,34 +140,7 @@ function createWebToken(userId: number) {
 	}
 }
 
-async function createRandomId(): Promise<string> {
-	return await randomBytes(16).toString('hex');
-}
-
-async function createResetPasswordEmail(name: string, email: string, token: string) {
-	try {
-		const client = new postmark.ServerClient(`${process.env.POSTMARK_TOKEN}`);
-
-		await client.sendEmailWithTemplate({
-			From: 'info@tidytrek.co',
-			To: email,
-			TemplateId: 34543255,
-			MessageStream: 'transaction-emails-password-re',
-			TemplateModel: {
-				name: name || 'friend',
-				product_name: 'Tidytrek',
-				action_url: `${process.env.FRONTEND_URL}/reset-password/${token}`,
-				support_url: 'https://tidytrek.co',
-			},
-		});
-	} catch (err) {
-		if (typeof err === 'string') return new Error(err);
-		else
-			return new Error('There was an error sending reset password email via postmark.');
-	}
-}
-
-async function createUserSettings(userId: number) {
+async function createUserSettings(userId: string) {
 	const { themeId } = await knex(t.theme)
 		.select('theme_id')
 		.where({ tidytrek_theme: true })
@@ -311,7 +149,7 @@ async function createUserSettings(userId: number) {
 	await knex(t.userSettings).insert({ user_id: userId, theme_id: themeId });
 }
 
-async function createDefaultPack(userId: number) {
+async function createDefaultPack(userId: string) {
 	try {
 		const [{ packId }] = await knex(t.pack)
 			.insert({
@@ -373,8 +211,5 @@ export default {
 	login,
 	logout,
 	getAuthStatus,
-	changePassword,
-	requestResetPassword,
-	confirmResetPassword,
 	deleteAccount,
 };

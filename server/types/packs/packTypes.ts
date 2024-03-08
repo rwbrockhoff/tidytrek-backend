@@ -1,8 +1,10 @@
+// import { type UUID } from 'crypto';
+
 export type PackItem = {
 	pack_item_name: string;
 	pack_item_description: string;
-	user_id?: number;
-	pack_id?: number;
+	user_id: string;
+	pack_id: number;
 	pack_category_id?: number;
 	pack_item_weight: number;
 	pack_item_unit: string;
@@ -10,8 +12,10 @@ export type PackItem = {
 	pack_item_index: number;
 };
 
+export type MockPackItem = Omit<PackItem, 'pack_id'> & { pack_id?: string };
+
 export type Pack = {
-	userId: number;
+	userId: string;
 	packId: number;
 	packIndex: number;
 	packName: string;

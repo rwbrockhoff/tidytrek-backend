@@ -19,7 +19,7 @@ async function getProfileSettings(req: Request, res: Response) {
 	}
 }
 
-export const getUserProfileInfo = async (userId: number) => {
+export const getUserProfileInfo = async (userId: string) => {
 	const profileInfo = await knex(t.user)
 		.leftJoin(t.userProfile, `${t.user}.user_id`, `${t.userProfile}.user_id`)
 		.select(
@@ -68,7 +68,6 @@ async function editProfileSettings(req: Request, res: Response) {
 
 		return res.status(200).send();
 	} catch (err) {
-		console.log('err: ', err);
 		return res.status(400).json({ error: 'There was an error updating your profile.' });
 	}
 }
