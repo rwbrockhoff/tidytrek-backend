@@ -9,8 +9,16 @@ async function register(req: Request, res: Response) {
 	try {
 		const { user_id, email, first_name, last_name, avatar_url } = req.body;
 
-		const { unique, message } = await isUniqueEmail(email);
-		if (!unique) return res.status(409).json({ error: message });
+		const { unique } = await isUniqueEmail(email);
+
+		if (!unique && !req.userId) return res.status(200).send();
+
+		if (!unique && req.userId) {
+			// add jwt + signed cookie for supabase verified user
+			const token = createWebToken(req.userId);
+			res.cookie(cookieName, token, cookieOptions);
+			return res.status(200).send();
+		}
 
 		await knex(t.user).insert({
 			user_id,
@@ -46,8 +54,7 @@ async function login(req: Request, res: Response) {
 			.where({ user_id, email })
 			.first();
 
-		if (initialUser === undefined)
-			return res.status(400).json({ error: 'No account found. Feel free to sign up.' });
+		if (initialUser === undefined) return res.status(400).json({ error: errorText });
 
 		// create token + cookie
 		const token = createWebToken(user_id);
