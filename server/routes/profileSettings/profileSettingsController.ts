@@ -52,7 +52,7 @@ async function editProfileSettings(req: Request, res: Response) {
 
 		if (username) {
 			// check for existing username
-			const { unique, message } = await isUniqueUsername(username);
+			const { unique, message } = await isUniqueUsername(username, userId);
 			if (!unique) return res.status(409).json({ error: message });
 		}
 
@@ -159,7 +159,7 @@ async function updateUsername(req: Request, res: Response) {
 
 		if (username) {
 			// check for existing username
-			const { unique, message } = await isUniqueUsername(username);
+			const { unique, message } = await isUniqueUsername(username, userId);
 			if (!unique) return res.status(409).json({ error: message });
 		}
 
@@ -219,11 +219,12 @@ async function deleteSocialLink(req: Request, res: Response) {
 	}
 }
 
-async function isUniqueUsername(username: string) {
+async function isUniqueUsername(username: string, userId: string) {
 	if (username && username.length) {
 		const existingUsername = await knex(t.userProfile)
 			.select('username')
-			.where({ username })
+			.whereNot('user_id', '=', userId)
+			.andWhere({ username })
 			.first();
 
 		if (existingUsername)
