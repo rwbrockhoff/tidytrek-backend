@@ -7,22 +7,26 @@ import { cookieName } from './utils.js';
 type JwtPayload = { userId: string };
 
 export const getUserId = async (req: Request, _res: Response, next: Next) => {
-	//--supabase
-	const authHeader = req.headers['authorization'];
-	if (authHeader) {
-		// Split the authorization header value by whitespace
-		const parts = authHeader.split(' ');
-		// Check if the authorization header has the correct format
-		if (parts.length === 2 && parts[0].toLowerCase() === 'bearer') {
-			// Extract the token from the authorization header
-			const token = parts[1];
-			// Attach user from verified JWT to request
-			if (token && process.env.SUPABASE_KEY) {
-				const { sub: userId } = jwt.verify(token, process.env.SUPABASE_KEY);
-				if (typeof userId === 'string') req.userId = userId;
+	try {
+		//--supabase
+		const authHeader = req.headers['authorization'];
+		if (authHeader) {
+			// Split the authorization header value by whitespace
+			const parts = authHeader.split(' ');
+			// Check if the authorization header has the correct format
+			if (parts.length === 2 && parts[0].toLowerCase() === 'bearer') {
+				// Extract the token from the authorization header
+				const token = parts[1];
+				// Attach user from verified JWT to request
+				if (token && process.env.SUPABASE_KEY) {
+					const verifiedJwt = jwt.verify(token, process.env.SUPABASE_KEY) || {};
+					const userId = verifiedJwt?.sub;
+					if (typeof userId === 'string') req.userId = userId;
+					else next();
+				}
 			}
 		}
-	}
+	} catch (err) {}
 	//--supabase
 
 	next();
@@ -56,7 +60,7 @@ export const protectedRoute = async (req: Request, res: Response, next: Next) =>
 	else {
 		//middleware used for routes only accessible to logged in users
 		if (!req.userId || !req.cookie || req.userId !== req.cookie) {
-			return res.status(400).json({ error: 'Please log in to complete this request.' });
+			return res.status(401).json({ error: 'Please log in to complete this request.' });
 		}
 	}
 	next();

@@ -7,7 +7,7 @@ import { supabase } from '../../db/supabaseClient.js';
 
 async function register(req: Request, res: Response) {
 	try {
-		const { user_id, email, first_name, last_name } = req.body;
+		const { user_id, email, first_name, last_name, avatar_url } = req.body;
 
 		const { unique, message } = await isUniqueEmail(email);
 		if (!unique) return res.status(409).json({ error: message });
@@ -20,8 +20,9 @@ async function register(req: Request, res: Response) {
 		});
 
 		// set up defaults
+		const photoUrl = avatar_url || null;
 		await createDefaultPack(user_id);
-		await createUserSettings(user_id);
+		await createUserSettings(user_id, photoUrl);
 
 		// add jwt + signed cookie
 		const token = createWebToken(user_id);
@@ -140,14 +141,14 @@ function createWebToken(userId: string) {
 	}
 }
 
-async function createUserSettings(user_id: string) {
+async function createUserSettings(user_id: string, profile_photo_url: string | null) {
 	const { themeId } = await knex(t.theme)
 		.select('theme_id')
 		.where({ tidytrek_theme: true })
 		.first();
 
 	await knex(t.userSettings).insert({ user_id, theme_id: themeId });
-	await knex(t.userProfile).insert({ user_id });
+	await knex(t.userProfile).insert({ user_id, profile_photo_url });
 }
 
 async function createDefaultPack(userId: string) {
