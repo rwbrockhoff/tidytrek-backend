@@ -361,17 +361,18 @@ async function movePackItem(req: Request, res: Response) {
 				? await knex.raw(`UPDATE pack_item
 				SET pack_item_index = pack_item_index + 1 
 				WHERE pack_item_index >= ${pack_item_index} and pack_item_index < ${prev_pack_item_index}
-				AND user_id = ${userId} AND pack_category_id = ${pack_category_id}`)
-				: await knex.raw(`UPDATE pack_item 
+				AND user_id = '${userId}' AND pack_category_id = ${pack_category_id}`)
+				: // handle lower position
+				  await knex.raw(`UPDATE pack_item 
 				SET pack_item_index = pack_item_index - 1 
 				WHERE pack_item_index <= ${pack_item_index} AND pack_item_index > ${prev_pack_item_index}
-				AND user_id = ${userId} AND pack_category_id = ${pack_category_id}`);
+				AND user_id = '${userId}' AND pack_category_id = ${pack_category_id}`);
 		} else {
 			// when moving to different category, we don't have to worry about previous position
 			await knex.raw(`UPDATE pack_item
 				SET pack_item_index = pack_item_index + 1
 				WHERE pack_item_index >= ${pack_item_index}
-				AND user_id = ${userId} AND pack_category_id = ${pack_category_id}`);
+				AND user_id = '${userId}' AND pack_category_id = ${pack_category_id}`);
 		}
 
 		// update the pack items position now that we've made room
