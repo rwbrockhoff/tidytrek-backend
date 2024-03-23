@@ -1,11 +1,13 @@
 import knex from '../../db/connection.js';
 import { tables as t } from '../../../knexfile.js';
+
 async function changeItemOrder(
 	userId: string,
 	table: string,
 	property: string,
 	currIndex: number,
 	prevIndex: number,
+	conditions?: string,
 ) {
 	try {
 		// higher position visually, making it a lower index in our table
@@ -16,11 +18,11 @@ async function changeItemOrder(
 			? await knex.raw(`UPDATE ${table}
 				SET ${property} = ${property} + 1 
 				WHERE ${property} >= ${currIndex} and ${property} < ${prevIndex}
-				AND user_id = ${userId}`)
+				AND user_id = '${userId}' ${conditions && `AND ${conditions}`}`)
 			: await knex.raw(`UPDATE ${table} 
 				SET ${property} = ${property} - 1 
 				WHERE ${property} <= ${currIndex} AND ${property} > ${prevIndex}
-				AND user_id = ${userId}`);
+				AND user_id = '${userId}' ${conditions && `AND ${conditions}`}`);
 	} catch (err) {
 		return new Error('There was an error changing the pack item index');
 	}

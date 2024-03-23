@@ -515,7 +515,7 @@ async function movePackCategory(req: Request, res: Response) {
 	try {
 		const { userId } = req;
 		const { categoryId } = req.params;
-		const { new_index, prev_index } = req.body;
+		const { new_index, prev_index, pack_id } = req.body;
 
 		await changeItemOrder(
 			userId,
@@ -523,6 +523,7 @@ async function movePackCategory(req: Request, res: Response) {
 			'pack_category_index',
 			new_index,
 			prev_index,
+			`pack_id = ${pack_id}`,
 		);
 
 		await knex(t.packCategory)

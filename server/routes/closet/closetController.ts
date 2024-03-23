@@ -72,6 +72,7 @@ async function moveGearClosetItem(req: Request, res: Response) {
 			'pack_item_index',
 			new_index,
 			previous_index,
+			'pack_category_id IS NULL',
 		);
 
 		await knex(t.packItem)
