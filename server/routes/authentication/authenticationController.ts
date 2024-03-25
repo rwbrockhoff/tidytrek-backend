@@ -4,6 +4,7 @@ import { Request, Response } from 'express';
 import { tables as t } from '../../../knexfile.js';
 import { cookieName, cookieOptions } from '../../utils/utils.js';
 import { supabase } from '../../db/supabaseClient.js';
+import { generateUsername } from '../../utils/usernameGenerator.js';
 
 async function register(req: Request, res: Response) {
 	try {
@@ -154,8 +155,15 @@ async function createUserSettings(user_id: string, profile_photo_url: string | n
 		.where({ tidytrek_theme: true })
 		.first();
 
+	const defaultUsername = generateUsername();
+
 	await knex(t.userSettings).insert({ user_id, theme_id: themeId });
-	await knex(t.userProfile).insert({ user_id, profile_photo_url });
+
+	await knex(t.userProfile).insert({
+		user_id,
+		profile_photo_url,
+		username: defaultUsername,
+	});
 }
 
 async function createDefaultPack(userId: string) {
@@ -172,7 +180,7 @@ async function createDefaultPack(userId: string) {
 			.insert({
 				user_id: userId,
 				pack_id: packId,
-				pack_category_name: 'Default Category',
+				pack_category_name: '',
 				pack_category_index: 0,
 				pack_category_color: 'primary',
 			})

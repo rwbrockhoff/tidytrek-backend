@@ -53,28 +53,26 @@ async function getCategories(packId: string) {
 	// Groups all pack items for each category into an object {pack_items: []}
 	return await knex.raw(
 		`select 
-            pc.*, array_remove(array_agg(to_jsonb(ordered_pack_items)), NULL) as pack_items from pack_category pc
-                left outer join
-                ( select * from pack_item where pack_item.pack_id = ${packId} 
-                order by pack_item.pack_item_index
-                ) ordered_pack_items on pc.pack_category_id = ordered_pack_items.pack_category_id
-            where pc.pack_id = ${packId}
-            group by pc.pack_category_id
-            order by pc.pack_category_index`,
+			pc.*, 
+			array_remove(array_agg(to_jsonb(pi) order by pack_item_index), NULL) as pack_items 
+			from pack_category pc
+			join pack_item pi on pi.pack_category_id = pc.pack_category_id	
+		where pc.pack_id = ${packId}
+		group by pc.pack_category_id
+		order by pc.pack_category_index`,
 	);
 }
 
 async function getUserProfile(req: Request, res: Response) {
 	try {
-		const { userId, username } = req.params;
-		// determine type of identifier sent via params
-		const resolvedId =
-			userId !== 'undefined' ? userId : await getIdFromUsername(username);
-		//use userId or username to figure out if user has public profile
+		const { username } = req.params;
+		const resolvedId = await getIdFromUsername(username);
+
 		const { publicProfile } = await knex(t.userSettings)
 			.select('public_profile')
 			.where({ user_id: resolvedId })
 			.first();
+
 		// handle private profiles or non-existent users
 		if (!publicProfile) {
 			return res

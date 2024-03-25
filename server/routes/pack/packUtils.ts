@@ -5,24 +5,25 @@ async function changeItemOrder(
 	userId: string,
 	table: string,
 	property: string,
-	currIndex: number,
-	prevIndex: number,
+	newIndex: number,
+	previousIndex: number,
 	conditions?: string,
 ) {
 	try {
 		// higher position visually, making it a lower index in our table
-		const higherPos = currIndex < prevIndex;
+		const higherPos = newIndex < previousIndex;
+
 		// move pack item indexes to allow item at new position
 		// handle lower or higher position for items in same category
 		return higherPos
 			? await knex.raw(`UPDATE ${table}
 				SET ${property} = ${property} + 1 
-				WHERE ${property} >= ${currIndex} and ${property} < ${prevIndex}
-				AND user_id = '${userId}' ${conditions && `AND ${conditions}`}`)
+				WHERE ${property} >= ${newIndex} and ${property} < ${previousIndex}
+				AND user_id = '${userId}' ${conditions ? `AND ${conditions}` : ''}`)
 			: await knex.raw(`UPDATE ${table} 
 				SET ${property} = ${property} - 1 
-				WHERE ${property} <= ${currIndex} AND ${property} > ${prevIndex}
-				AND user_id = '${userId}' ${conditions && `AND ${conditions}`}`);
+				WHERE ${property} <= ${newIndex} AND ${property} > ${previousIndex}
+				AND user_id = '${userId}' ${conditions ? `AND ${conditions}` : ''}`);
 	} catch (err) {
 		return new Error('There was an error changing the pack item index');
 	}
@@ -68,7 +69,7 @@ async function shiftPackItems(
 	try {
 		await knex.raw(`UPDATE pack_item
 			SET pack_item_index = pack_item_index - 1
-			WHERE user_id = ${userId} AND 
+			WHERE user_id = '${userId}' AND 
 			${packCategoryId ? `pack_category_id = ${packCategoryId}` : `pack_category_id IS NULL`}
 			AND pack_item_index >= ${packItemIndex}`);
 	} catch (err) {

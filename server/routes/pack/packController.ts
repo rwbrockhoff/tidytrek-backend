@@ -55,15 +55,14 @@ async function getPackById(userId: string, packId: number) {
 		.orderBy('created_at')
 		.first();
 
-	// Gets categories for a pack ordered by index
-	// Groups all pack items for each category into an object {pack_items: []}
+	// Gets categories for a pack ordered by category index
+	// Groups all pack items for each category ordered by pack item index
 	const categories = await knex.raw(
 		`select 
-		pc.*, array_remove(array_agg(to_jsonb(ordered_pack_items)), NULL) as pack_items from pack_category pc
-			left outer join
-			( select * from pack_item where pack_item.user_id = '${userId}'
-			order by pack_item.pack_item_index
-			) ordered_pack_items on pc.pack_category_id = ordered_pack_items.pack_category_id
+			pc.*, 
+			array_remove(array_agg(to_jsonb(pi) order by pack_item_index), NULL) as pack_items 
+			from pack_category pc
+			join pack_item pi on pi.pack_category_id = pc.pack_category_id	
 		where pc.user_id = '${userId}' and pc.pack_id = ${packId}
 		group by pc.pack_category_id
 		order by pc.pack_category_index`,
@@ -114,7 +113,7 @@ async function createNewPack(userId: string) {
 			.insert({
 				user_id: userId,
 				pack_id: pack.packId,
-				pack_category_name: 'Default Category',
+				pack_category_name: '',
 				pack_category_index: 0,
 				pack_category_color: 'primary',
 			})
@@ -240,7 +239,7 @@ async function deletePack(req: Request, res: Response) {
 		const { packId } = req.params;
 
 		const maxGearClosetIndex = await getMaxItemIndex(userId, null);
-		// unattach pack items (keep in garage)
+		// remove packId from packItems (keep in garage)
 		// update indexes to start at highest index in gear closet
 		await knex.raw(`
 			update pack_item pk
@@ -258,6 +257,11 @@ async function deletePack(req: Request, res: Response) {
 		await knex(t.packCategory).del().where({ user_id: userId, pack_id: packId });
 
 		await knex(t.pack).del().where({ user_id: userId, pack_id: packId });
+
+		// shift pack indexes
+		await knex.raw(`UPDATE pack
+			SET pack_index = pack_index - 1
+			WHERE user_id = '${userId}' AND pack_index > 0`);
 
 		//if no packs left, create default pack
 		const response = await knex(t.pack)
@@ -282,6 +286,11 @@ async function deletePackAndItems(req: Request, res: Response) {
 		await knex(t.packCategory).del().where({ user_id: userId, pack_id: packId });
 
 		await knex(t.pack).del().where({ user_id: userId, pack_id: packId });
+
+		// shift pack indexes
+		await knex.raw(`UPDATE pack
+			SET pack_index = pack_index - 1
+			WHERE user_id = '${userId}' AND pack_index > 0`);
 
 		//if no packs left, ensure user has default pack
 		const response = await knex(t.pack)
@@ -467,7 +476,7 @@ async function addPackCategory(req: Request & { params: number }, res: Response)
 
 		const [packCategory] = await knex(t.packCategory)
 			.insert({
-				pack_category_name: 'Category',
+				pack_category_name: '',
 				user_id: userId,
 				pack_id: packId,
 				pack_category_index: packCategoryIndex,
@@ -585,16 +594,15 @@ async function deleteCategoryAndItems(req: Request, res: Response) {
 
 async function getAvailablePacks(userId: string) {
 	try {
-		return await knex.raw(`
-			select pack.pack_id, pack_name, pack_index,
-			array_remove(array_agg(to_jsonb(ordered_categories)), NULL) as pack_categories from pack
-				left outer join
-					( select * from pack_category where pack_category.user_id = '${userId}'
-					order by pack_category.pack_category_index
-					) ordered_categories on pack.pack_id = ordered_categories.pack_id
-			where pack.user_id = '${userId}' 
-			group by pack.pack_id
-			order by pack.pack_index`);
+		return await knex.raw(
+			`select 
+			pack.pack_id, pack_name, pack_index,
+			array_remove(array_agg(to_jsonb(pc) order by pack_index), NULL) as pack_categories from pack
+			join pack_category pc on pc.pack_id = pack.pack_id	
+		where pack.user_id = '${userId}'
+		group by pack.pack_id
+		order by pack.pack_index`,
+		);
 	} catch (err) {
 		return new Error('Error getting available packs.');
 	}
