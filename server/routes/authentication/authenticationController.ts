@@ -8,7 +8,7 @@ import { generateUsername } from '../../utils/usernameGenerator.js';
 
 async function register(req: Request, res: Response) {
 	try {
-		const { user_id, email, first_name, last_name, avatar_url } = req.body;
+		const { user_id, email } = req.body;
 
 		const { unique } = await isUniqueEmail(email);
 
@@ -21,17 +21,7 @@ async function register(req: Request, res: Response) {
 			return res.status(200).send();
 		}
 
-		await knex(t.user).insert({
-			user_id,
-			email,
-			first_name,
-			last_name,
-		});
-
-		// set up defaults
-		const photoUrl = avatar_url || null;
-		await createDefaultPack(user_id);
-		await createUserSettings(user_id, photoUrl);
+		await onboardUser(req.body);
 
 		// add jwt + signed cookie
 		const token = createWebToken(user_id);
@@ -41,6 +31,27 @@ async function register(req: Request, res: Response) {
 	} catch (err) {
 		res.status(400).json({ error: err });
 	}
+}
+
+async function onboardUser(userInfo: {
+	user_id: string;
+	email: string;
+	first_name?: string;
+	last_name?: string;
+	avatar_url?: string;
+}) {
+	const { user_id, email, first_name, last_name, avatar_url } = userInfo;
+	await knex(t.user).insert({
+		user_id,
+		email,
+		first_name,
+		last_name,
+	});
+
+	// set up defaults
+	const photoUrl = avatar_url || null;
+	await createDefaultPack(user_id);
+	await createUserSettings(user_id, photoUrl);
 }
 
 async function login(req: Request, res: Response) {
@@ -55,14 +66,19 @@ async function login(req: Request, res: Response) {
 			.where({ user_id, email })
 			.first();
 
-		if (initialUser === undefined) return res.status(400).json({ error: errorText });
+		if (initialUser === undefined && !req.userId)
+			return res.status(400).json({ error: errorText });
+
+		if (initialUser === undefined && req.userId) {
+			await onboardUser(req.body);
+		}
 
 		// create token + cookie
 		const token = createWebToken(user_id);
 
 		res.cookie(cookieName, token, cookieOptions);
 
-		res.status(200).send();
+		res.status(200).json({ newUser: initialUser === undefined });
 	} catch (err) {
 		res.status(400).json({ error: errorText });
 	}

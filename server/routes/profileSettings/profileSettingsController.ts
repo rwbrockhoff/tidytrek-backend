@@ -35,6 +35,7 @@ export const getUserProfileInfo = async (userId: string) => {
 		.first();
 
 	const socialLinks = await knex(t.socialLinkList)
+		.select('social_link_id', 'social_link_name', 'social_link_url')
 		.leftOuterJoin(
 			t.socialLink,
 			`${t.socialLinkList}.${linkListId}`,
