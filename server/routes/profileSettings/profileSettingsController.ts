@@ -2,7 +2,7 @@ import knex from '../../db/connection.js';
 import { tables as t } from '../../../knexfile.js';
 import { Request, Response } from 'express';
 import { createCloudfrontUrlForPhoto, s3DeletePhoto } from '../../utils/s3.js';
-
+import { generateUsername } from '../../utils/usernameGenerator.js';
 const linkListId = 'social_link_list_id';
 
 async function getProfileSettings(req: Request, res: Response) {
@@ -173,6 +173,15 @@ async function updateUsername(req: Request, res: Response) {
 	}
 }
 
+async function generateUsernamePreview(_req: Request, res: Response) {
+	try {
+		const username = generateUsername();
+		return res.status(200).json({ username });
+	} catch (err) {
+		return res.status(400).json({ error: 'There was an error creating a new username.' });
+	}
+}
+
 async function addSocialLink(req: Request, res: Response) {
 	try {
 		const { userId } = req;
@@ -244,6 +253,7 @@ export default {
 	deleteProfilePhoto,
 	uploadBannerPhoto,
 	updateUsername,
+	generateUsernamePreview,
 	addSocialLink,
 	deleteSocialLink,
 };

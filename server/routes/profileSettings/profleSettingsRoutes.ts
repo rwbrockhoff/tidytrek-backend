@@ -5,6 +5,7 @@ import { s3UploadPhoto } from '../../utils/s3.js';
 const router = express.Router();
 
 router.get('/', userProfileController.getProfileSettings);
+router.get('/random-username', userProfileController.generateUsernamePreview);
 
 router.post('/social-link', userProfileController.addSocialLink);
 router.post(
