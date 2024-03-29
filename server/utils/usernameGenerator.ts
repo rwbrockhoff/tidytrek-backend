@@ -1,6 +1,6 @@
 export const generateUsername = () => {
-	const adjectiveNum = Math.floor(Math.random() * positiveAdjectives.length - 1);
-	const nounNum = Math.floor(Math.random() * positiveNouns.length - 1);
+	const adjectiveNum = Math.floor(Math.random() * positiveAdjectives.length);
+	const nounNum = Math.floor(Math.random() * positiveNouns.length);
 	const randomNum = Math.floor(Math.random() * 9999);
 	return `${positiveAdjectives[adjectiveNum]}_${positiveNouns[nounNum]}${randomNum}`;
 };
@@ -98,6 +98,7 @@ const positiveNouns = [
 	'Meadow',
 	'Creek',
 	'River',
+	'Pinecone',
 	'Lake',
 	'Wilderness',
 	'Canyon',
