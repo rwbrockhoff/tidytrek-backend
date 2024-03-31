@@ -54,7 +54,7 @@ async function getCategories(packId: string) {
 	return await knex.raw(
 		`select 
 			pc.*, 
-			array_remove(array_agg(to_jsonb(pi) order by pack_item_index), NULL) as pack_items 
+			coalesce(array_agg(to_jsonb(pi) order by pack_item_index), '{}') as pack_items 
 			from pack_category pc
 			join pack_item pi on pi.pack_category_id = pc.pack_category_id	
 		where pc.pack_id = ${packId}
