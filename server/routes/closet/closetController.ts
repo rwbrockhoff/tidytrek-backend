@@ -7,12 +7,18 @@ async function getGearCloset(req: Request, res: Response) {
 	try {
 		const { userId } = req;
 
-		const gearClosetList = await knex(t.packItem)
-			.where({
-				user_id: userId,
-				pack_id: null,
-			})
-			.orderBy('pack_item_index');
+		// todo: int parser for pg to resolve knex queries returning string values
+		// or convert raw queries to string values
+		// current result: knex query: '45.0000' knex raw query: 45
+
+		const [{ gearClosetList }] =
+			(await knex.raw(`
+			select coalesce(array_agg(to_jsonb(pi) order by pack_item_index), '{}') as gear_closet_list 
+				from (
+					select * from pack_item
+					where user_id = '${userId}' and pack_id IS NULL
+				) pi
+		`)) || [];
 
 		return res.status(200).json({ gearClosetList });
 	} catch (err) {
@@ -72,6 +78,7 @@ async function moveGearClosetItem(req: Request, res: Response) {
 			'pack_item_index',
 			new_index,
 			previous_index,
+			'pack_category_id IS NULL',
 		);
 
 		await knex(t.packItem)

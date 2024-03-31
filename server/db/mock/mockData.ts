@@ -1,10 +1,13 @@
-import { PackItem } from '../../types/packs/packTypes.js';
+import { type MockPackItem } from '../../types/packs/packTypes.js';
+
+const mockUserId = '60094a8e-a1fe-423a-abca-637381b33950';
+const mockUserId2 = '670098f4-4c1e-40a4-8896-e0f8968a90ac';
 
 export const mockUser = {
+	userId: mockUserId,
 	first_name: 'Ryan',
 	last_name: 'Brockhoff',
 	email: 'ryan@tidytrek.co',
-	password: 'ilovehiking',
 	username: 'tidyTrekHiker171',
 	trailName: 'Rocket',
 };
@@ -37,7 +40,7 @@ export const mockPackCategory = {
 	pack_category_index: 0,
 };
 
-export const mockPackItems: PackItem[] = [
+export const mockPackItems: MockPackItem[] = [
 	{
 		pack_item_name: 'Durston Kakwa',
 		pack_item_description: '40 Liter UL Pack',
@@ -45,6 +48,7 @@ export const mockPackItems: PackItem[] = [
 		pack_item_unit: 'oz',
 		pack_item_quantity: 1,
 		pack_item_index: 0,
+		user_id: mockUserId,
 	},
 	{
 		pack_item_name: 'X-Mid 2',
@@ -53,6 +57,7 @@ export const mockPackItems: PackItem[] = [
 		pack_item_unit: 'oz',
 		pack_item_quantity: 1,
 		pack_item_index: 1,
+		user_id: mockUserId,
 	},
 	{
 		pack_item_name: 'Nemo Tensor Insulated',
@@ -61,6 +66,7 @@ export const mockPackItems: PackItem[] = [
 		pack_item_unit: 'lb',
 		pack_item_quantity: 1,
 		pack_item_index: 2,
+		user_id: mockUserId,
 	},
 ];
 
@@ -71,14 +77,16 @@ export const notSeededPackItem = {
 	pack_item_unit: 'oz',
 	pack_item_quantity: 1,
 };
+
 export const notSeededUser = {
 	first_name: 'Sarah',
 	last_name: 'Collins',
 	email: 'scollins@tidytrek.co',
 	password: 'newtohiking123!',
+	userId: mockUserId2,
 };
 
-export const mockGearClosetItems: PackItem[] = [
+export const mockGearClosetItems: MockPackItem[] = [
 	{
 		pack_item_name: 'REI Flash',
 		pack_item_description: 'Old 55 liter pack',
@@ -86,6 +94,7 @@ export const mockGearClosetItems: PackItem[] = [
 		pack_item_unit: 'oz',
 		pack_item_quantity: 1,
 		pack_item_index: 0,
+		user_id: mockUserId,
 	},
 	{
 		pack_item_name: 'Big Agnes Copper Spur',
@@ -94,6 +103,7 @@ export const mockGearClosetItems: PackItem[] = [
 		pack_item_unit: 'lb',
 		pack_item_quantity: 1,
 		pack_item_index: 1,
+		user_id: mockUserId,
 	},
 	{
 		pack_item_name: 'Klymit Insulated Pad',
@@ -102,5 +112,6 @@ export const mockGearClosetItems: PackItem[] = [
 		pack_item_unit: 'oz',
 		pack_item_quantity: 1,
 		pack_item_index: 2,
+		user_id: mockUserId,
 	},
 ];

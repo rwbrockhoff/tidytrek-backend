@@ -10,7 +10,7 @@ export async function up(knex: Knex): Promise<void> {
 	await knex.schema.createTable(t.socialLink, (table) => {
 		table.increments('social_link_id').unsigned().primary();
 
-		table.integer('user_id').unsigned().notNullable();
+		table.uuid('user_id').unsigned().notNullable();
 		table.foreign('user_id').references('user_id').inTable(t.user).onDelete('CASCADE');
 
 		table.integer('social_link_list_id').unsigned().notNullable();
@@ -24,9 +24,9 @@ export async function up(knex: Knex): Promise<void> {
 
 	await knex.schema.createTable(t.userProfile, (table) => {
 		table.increments('user_profile_id').unsigned().primary();
-		table.integer('user_id').unsigned().notNullable();
+		table.uuid('user_id').unsigned().notNullable();
 		table.foreign('user_id').references('user_id').inTable(t.user).onDelete('CASCADE');
-		table.string('username').unique().nullable();
+		table.string('username').unique().notNullable();
 		table.string('trail_name').nullable();
 		table.text('profile_photo_url').nullable();
 		table.text('banner_photo_url').nullable();

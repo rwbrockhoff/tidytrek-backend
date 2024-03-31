@@ -4,7 +4,7 @@ import { tables as t } from '../../../knexfile.js';
 export async function up(knex: Knex): Promise<void> {
 	await knex.schema.createTable(t.pack, (table) => {
 		table.increments('pack_id').unsigned().primary();
-		table.integer('user_id').unsigned().notNullable();
+		table.uuid('user_id').unsigned().notNullable();
 		table.foreign('user_id').references('user_id').inTable(t.user).onDelete('CASCADE');
 		table.integer('pack_index').unsigned().notNullable();
 		table.index('pack_index');
@@ -16,6 +16,7 @@ export async function up(knex: Knex): Promise<void> {
 		table.string('pack_distance_tag').nullable();
 		table.boolean('pack_public').defaultTo(false).notNullable();
 		table.boolean('pack_affiliate').defaultTo(false).notNullable();
+		table.boolean('pack_pricing').defaultTo(false).notNullable();
 		table.text('pack_affiliate_description').nullable();
 		table.string('pack_url_name').nullable();
 		table.text('pack_url').nullable();

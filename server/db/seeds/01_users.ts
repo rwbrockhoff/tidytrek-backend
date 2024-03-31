@@ -1,6 +1,5 @@
 import { Knex } from 'knex';
 import { tables as t } from '../../../knexfile.js';
-import bcrypt from 'bcrypt';
 import {
 	mockUser,
 	mockPack,
@@ -9,10 +8,9 @@ import {
 	mockPackItems,
 	mockGearClosetItems,
 } from '../mock/mockData.js';
-import { PackItem } from '../../types/packs/packTypes.js';
+import { type MockPackItem } from '../../types/packs/packTypes.js';
 
-const { first_name, last_name, email, password } = mockUser;
-const mockUserHashedPassword = await bcrypt.hash(password, 10);
+const { first_name, last_name, email, userId: user_id } = mockUser;
 
 export async function seed(knex: Knex): Promise<void> {
 	await knex(t.user).del();
@@ -20,38 +18,30 @@ export async function seed(knex: Knex): Promise<void> {
 	await knex(t.packCategory).del();
 	await knex(t.packItem).del();
 
-	const [dummyUser] = await knex(t.user)
-		.insert({ first_name, last_name, email, password: mockUserHashedPassword })
-		.returning('*');
+	await knex(t.user).insert({ user_id, first_name, last_name, email }).returning('*');
 
 	const [pack] = await knex(t.pack)
-		.insert({ ...mockPack, user_id: dummyUser.userId })
+		.insert({ ...mockPack, user_id })
 		.returning('*');
 
 	const [packCategory] = await knex(t.packCategory)
 		.insert({
 			...mockPackCategory,
-			user_id: dummyUser.userId,
+			user_id,
 			pack_id: pack.packId,
 			pack_category_color: 'primary',
 		})
 		.returning('*');
 
-	const packItemsWithIds = mockPackItems.map((item: PackItem) => {
-		item['user_id'] = dummyUser.userId;
+	const packItemsWithIds = mockPackItems.map((item: MockPackItem) => {
 		item['pack_id'] = pack.packId;
 		item['pack_category_id'] = packCategory.packCategoryId;
 		return item;
 	});
 
-	const closetItemsWithIds = mockGearClosetItems.map((item: PackItem) => {
-		item['user_id'] = dummyUser.userId;
-		return item;
-	});
-
-	await knex(t.packItem).insert([...packItemsWithIds, ...closetItemsWithIds]);
+	await knex(t.packItem).insert([...packItemsWithIds, ...mockGearClosetItems]);
 
 	await knex(t.pack)
-		.insert({ ...mockPack2, user_id: dummyUser.userId })
+		.insert({ ...mockPack2, user_id: user_id })
 		.returning('*');
 }

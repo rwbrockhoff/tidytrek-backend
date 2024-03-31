@@ -10,3 +10,14 @@ export const knexCamelCaseResponse = (result: KnexResponse) => {
 	}
 	return result;
 };
+
+export const cookieName =
+	process.env.NODE_ENV === 'production' ? 'tidyToken' : 'tidyToken';
+
+// todo: '__Host-tidyToken'
+
+export const cookieOptions = {
+	httpOnly: true,
+	maxAge: 1000 * 60 * 60 * 24 * 180, // 180 days
+	signed: true,
+};

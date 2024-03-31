@@ -15,14 +15,14 @@ async function getProfile(req: Request, res: Response) {
 	}
 }
 
-export const getProfileAndPacks = async (userId: number, isPackOwner: boolean) => {
+export const getProfileAndPacks = async (userId: string, isPackOwner: boolean) => {
 	const { profileInfo, socialLinks } = await getUserProfileInfo(userId);
 
 	const packThumbnailList = await getPackThumbnailList(userId, isPackOwner);
 	return { userProfile: { profileInfo, socialLinks }, packThumbnailList };
 };
 
-export const getPackThumbnailList = async (userId: number, isPackOwner: boolean) => {
+export const getPackThumbnailList = async (userId: string, isPackOwner: boolean) => {
 	const publicCondition = isPackOwner ? {} : { pack_public: true };
 	return await knex(t.pack)
 		.where({ user_id: userId, ...publicCondition })
