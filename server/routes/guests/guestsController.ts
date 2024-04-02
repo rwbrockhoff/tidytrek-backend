@@ -56,7 +56,7 @@ async function getCategories(packId: string) {
 			pc.*, 
 			coalesce(array_agg(to_jsonb(pi) order by pack_item_index), '{}') as pack_items 
 			from pack_category pc
-			join pack_item pi on pi.pack_category_id = pc.pack_category_id	
+			left outer join pack_item pi on pi.pack_category_id = pc.pack_category_id	
 		where pc.pack_id = ${packId}
 		group by pc.pack_category_id
 		order by pc.pack_category_index`,
