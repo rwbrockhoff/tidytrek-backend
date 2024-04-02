@@ -60,13 +60,14 @@ async function getPackById(userId: string, packId: number) {
 	const categories = await knex.raw(
 		`select 
 			pc.*, 
-			coalesce(array_agg(to_jsonb(pi) order by pack_item_index), '{}') as pack_items 
+			coalesce(array_remove(array_agg(to_jsonb(pi) order by pack_item_index), NULL), '{}') as pack_items 
 			from pack_category pc
 			left outer join pack_item pi on pi.pack_category_id = pc.pack_category_id	
 		where pc.user_id = '${userId}' and pc.pack_id = ${packId}
 		group by pc.pack_category_id
 		order by pc.pack_category_index`,
 	);
+
 	return { pack, categories: categories || [] };
 }
 
@@ -597,7 +598,7 @@ async function getAvailablePacks(userId: string) {
 		return await knex.raw(
 			`select 
 			pack.pack_id, pack_name, pack_index,
-			coalesce(array_agg(to_jsonb(pc) order by pack_index), '{}') as pack_categories from pack
+			coalesce(array_remove(array_agg(to_jsonb(pc) order by pack_index), NULL), '{}') as pack_categories from pack
 			left outer join pack_category pc on pc.pack_id = pack.pack_id	
 		where pack.user_id = '${userId}'
 		group by pack.pack_id
