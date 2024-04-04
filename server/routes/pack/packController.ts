@@ -9,6 +9,8 @@ import { tables as t } from '../../../knexfile.js';
 import { themeColorNames } from '../../utils/constraints.js';
 import { Request, Response } from 'express';
 import { createCloudfrontUrlForPhoto, s3DeletePhoto } from '../../utils/s3.js';
+import { packScraper } from '../../utils/puppeteer.js';
+import { isError } from '../../utils/utils.js';
 
 async function getDefaultPack(req: Request, res: Response) {
 	try {
@@ -86,11 +88,13 @@ async function addNewPack(req: Request, res: Response) {
 	const errorMessage = 'There was an error adding a new pack.';
 	try {
 		const { userId } = req;
-		const response = await createNewPack(userId);
-		if ('pack' in response && 'categories' in response) {
-			const { pack, categories } = response;
-			return res.status(200).json({ pack, categories });
-		} else return res.status(400).json({ error: errorMessage });
+		const newPack = await createNewPack(userId);
+
+		const newPackError = isError(newPack);
+		if (newPackError) return res.status(400).json({ error: errorMessage });
+
+		const { pack, categories } = newPack;
+		return res.status(200).json({ pack, categories });
 	} catch (err) {
 		return res.status(400).json({ error: errorMessage });
 	}
@@ -135,6 +139,72 @@ async function createNewPack(userId: string) {
 		return { pack, categories };
 	} catch (err) {
 		return new Error('There was an error creating a new pack.');
+	}
+}
+
+async function importNewPack(req: Request, res: Response) {
+	const importErrorMessage = 'There was an error importing your pack.';
+	try {
+		const { userId } = req;
+		const { pack_url } = req.body;
+		// const lpUrl = 'https://lighterpack.com/r/jbknlg';
+		const importedPack = await packScraper(pack_url);
+
+		// handle error
+		const isPackError = isError(importedPack);
+		if (isPackError) return res.status(400).json({ error: importErrorMessage });
+
+		// save new pack to db
+		const { pack_name, pack_description, pack_categories } = importedPack;
+
+		const packIndex = await generateIndex(t.pack, 'pack_index', {
+			user_id: userId,
+		});
+
+		// insert pack
+		const [{ packId }] = await knex(t.pack)
+			.insert({
+				user_id: userId,
+				pack_name,
+				pack_description,
+				pack_index: packIndex,
+			})
+			.returning('pack_id');
+
+		// insert categories and pack items
+		pack_categories.map(async (category) => {
+			const { pack_category_name, pack_category_index, pack_items } = category;
+			// get theme color based on index
+			const themeColor = await getThemeColor(userId, pack_category_index);
+
+			// assign default color if theme color error
+			const isThemeColorError = isError(themeColor);
+			const pack_category_color = isThemeColorError ? 'primary' : themeColor;
+
+			// insert pack category
+			const [{ packCategoryId }] = await knex(t.packCategory)
+				.insert({
+					user_id: userId,
+					pack_id: packId,
+					pack_category_name,
+					pack_category_index,
+					pack_category_color,
+				})
+				.returning('pack_category_id');
+
+			// insert pack items
+			const packItemsWithIds = pack_items.map((item) => ({
+				...item,
+				user_id: userId,
+				pack_id: packId,
+				pack_category_id: packCategoryId,
+			}));
+			await knex(t.packItem).insert(packItemsWithIds);
+		});
+
+		return res.status(200).send();
+	} catch (err) {
+		return res.status(400).json({ error: importErrorMessage });
 	}
 }
 
@@ -460,20 +530,7 @@ async function addPackCategory(req: Request & { params: number }, res: Response)
 			pack_id: packId,
 		});
 
-		//get user's theme ID from user_settings
-		const { themeId } = await knex(t.userSettings)
-			.select('theme_id')
-			.where({ user_id: userId })
-			.first();
-
-		// get nth number from theme_colors using pack category index
-		const themeColorIndex = packCategoryIndex % themeColorNames.length;
-		const { themeColorName } = await knex(t.themeColor)
-			.select('theme_color_name')
-			.where({ theme_id: themeId })
-			.offset(themeColorIndex)
-			.limit(1)
-			.first();
+		const themeColorName = await getThemeColor(userId, packCategoryIndex);
 
 		const [packCategory] = await knex(t.packCategory)
 			.insert({
@@ -501,6 +558,29 @@ async function addPackCategory(req: Request & { params: number }, res: Response)
 		return res.status(200).json({ packCategory });
 	} catch (err) {
 		return res.status(400).json({ error: 'There was an error adding a new category.' });
+	}
+}
+
+async function getThemeColor(user_id: string, packCategoryIndex: number) {
+	try {
+		//get user's theme ID from user_settings
+		const { themeId } = await knex(t.userSettings)
+			.select('theme_id')
+			.where({ user_id })
+			.first();
+
+		// get nth number from theme_colors using pack category index
+		const themeColorIndex = packCategoryIndex % themeColorNames.length;
+		const { themeColorName } = await knex(t.themeColor)
+			.select('theme_color_name')
+			.where({ theme_id: themeId })
+			.offset(themeColorIndex)
+			.limit(1)
+			.first();
+
+		return themeColorName;
+	} catch (err) {
+		return new Error('There was an error getting the theme color.');
 	}
 }
 
@@ -626,6 +706,7 @@ export default {
 	getPack,
 	getPackList,
 	addNewPack,
+	importNewPack,
 	uploadPackPhoto,
 	editPack,
 	movePack,

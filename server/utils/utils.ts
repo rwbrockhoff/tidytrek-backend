@@ -21,3 +21,5 @@ export const cookieOptions = {
 	maxAge: 1000 * 60 * 60 * 24 * 180, // 180 days
 	signed: true,
 };
+
+export const isError = (err: unknown): err is Error => err instanceof Error;

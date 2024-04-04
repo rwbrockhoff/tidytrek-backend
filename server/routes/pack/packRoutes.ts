@@ -13,6 +13,7 @@ router.post(
 	s3UploadPhoto('packPhotoBucket').single('packPhoto'),
 	packController.uploadPackPhoto,
 );
+router.post('/import', packController.importNewPack);
 router.put('/:packId', packController.editPack);
 router.put('/index/:packId', packController.movePack);
 router.delete('/:packId', packController.deletePack);
