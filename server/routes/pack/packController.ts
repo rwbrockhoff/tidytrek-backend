@@ -147,7 +147,6 @@ async function importNewPack(req: Request, res: Response) {
 	try {
 		const { userId } = req;
 		const { pack_url } = req.body;
-
 		const importedPack = await packScraper(pack_url);
 
 		// handle error
