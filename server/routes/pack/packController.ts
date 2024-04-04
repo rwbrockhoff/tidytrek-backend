@@ -147,7 +147,7 @@ async function importNewPack(req: Request, res: Response) {
 	try {
 		const { userId } = req;
 		const { pack_url } = req.body;
-		// const lpUrl = 'https://lighterpack.com/r/jbknlg';
+
 		const importedPack = await packScraper(pack_url);
 
 		// handle error

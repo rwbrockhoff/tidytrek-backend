@@ -51,7 +51,7 @@ export async function packScraper(packUrl: string) {
 
 					const pack_item_price =
 						packItem
-							.querySelector('.lpPriceCell .lpNumber')
+							.querySelector('.lpPriceCell')
 							?.textContent?.trim()
 							.replace(/[^0-9\.-]+/g, '') || 0;
 
