@@ -55,7 +55,7 @@ describe('Auth Routes: ', () => {
 
 	it.skip('POST /register -> Should NOT allow existing username to be registered', async () => {
 		notSeededUser.username = mockUser.username;
-		console.log('not seeded user: ', notSeededUser);
+
 		const response = await request.post('/auth/register').send(notSeededUser);
 
 		expect(response.statusCode).toEqual(409);
