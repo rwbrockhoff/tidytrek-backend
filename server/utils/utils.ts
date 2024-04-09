@@ -11,17 +11,16 @@ export const knexCamelCaseResponse = (result: KnexResponse) => {
 	return result;
 };
 
-export const cookieName =
-	process.env.NODE_ENV === 'production' ? 'tidyToken' : 'tidyToken';
+export const cookieName = 'tidytrek_token';
 
-// export const domainName = process.env.NODE_ENV === 'production' ? 'tidytrek.co' : 'localhost';
-// todo: '__Host-tidyToken'
+export const domainName =
+	process.env.NODE_ENV === 'production' ? 'tidytrek.co' : undefined;
 
 export const cookieOptions = {
 	httpOnly: true,
 	maxAge: 1000 * 60 * 60 * 24 * 180, // 180 days
 	signed: true,
-	// domain: domainName,
+	domain: domainName,
 };
 
 export const isError = (err: unknown): err is Error => err instanceof Error;
