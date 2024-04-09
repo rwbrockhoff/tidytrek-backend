@@ -2,7 +2,7 @@ import jwt from 'jsonwebtoken';
 import knex from '../../db/connection.js';
 import { Request, Response } from 'express';
 import { tables as t } from '../../../knexfile.js';
-import { cookieName, cookieOptions } from '../../utils/utils.js';
+import { cookieName, cookieOptions, domainName } from '../../utils/utils.js';
 import { supabase } from '../../db/supabaseClient.js';
 import { generateUsername } from '../../utils/usernameGenerator.js';
 
@@ -85,7 +85,7 @@ async function login(req: Request, res: Response) {
 }
 
 async function logout(_req: Request, res: Response) {
-	return res.status(200).clearCookie(cookieName).json({
+	return res.status(200).clearCookie(cookieName, { domain: domainName }).json({
 		message: 'User has been logged out.',
 	});
 }
