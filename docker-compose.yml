@@ -1,0 +1,6 @@
+version: '3'
+services:
+  tidytrek-api:
+    build: .
+    ports:
+      - '4001:4001'

@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 dotenv.config({
 	path: process.env.NODE_ENV === 'production' ? 'production.env' : 'dev.env',
 });
+
 const dbName = 'tidytrek_db';
 
 export const tables = {
@@ -23,9 +24,10 @@ export default {
 	development: {
 		client: 'pg',
 		connection: {
-			host: '127.0.0.1',
-			port: 5432,
+			host: process.env.DB_HOST || '127.0.0.1',
 			database: dbName,
+			port: 5432,
+			user: 'postgres',
 		},
 		postProcessResponse: (result: KnexResponse) => knexCamelCaseResponse(result),
 		asyncStackTraces: true,
@@ -60,9 +62,10 @@ export default {
 	test: {
 		client: 'pg',
 		connection: {
-			host: '127.0.0.1',
+			host: process.env.DB_HOST || '127.0.0.1',
 			port: 5432,
 			database: `${dbName}_test`,
+			user: 'postgres',
 		},
 		postProcessResponse: (result: KnexResponse) => knexCamelCaseResponse(result),
 		asyncStackTraces: true,
