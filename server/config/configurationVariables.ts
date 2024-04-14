@@ -1,8 +1,8 @@
+import { getSecret } from '../utils/getSecrets.js';
+
 export const acceptedOrigins: string[] = [
-	// @ts-expect-error ENV variable
-	process.env.FRONTEND_URL,
-	// @ts-expect-error ENV variable
-	process.env.LANDING_PAGE_URL,
+	getSecret('FRONTEND_URL'),
+	getSecret('LANDING_PAGE_URL'),
 ];
 
 export const corsErrorMessage: string =

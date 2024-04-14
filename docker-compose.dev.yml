@@ -1,13 +1,11 @@
 version: '3'
 services:
   tidytrek-api:
+    build:
+      target: development
     volumes:
-      - ./:/app
-      # - /app/node_modules
-    env_file:
-      - ./dev.env
+      - /app
     environment:
       - NODE_ENV=development
       - DB_HOST=host.docker.internal
-
     command: npm run dev

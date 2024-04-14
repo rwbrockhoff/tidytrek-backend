@@ -4,3 +4,9 @@ Dockerfile
 .git
 .gitignore
 docker-compose*
+README.md
+vitest.config.ts
+.prettierrc
+.eslintrc
+.github
+*.env

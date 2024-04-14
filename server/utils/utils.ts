@@ -3,6 +3,7 @@ import { KnexResponse } from '../types/server/serverTypes.js';
 
 export const knexCamelCaseResponse = (result: KnexResponse) => {
 	if (result) {
+		// @ts-expect-error rows is defined
 		if (result?.rows) return camelcaseKeys(result.rows, { deep: true });
 		else {
 			return camelcaseKeys(result);

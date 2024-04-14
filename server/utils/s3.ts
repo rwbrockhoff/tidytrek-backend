@@ -3,12 +3,13 @@ dotenv.config();
 import { S3Client, DeleteObjectCommand } from '@aws-sdk/client-s3';
 import multer from 'multer';
 import multerS3 from 'multer-s3';
+import { getSecret } from './getSecrets.js';
 
 // Express.MulterS3.File
 
-const profilePhotoBucket = process.env.PROFILE_PHOTO_S3_BUCKET;
-const bannerPhotoBucket = process.env.BANNER_PHOTO_S3_BUCKET;
-const packPhotoBucket = process.env.PACK_PHOTO_S3_BUCKET;
+const profilePhotoBucket = getSecret('PROFILE_PHOTO_S3_BUCKET');
+const bannerPhotoBucket = getSecret('BANNER_PHOTO_S3_BUCKET');
+const packPhotoBucket = getSecret('PACK_PHOTO_S3_BUCKET');
 
 const buckets = {
 	profilePhotoBucket,
@@ -24,10 +25,10 @@ const photoResizing: { [K in BucketName]?: { width?: number; height?: number } }
 
 type BucketName = 'profilePhotoBucket' | 'bannerPhotoBucket' | 'packPhotoBucket';
 
-const bucketRegion = process.env.AWS_REGION;
-const accessKey = process.env.PP_S3_ACCESS_KEY;
-const secretAccessKey = process.env.PP_S3_SECRET_ACCESS_KEY;
-const photoUploadCloudfrontUrl = process.env.CLOUDFRONT_PHOTO_UPLOAD_URL ?? '';
+const bucketRegion = getSecret('AWS_REGION');
+const accessKey = getSecret('PP_S3_ACCESS_KEY');
+const secretAccessKey = getSecret('PP_S3_SECRET_ACCESS_KEY');
+const photoUploadCloudfrontUrl = getSecret('CLOUDFRONT_PHOTO_UPLOAD_URL');
 
 const s3 = new S3Client({
 	credentials: {

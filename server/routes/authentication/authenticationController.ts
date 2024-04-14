@@ -5,6 +5,7 @@ import { tables as t } from '../../../knexfile.js';
 import { cookieName, cookieOptions, domainName } from '../../utils/utils.js';
 import { supabase } from '../../db/supabaseClient.js';
 import { generateUsername } from '../../utils/usernameGenerator.js';
+import { getSecret } from '../../utils/getSecrets.js';
 
 async function register(req: Request, res: Response) {
 	try {
@@ -157,8 +158,8 @@ async function deleteAccount(req: Request, res: Response) {
 }
 
 function createWebToken(userId: string) {
-	if (process.env.APP_SECRET) {
-		return jwt.sign({ userId }, process.env.APP_SECRET);
+	if (getSecret('APP_SECRET')) {
+		return jwt.sign({ userId }, getSecret('APP_SECRET'));
 	} else {
 		return new Error('Invalid app secret when creating JWT.');
 	}

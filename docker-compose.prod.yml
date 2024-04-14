@@ -1,6 +1,9 @@
 version: '3'
 services:
   tidytrek-api:
+    platform: linux/amd64
+    build:
+      target: production
     environment:
-      - NODE_ENV=production
+      NODE_ENV: production
     command: node server/index.js

@@ -3,6 +3,7 @@ import snakeCaseKeys from 'snakecase-keys';
 import { Request, Response, NextFunction as Next } from 'express';
 import { getUser } from '../routes/authentication/authenticationController.js';
 import { cookieName } from './utils.js';
+import { getSecret } from './getSecrets.js';
 
 type JwtPayload = { userId: string };
 
@@ -18,8 +19,8 @@ export const getUserId = async (req: Request, _res: Response, next: Next) => {
 				// Extract the token from the authorization header
 				const token = parts[1];
 				// Attach user from verified JWT to request
-				if (token && process.env.SUPABASE_KEY) {
-					const verifiedJwt = jwt.verify(token, process.env.SUPABASE_KEY) || {};
+				if (token && getSecret('SUPABASE_KEY')) {
+					const verifiedJwt = jwt.verify(token, getSecret('SUPABASE_KEY')) || {};
 					const userId = verifiedJwt?.sub;
 					if (typeof userId === 'string') req.userId = userId;
 					else next();
@@ -36,8 +37,8 @@ export const attachCookie = (req: Request, _res: Response, next: Next) => {
 	// get token from signedCookies and verify jwt
 	const token = req.signedCookies[cookieName] || null;
 
-	if (token && process.env.APP_SECRET) {
-		const { userId } = jwt.verify(token, process.env.APP_SECRET) as JwtPayload;
+	if (token && getSecret('APP_SECRET')) {
+		const { userId } = jwt.verify(token, getSecret('APP_SECRET')) as JwtPayload;
 		req.cookie = userId;
 	}
 

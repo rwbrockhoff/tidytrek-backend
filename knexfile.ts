@@ -1,6 +1,7 @@
 import { knexCamelCaseResponse } from './server/utils/utils.js';
 import { KnexResponse } from './server/types/server/serverTypes.js';
 import dotenv from 'dotenv';
+import { getSecret } from './server/utils/getSecrets.js';
 dotenv.config({
 	path: process.env.NODE_ENV === 'production' ? 'production.env' : 'dev.env',
 });
@@ -43,11 +44,11 @@ export default {
 	production: {
 		client: 'pg',
 		connection: {
-			host: `${process.env.PRODUCTION_DB_HOST}`,
+			host: `${getSecret('PRODUCTION_DB_HOST')}`,
 			database: dbName,
 			port: 5432,
-			user: `${process.env.PRODUCTION_DB_USER}`,
-			password: `${process.env.PRODUCTION_DB_PASSWORD}`,
+			user: `${getSecret('PRODUCTION_DB_USER')}`,
+			password: `${getSecret('PRODUCTION_DB_PASSWORD')}`,
 			ssl: true,
 		},
 		postProcessResponse: (result: KnexResponse) => knexCamelCaseResponse(result),

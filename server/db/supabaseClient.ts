@@ -1,7 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
+import { getSecret } from '../utils/getSecrets.js';
 
-const supabaseClient = process.env.SUPABASE_CLIENT;
-const supabaseKey = process.env.SUPABASE_PRIVATE_KEY;
+const supabaseClient = getSecret('SUPABASE_CLIENT');
+const supabaseKey = getSecret('SUPABASE_PRIVATE_KEY');
 
-// @ts-expect-error: value will exist as string in env file
 export const supabase = createClient(supabaseClient, supabaseKey);
