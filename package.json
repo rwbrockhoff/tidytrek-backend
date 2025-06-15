@@ -5,6 +5,9 @@
 	"author": "Ryan Brockhoff <brockhoffrw@gmail.com>",
 	"main": "server/index.js",
 	"type": "module",
+	"engines": {
+		"node": ">=22.0.0"
+	},
 	"scripts": {
 		"build": "npx tsc",
 		"start": "NODE_ENV=production node server/index.js",

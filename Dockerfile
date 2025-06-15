@@ -1,21 +1,30 @@
-# build
-FROM node:20-alpine3.19 as base
+# Use Node 22 LTS with latest Alpine
+FROM node:22-alpine AS base
 WORKDIR /app
-COPY package*.json .
-RUN npm ci
+COPY package*.json ./
+# All deps needed for building
+RUN npm ci 
 COPY . .
-RUN npm run build
+
+# Development stage
+FROM base AS development
 EXPOSE 4001
+CMD ["npm", "run", "dev"]
 
-# development
-FROM node:20-alpine3.19 AS development
-CMD ["node", "server/index.js"]
+# Build stage
+FROM base AS builder
+# TypeScript → JavaScript compilation
+RUN npm run build
 
-# production
-FROM node:20-alpine3.19 AS production
+# Production stage
+FROM node:22-alpine AS production
 WORKDIR /app
-RUN chown -R node:node /app
-USER node
-COPY --from=base  --chown=node:node /app/dist .
-RUN NODE_ENV=production npm install --omit-dev
-CMD ["node", "server/index.js"]
+COPY package*.json ./
+# ONLY production dependencies
+RUN npm ci --only=production && npm cache clean --force
+COPY --from=builder /app/dist ./dist
+
+RUN addgroup -g 1001 -S nodejs && adduser -S nodejs -u 1001
+USER nodejs
+EXPOSE 4001
+CMD ["npm", "start"]
