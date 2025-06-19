@@ -1,5 +1,6 @@
 import { Knex } from 'knex';
 import { tables as t } from '../../../knexfile.js';
+import { DEFAULT_PALETTE_COLOR } from '../../utils/constants.js';
 import {
 	mockUser,
 	mockPack,
@@ -29,7 +30,7 @@ export async function seed(knex: Knex): Promise<void> {
 			...mockPackCategory,
 			user_id,
 			pack_id: pack.packId,
-			pack_category_color: 'primary',
+			pack_category_color: DEFAULT_PALETTE_COLOR,
 		})
 		.returning('*');
 

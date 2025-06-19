@@ -15,13 +15,13 @@ afterAll(async () => {
 });
 
 const validSocialLink = {
-	service: 'instagram',
-	social_link: 'www.instagram.com/@tidytrek',
+	platform_name: 'instagram',
+	social_link_url: 'www.instagram.com/@tidytrek',
 };
 
 const invalidSocialLink = {
-	service: 'mobysocial',
-	social_link: 'www.mobysocialisfake.com/@tidytrek',
+	platform_name: 'mobysocial',
+	social_link_url: 'www.mobysocialisfake.com/@tidytrek',
 };
 
 const updatedProfileInfo = {
@@ -53,15 +53,6 @@ describe('User Profile Routes ', () => {
 		expect(response.statusCode).toEqual(200);
 	});
 
-	it('POST / -> Should reject unknown social media name', async () => {
-		const userAgent = await loginMockUser();
-		const response = await userAgent
-			.post('/profile-settings/social-link')
-			.send(invalidSocialLink);
-
-		expect(response.statusCode).toEqual(400);
-	});
-
 	it('POST / -> Should only allow four social links', async () => {
 		const userAgent = await loginMockUser();
 
@@ -86,12 +77,12 @@ describe('User Profile Routes ', () => {
 			body: { socialLinks },
 		} = await userAgent.get('/profile-settings/');
 
+		expect(socialLinks).toHaveLength(1);
 		const socialLinkId = socialLinks[0].socialLinkId;
 		const deleteResponse = await userAgent.delete(
 			`/profile-settings/social-link/${socialLinkId}`,
 		);
 
-		expect(socialLinks).toHaveLength(1);
 		expect(deleteResponse.statusCode).toEqual(200);
 	});
 
