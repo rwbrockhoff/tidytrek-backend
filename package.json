@@ -1,7 +1,7 @@
 {
 	"name": "tt-backend",
 	"version": "1.0.0",
-	"description": "",
+	"description": "Tidytrek Backend API",
 	"author": "Ryan Brockhoff <brockhoffrw@gmail.com>",
 	"main": "server/index.js",
 	"type": "module",
@@ -28,8 +28,7 @@
 		"test:migrate-unlock": "NODE_ENV=test NODE_OPTIONS='--import=tsx' knex migrate:unlock",
 		"prod:migrate": "NODE_ENV=production knex migrate:latest",
 		"prod:migrate-rollback": "NODE_ENV=production knex migrate:rollback",
-		"prod:migrate-unlock": "NODE_ENV=production knex migrate:unlock",
-		"prod:db-reset": "npm run prod:migrate-rollback && npm run prod:migrate"
+		"prod:migrate-unlock": "NODE_ENV=production knex migrate:unlock"
 	},
 	"keywords": [],
 	"license": "ISC",
