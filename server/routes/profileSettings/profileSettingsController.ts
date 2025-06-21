@@ -3,7 +3,6 @@ import { tables as t } from '../../../knexfile.js';
 import { Request, Response } from 'express';
 import { createCloudfrontUrlForPhoto, s3DeletePhoto } from '../../utils/s3.js';
 import { generateUsername } from '../../utils/usernameGenerator.js';
-const linkListId = 'social_link_list_id';
 
 async function getProfileSettings(req: Request, res: Response) {
 	try {
@@ -31,16 +30,11 @@ export const getUserProfileInfo = async (userId: string) => {
 			'user_bio',
 			'user_location',
 		)
-		.where({ 'user.user_id': userId })
+		.where({ [`${t.user}.user_id`]: userId })
 		.first();
 
-	const socialLinks = await knex(t.socialLinkList)
-		.select('social_link_id', 'social_link_name', 'social_link_url')
-		.leftOuterJoin(
-			t.socialLink,
-			`${t.socialLinkList}.${linkListId}`,
-			`${t.socialLink}.${linkListId}`,
-		)
+	const socialLinks = await knex(t.socialLink)
+		.select('social_link_id', 'platform_name', 'social_link_url')
 		.where({ user_id: userId });
 
 	return { profileInfo, socialLinks };
@@ -185,13 +179,9 @@ async function generateUsernamePreview(_req: Request, res: Response) {
 async function addSocialLink(req: Request, res: Response) {
 	try {
 		const { userId } = req;
-		const { service, social_link } = req.body;
+		const { platform_name, social_link_url } = req.body;
 
-		const { socialLinkListId } = await knex(t.socialLinkList)
-			.select('social_link_list_id')
-			.where({ social_link_name: service })
-			.first();
-
+		// Check if user has hit social link limit
 		const countResponse = await knex(t.socialLink)
 			.count()
 			.where({ user_id: userId })
@@ -205,9 +195,10 @@ async function addSocialLink(req: Request, res: Response) {
 
 		await knex(t.socialLink).insert({
 			user_id: userId,
-			social_link_url: social_link,
-			social_link_list_id: socialLinkListId,
+			platform_name,
+			social_link_url,
 		});
+
 		return res.status(200).send();
 	} catch (err) {
 		return res.status(400).json({ error: 'There was an error adding your link.' });

@@ -11,10 +11,7 @@ export const tables = {
 	pack: 'pack',
 	packCategory: 'pack_category',
 	packItem: 'pack_item',
-	theme: 'theme',
-	themeColor: 'theme_color',
 	userSettings: 'user_settings',
-	socialLinkList: 'social_link_list',
 	socialLink: 'social_link',
 	userProfile: 'user_profile',
 };

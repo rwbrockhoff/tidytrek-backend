@@ -3,7 +3,7 @@ import { KnexResponse } from '../types/server/serverTypes.js';
 
 export const knexCamelCaseResponse = (result: KnexResponse) => {
 	if (result) {
-		if (result?.rows) return camelcaseKeys(result.rows, { deep: true });
+		if (result?.rows) return camelcaseKeys(result.rows as Record<string, unknown>[], { deep: true });
 		else {
 			return camelcaseKeys(result);
 		}

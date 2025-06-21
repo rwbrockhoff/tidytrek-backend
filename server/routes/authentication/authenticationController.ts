@@ -5,6 +5,7 @@ import { tables as t } from '../../../knexfile.js';
 import { cookieName, cookieOptions, domainName } from '../../utils/utils.js';
 import { supabase } from '../../db/supabaseClient.js';
 import { generateUsername } from '../../utils/usernameGenerator.js';
+import { DEFAULT_PALETTE_COLOR } from '../../utils/constants.js';
 
 async function register(req: Request, res: Response) {
 	try {
@@ -120,20 +121,10 @@ export async function getUser(userId: string) {
 }
 
 export async function getUserSettings(userId: string) {
-	const [settings] = await knex.raw(`
-		select us.public_profile, us.topo_background, us.dark_theme, us.weight_unit, 
-		theme_info.theme_name, theme_info.theme_colors from user_settings us
-			left outer join (
-				select th.theme_id, th.theme_name, th.tidytrek_theme, 
-				array_agg(to_jsonb(theme_colors)) as theme_colors from theme th
-				left outer join 
-				(select tc.theme_id, tc.theme_color, tc.theme_color_name from theme_color tc
-				) theme_colors on th.theme_id = theme_colors.theme_id
-			group by th.theme_id
-			) theme_info on us.theme_id = theme_info.theme_id
-			where us.user_id = '${userId}' AND us.theme_id = theme_info.theme_id;
-	`);
-	return settings;
+	return await knex(t.userSettings)
+		.select('public_profile', 'theme_name', 'dark_mode', 'weight_unit', 'currency_unit')
+		.where({ user_id: userId })
+		.first();
 }
 
 async function deleteAccount(req: Request, res: Response) {
@@ -165,14 +156,9 @@ function createWebToken(userId: string) {
 }
 
 async function createUserSettings(user_id: string, profile_photo_url: string | null) {
-	const { themeId } = await knex(t.theme)
-		.select('theme_id')
-		.where({ tidytrek_theme: true })
-		.first();
-
 	const defaultUsername = generateUsername();
 
-	await knex(t.userSettings).insert({ user_id, theme_id: themeId });
+	await knex(t.userSettings).insert({ user_id });
 
 	await knex(t.userProfile).insert({
 		user_id,
@@ -197,7 +183,7 @@ async function createDefaultPack(userId: string) {
 				pack_id: packId,
 				pack_category_name: '',
 				pack_category_index: 0,
-				pack_category_color: 'primary',
+				pack_category_color: DEFAULT_PALETTE_COLOR,
 			})
 			.returning('pack_category_id');
 

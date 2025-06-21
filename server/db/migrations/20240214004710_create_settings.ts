@@ -1,5 +1,6 @@
 import type { Knex } from 'knex';
 import { tables as t } from '../../../knexfile.js';
+import { DEFAULT_THEME_NAME } from '../../utils/constants.js';
 
 const weightUnitConstraints = ['lb', 'kg', 'oz', 'g'];
 
@@ -8,17 +9,15 @@ export async function up(knex: Knex): Promise<void> {
 		table.increments('user_settings_id').unsigned().primary();
 		table.uuid('user_id').unsigned().notNullable();
 		table.foreign('user_id').references('user_id').inTable(t.user).onDelete('CASCADE');
-		table.integer('theme_id').unsigned();
-		table.foreign('theme_id').references('theme_id').inTable(t.theme);
 		table.boolean('public_profile').defaultTo(true).notNullable();
-		table.boolean('topo_background').defaultTo(false).notNullable();
-		table.boolean('dark_theme').defaultTo(false).notNullable();
+		table.string('theme_name', 25).defaultTo(DEFAULT_THEME_NAME).notNullable();
+		table.boolean('dark_mode').defaultTo(false).notNullable();
 		table
-			.string('weight_unit')
+			.string('weight_unit', 10)
 			.checkIn(weightUnitConstraints)
 			.defaultTo('lb')
 			.notNullable();
-		table.string('currency_unit').defaultTo('USD').notNullable();
+		table.string('currency_unit', 10).defaultTo('USD').notNullable();
 	});
 }
 

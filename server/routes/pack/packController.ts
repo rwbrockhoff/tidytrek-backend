@@ -6,7 +6,7 @@ import {
 	shiftPackItems,
 } from './packUtils.js';
 import { tables as t } from '../../../knexfile.js';
-import { themeColorNames } from '../../utils/constraints.js';
+import { DEFAULT_PALETTE_COLOR } from '../../utils/constants.js';
 import { Request, Response } from 'express';
 import { createCloudfrontUrlForPhoto, s3DeletePhoto } from '../../utils/s3.js';
 import { packScraper } from '../../utils/puppeteer.js';
@@ -120,7 +120,7 @@ async function createNewPack(userId: string) {
 				pack_id: pack.packId,
 				pack_category_name: '',
 				pack_category_index: 0,
-				pack_category_color: 'primary',
+				pack_category_color: DEFAULT_PALETTE_COLOR,
 			})
 			.returning('*');
 
@@ -146,7 +146,7 @@ async function importNewPack(req: Request, res: Response) {
 	const importErrorMessage = 'There was an error importing your pack.';
 	try {
 		const { userId } = req;
-		const { pack_url } = req.body;
+		const { pack_url, palette_list } = req.body;
 		const importedPack = await packScraper(pack_url);
 
 		// handle error
@@ -173,12 +173,14 @@ async function importNewPack(req: Request, res: Response) {
 		// insert categories and pack items
 		pack_categories.map(async (category) => {
 			const { pack_category_name, pack_category_index, pack_items } = category;
+
 			// get theme color based on index
-			const themeColor = await getThemeColor(userId, pack_category_index);
+			const themeColor = palette_list?.[pack_category_index % palette_list.length];
 
 			// assign default color if theme color error
-			const isThemeColorError = isError(themeColor);
-			const pack_category_color = isThemeColorError ? 'primary' : themeColor;
+			const pack_category_color = isError(themeColor)
+				? DEFAULT_PALETTE_COLOR
+				: themeColor;
 
 			// insert pack category
 			const [{ packCategoryId }] = await knex(t.packCategory)
@@ -523,13 +525,12 @@ async function addPackCategory(req: Request & { params: number }, res: Response)
 	try {
 		const { userId } = req;
 		const { packId } = req.params;
+		const { category_color } = req.body;
 
 		const packCategoryIndex = await generateIndex(t.packCategory, 'pack_category_index', {
 			user_id: userId,
 			pack_id: packId,
 		});
-
-		const themeColorName = await getThemeColor(userId, packCategoryIndex);
 
 		const [packCategory] = await knex(t.packCategory)
 			.insert({
@@ -537,7 +538,7 @@ async function addPackCategory(req: Request & { params: number }, res: Response)
 				user_id: userId,
 				pack_id: packId,
 				pack_category_index: packCategoryIndex,
-				pack_category_color: themeColorName,
+				pack_category_color: category_color,
 			})
 			.returning('*');
 
@@ -557,29 +558,6 @@ async function addPackCategory(req: Request & { params: number }, res: Response)
 		return res.status(200).json({ packCategory });
 	} catch (err) {
 		return res.status(400).json({ error: 'There was an error adding a new category.' });
-	}
-}
-
-async function getThemeColor(user_id: string, packCategoryIndex: number) {
-	try {
-		//get user's theme ID from user_settings
-		const { themeId } = await knex(t.userSettings)
-			.select('theme_id')
-			.where({ user_id })
-			.first();
-
-		// get nth number from theme_colors using pack category index
-		const themeColorIndex = packCategoryIndex % themeColorNames.length;
-		const { themeColorName } = await knex(t.themeColor)
-			.select('theme_color_name')
-			.where({ theme_id: themeId })
-			.offset(themeColorIndex)
-			.limit(1)
-			.first();
-
-		return themeColorName;
-	} catch (err) {
-		return new Error('There was an error getting the theme color.');
 	}
 }
 
