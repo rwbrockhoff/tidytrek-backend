@@ -79,11 +79,12 @@ export const notSeededPackItem = {
 };
 
 export const notSeededUser = {
-	first_name: 'Sarah',
-	last_name: 'Collins',
+	firstName: 'Sarah',
+	lastName: 'Collins',
 	email: 'scollins@tidytrek.co',
 	password: 'newtohiking123!',
 	userId: mockUserId2,
+	supabaseRefreshToken: 'test_refresh_token',
 };
 
 export const mockGearClosetItems: MockPackItem[] = [
