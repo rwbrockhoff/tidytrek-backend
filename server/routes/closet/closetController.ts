@@ -16,9 +16,9 @@ async function getGearCloset(req: Request, res: Response) {
 			select coalesce(array_remove(array_agg(to_jsonb(pi) order by pack_item_index), NULL), '{}') as gear_closet_list 
 				from (
 					select * from pack_item
-					where user_id = '${userId}' and pack_id IS NULL
+					where user_id = ? and pack_id IS NULL
 				) pi
-		`)) || [];
+		`, [userId])) || [];
 
 		return res.status(200).json({ gearClosetList });
 	} catch (err) {

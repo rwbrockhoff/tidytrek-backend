@@ -15,15 +15,22 @@ async function changeItemOrder(
 
 		// move pack item indexes to allow item at new position
 		// handle lower or higher position for items in same category
+		// Note: table and property names cannot be parameterized in SQL
 		return higherPos
-			? await knex.raw(`UPDATE ${table}
+			? await knex.raw(
+					`UPDATE ${table}
 				SET ${property} = ${property} + 1 
-				WHERE ${property} >= ${newIndex} and ${property} < ${previousIndex}
-				AND user_id = '${userId}' ${conditions ? `AND ${conditions}` : ''}`)
-			: await knex.raw(`UPDATE ${table} 
+				WHERE ${property} >= ? and ${property} < ?
+				AND user_id = ? ${conditions ? `AND ${conditions}` : ''}`,
+					[newIndex, previousIndex, userId],
+			  )
+			: await knex.raw(
+					`UPDATE ${table} 
 				SET ${property} = ${property} - 1 
-				WHERE ${property} <= ${newIndex} AND ${property} > ${previousIndex}
-				AND user_id = '${userId}' ${conditions ? `AND ${conditions}` : ''}`);
+				WHERE ${property} <= ? AND ${property} > ?
+				AND user_id = ? ${conditions ? `AND ${conditions}` : ''}`,
+					[newIndex, previousIndex, userId],
+			  );
 	} catch (err) {
 		return new Error('There was an error changing the pack item index');
 	}
@@ -67,11 +74,14 @@ async function shiftPackItems(
 	packItemIndex: number,
 ) {
 	try {
-		await knex.raw(`UPDATE pack_item
+		await knex.raw(
+			`UPDATE pack_item
 			SET pack_item_index = pack_item_index - 1
-			WHERE user_id = '${userId}' AND 
-			${packCategoryId ? `pack_category_id = ${packCategoryId}` : `pack_category_id IS NULL`}
-			AND pack_item_index >= ${packItemIndex}`);
+			WHERE user_id = ? AND 
+			${packCategoryId ? `pack_category_id = ?` : `pack_category_id IS NULL`}
+			AND pack_item_index >= ?`,
+			packCategoryId ? [userId, packCategoryId, packItemIndex] : [userId, packItemIndex],
+		);
 	} catch (err) {
 		return new Error('Error shifting item indexes.');
 	}
