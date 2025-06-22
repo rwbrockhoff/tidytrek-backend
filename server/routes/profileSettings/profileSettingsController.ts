@@ -78,7 +78,7 @@ async function uploadProfilePhoto(req: Request, res: Response) {
 		);
 
 		// check for previous photo url
-		const { profilePhotoUrl: prevUrl } = await knex(t.userProfile)
+		const { profile_photo_url: prevUrl } = await knex(t.userProfile)
 			.select('profile_photo_url')
 			.where({ user_id: userId })
 			.first();
@@ -97,13 +97,13 @@ async function deleteProfilePhoto(req: Request, res: Response) {
 	try {
 		const { userId } = req;
 
-		const { profilePhotoUrl } = await knex(t.userProfile)
+		const { profile_photo_url } = await knex(t.userProfile)
 			.select('profile_photo_url')
 			.where({ user_id: userId })
 			.first();
 
 		// delete from S3
-		await s3DeletePhoto(profilePhotoUrl);
+		await s3DeletePhoto(profile_photo_url);
 
 		// delete from DB
 		await knex(t.userProfile)
@@ -132,7 +132,7 @@ async function uploadBannerPhoto(req: Request, res: Response) {
 		);
 
 		// check for previous photo url
-		const { bannerPhotoUrl: prevUrl } = await knex(t.userProfile)
+		const { banner_photo_url: prevUrl } = await knex(t.userProfile)
 			.select('banner_photo_url')
 			.where({ user_id: userId })
 			.first();

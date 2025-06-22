@@ -4,7 +4,6 @@
 import knex from '../db/connection.js';
 import { tables as t } from '../../knexfile.js';
 import { PackItem } from '../types/packs/packTypes.js';
-import snakecaseKeys from 'snakecase-keys';
 
 // Type for items that can be moved to gear closet (allows null pack_id/pack_category_id)
 type MovablePackItem = Omit<PackItem, 'pack_id' | 'pack_category_id'> & {
@@ -106,11 +105,8 @@ export async function getNextAppendIndex(
 		.orderByRaw(`?? ::NUMERIC DESC`, [indexColumn])
 		.limit(1);
 
-	// Get the index value from the result (convert snake_case to camelCase for Knex response)
-	const camelCaseColumn = indexColumn.replace(/_([a-z])/g, (_, letter) =>
-		letter.toUpperCase(),
-	);
-	const indexValue = lastItem?.[camelCaseColumn];
+	// Get the index value from the result
+	const indexValue = lastItem?.[indexColumn];
 
 	return lastItem && indexValue != null && indexValue !== 'undefined'
 		? calculateAfter(indexValue)
@@ -219,7 +215,7 @@ export async function bulkMoveToGearCloset(
 
 	// Bulk update using PostgreSQL's ON CONFLICT DO UPDATE
 	const updates = items.map((item: MovablePackItem, index) => ({
-		...snakecaseKeys(item),
+		...item,
 		pack_item_index: indexes[index],
 		pack_category_id: null,
 		pack_id: null,
@@ -266,8 +262,8 @@ export async function rebalanceIndexes(
 
 	// Prepare updates with only the new index - keep all other fields unchanged
 	const updates = items.map((item: KnexRecord, index: number) => ({
-		...snakecaseKeys(item), // Convert camelCase to snake_case for database
-		[indexColumn]: newIndexes[index], // Only update the index
+		...item,
+		[indexColumn]: newIndexes[index],
 	}));
 
 	// Update only the index column (reuse primaryKey from above)

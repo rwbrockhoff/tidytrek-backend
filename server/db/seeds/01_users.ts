@@ -29,14 +29,14 @@ export async function seed(knex: Knex): Promise<void> {
 		.insert({
 			...mockPackCategory,
 			user_id,
-			pack_id: pack.packId,
+			pack_id: pack.pack_id,
 			pack_category_color: DEFAULT_PALETTE_COLOR,
 		})
 		.returning('*');
 
 	const packItemsWithIds = mockPackItems.map((item: MockPackItem) => {
-		item['pack_id'] = pack.packId;
-		item['pack_category_id'] = packCategory.packCategoryId;
+		item['pack_id'] = pack.pack_id;
+		item['pack_category_id'] = packCategory.pack_category_id;
 		return item;
 	});
 

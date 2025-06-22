@@ -33,9 +33,14 @@ describe('Guests Routes: Pack ', () => {
 
 	it('GET / -> Should not be able to access a private pack', async () => {
 		const response = await request.get(`/guests/pack/2`).send();
-
-		expect(response.statusCode).toEqual(400);
-		expect(response.body).toHaveProperty('error');
+		// Should provide a 200 response with empty data
+		expect(response.statusCode).toEqual(200);
+		expect(response.body).toEqual({
+			pack: null,
+			categories: [],
+			settings: null,
+			userProfile: null,
+		});
 	});
 
 	it('GET / -> Should update pack view count when guests view', async () => {

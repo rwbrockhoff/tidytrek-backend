@@ -1,16 +1,3 @@
-import camelcaseKeys from 'camelcase-keys';
-import { KnexResponse } from '../types/server/serverTypes.js';
-
-export const knexCamelCaseResponse = (result: KnexResponse) => {
-	if (result) {
-		if (result?.rows) return camelcaseKeys(result.rows as Record<string, unknown>[], { deep: true });
-		else {
-			return camelcaseKeys(result);
-		}
-	}
-	return result;
-};
-
 export const cookieName = 'tidytrek_token';
 export const supabaseCookieName = 'supabase_refresh';
 

@@ -240,30 +240,33 @@ async function createUserSettings(user_id: string, profile_photo_url: string | n
 	});
 }
 
-async function createDefaultPack(userId: string) {
+async function createDefaultPack(user_id: string) {
 	try {
-		const [{ packId }] = await knex(t.pack)
+		// Create default pack
+		const [{ pack_id }] = await knex(t.pack)
 			.insert({
-				user_id: userId,
+				user_id,
 				pack_name: 'Default Pack',
 				pack_index: 0,
 			})
 			.returning('pack_id');
 
-		const [{ packCategoryId }] = await knex(t.packCategory)
+		// Create default category
+		const [{ pack_category_id }] = await knex(t.packCategory)
 			.insert({
-				user_id: userId,
-				pack_id: packId,
+				user_id,
+				pack_id,
 				pack_category_name: '',
 				pack_category_index: 0,
 				pack_category_color: DEFAULT_PALETTE_COLOR,
 			})
 			.returning('pack_category_id');
 
+		// Create default pack item
 		await knex(t.packItem).insert({
-			user_id: userId,
-			pack_id: packId,
-			pack_category_id: packCategoryId,
+			user_id,
+			pack_id,
+			pack_category_id,
 			pack_item_name: '',
 			pack_item_index: 0,
 		});

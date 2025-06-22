@@ -14,18 +14,25 @@ async function getPack(req: Request, res: Response) {
 			.where({ pack_id: packId, pack_public: true })
 			.first();
 
+		// Handle private and non-existent packs
 		if (pack === undefined) {
-			return res
-				.status(400)
-				.json({ error: "This is either a private pack or it doesn't exist." });
+			return res.status(200).json({
+				pack: null,
+				categories: [],
+				settings: null,
+				userProfile: null,
+			});
 		}
 
-		if (req.userId && req.userId !== pack.userId) await addPackViewCount(pack);
+		// Add count for other user
+		if (req.userId && req.userId !== pack.user_id) await addPackViewCount(pack);
+
+		// Add count for public non-user view
 		if (!req.userId) await addPackViewCount(pack);
 
-		const settings = await getUserSettings(pack.userId);
+		const settings = await getUserSettings(pack.user_id);
 
-		const { profileInfo, socialLinks } = await getUserProfileInfo(pack.userId);
+		const { profileInfo, socialLinks } = await getUserProfileInfo(pack.user_id);
 
 		const categories = await getCategories(packId);
 
@@ -37,12 +44,11 @@ async function getPack(req: Request, res: Response) {
 	}
 }
 
-async function addPackViewCount(pack: Pack) {
+async function addPackViewCount({ pack_id, pack_views }: Pack) {
 	try {
-		const { packId, packViews } = pack;
 		return await knex(t.pack)
-			.update({ pack_views: packViews + 1 })
-			.where({ pack_id: packId });
+			.update({ pack_views: pack_views + 1 })
+			.where({ pack_id });
 	} catch (err) {
 		return new Error('Error adding to view count.');
 	}
@@ -60,7 +66,7 @@ async function getCategories(packId: string) {
 		where pc.pack_id = ?
 		group by pc.pack_category_id
 		order by pc.pack_category_index::NUMERIC`,
-		[packId]
+		[packId],
 	);
 }
 
@@ -69,16 +75,18 @@ async function getUserProfile(req: Request, res: Response) {
 		const { username } = req.params;
 		const resolvedId = await getIdFromUsername(username);
 
-		const { publicProfile } = await knex(t.userSettings)
+		const { public_profile } = await knex(t.userSettings)
 			.select('public_profile')
 			.where({ user_id: resolvedId })
 			.first();
 
 		// handle private profiles or non-existent users
-		if (!publicProfile) {
-			return res
-				.status(400)
-				.json({ error: "The user doesn't exist or doesn't have a public profile." });
+		if (!public_profile) {
+			return res.status(200).json({
+				user: null,
+				packs: [],
+				settings: null,
+			});
 		}
 		const isPackOwner = req.userId === resolvedId;
 		const profile = await getProfileAndPacks(resolvedId, isPackOwner);
@@ -91,11 +99,11 @@ async function getUserProfile(req: Request, res: Response) {
 }
 
 async function getIdFromUsername(username: string) {
-	const { userId } = await knex(t.userProfile)
+	const { user_id } = await knex(t.userProfile)
 		.select('user_id')
 		.where({ username })
 		.first();
-	return userId;
+	return user_id;
 }
 
 export default { getPack, getUserProfile };

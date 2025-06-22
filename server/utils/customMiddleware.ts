@@ -1,5 +1,6 @@
 import jwt from 'jsonwebtoken';
 import snakeCaseKeys from 'snakecase-keys';
+import camelCaseKeys from 'camelcase-keys';
 import { Request, Response, NextFunction as Next } from 'express';
 import { getUser } from '../routes/authentication/authenticationController.js';
 import { cookieName, supabaseCookieName, cookieOptions } from './utils.js';
@@ -145,5 +146,19 @@ export const changeCase = (req: Request, _res: Response, next: Next) => {
 		const snakeCaseBody = snakeCaseKeys(req.body);
 		req.body = snakeCaseBody;
 	}
+	next();
+};
+
+export const convertResponseToCamelCase = (req: Request, res: Response, next: Next) => {
+	const originalJson = res.json;
+	
+	res.json = function (body: any) {
+		if (body && typeof body === 'object') {
+			const camelCaseBody = camelCaseKeys(body, { deep: true });
+			return originalJson.call(this, camelCaseBody);
+		}
+		return originalJson.call(this, body);
+	};
+	
 	next();
 };

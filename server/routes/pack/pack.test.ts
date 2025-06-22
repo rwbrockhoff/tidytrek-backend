@@ -62,7 +62,7 @@ describe('Pack Routes: Pack ', () => {
 		const { packId } = packResponse.body.pack;
 		const response = await userAgent
 			.put(`/packs/${packId}`)
-			.send({ modified_pack: { packName: 'Updated Pack Name' } });
+			.send({ packName: 'Updated Pack Name' });
 		expect(response.status).toEqual(200);
 	});
 

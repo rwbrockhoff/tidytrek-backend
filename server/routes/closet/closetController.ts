@@ -10,23 +10,18 @@ async function getGearCloset(req: Request, res: Response) {
 	try {
 		const { userId } = req;
 
-		// todo: int parser for pg to resolve knex queries returning string values
-		// or convert raw queries to string values
-		// current result: knex query: '45.0000' knex raw query: 45
+		const { rows: [{ gear_closet_list }] } = await knex.raw(
+			`
+		select coalesce(array_remove(array_agg(to_jsonb(pi) order by pack_item_index::NUMERIC), NULL), '{}') as gear_closet_list 
+			from (
+				select * from pack_item
+				where user_id = ? and pack_id IS NULL
+			) pi
+	`,
+			[userId],
+		);
 
-		const [{ gearClosetList }] =
-			(await knex.raw(
-				`
-			select coalesce(array_remove(array_agg(to_jsonb(pi) order by pack_item_index::NUMERIC), NULL), '{}') as gear_closet_list 
-				from (
-					select * from pack_item
-					where user_id = ? and pack_id IS NULL
-				) pi
-		`,
-				[userId],
-			)) || [];
-
-		return res.status(200).json({ gearClosetList });
+		return res.status(200).json({ gear_closet_list });
 	} catch (err) {
 		return res
 			.status(400)

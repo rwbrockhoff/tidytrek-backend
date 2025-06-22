@@ -106,7 +106,7 @@ describe('Database Operations', () => {
 				t.packItem,
 				'pack_item_index' as IndexColumn,
 				'pack_item_id',
-				item.packItemId,
+				item.pack_item_id,
 				'1000',
 				'3000',
 				packConditions as WhereConditions,
@@ -116,9 +116,9 @@ describe('Database Operations', () => {
 			expect(result.rebalanced).toBe(false);
 
 			const updatedItem = await knex(t.packItem)
-				.where('pack_item_id', item.packItemId)
+				.where('pack_item_id', item.pack_item_id)
 				.first();
-			expect(updatedItem.packItemIndex).toBe('2000');
+			expect(updatedItem.pack_item_index).toBe('2000');
 		});
 
 		it('should trigger rebalancing on invalid ordering', async () => {
@@ -132,7 +132,7 @@ describe('Database Operations', () => {
 				t.packItem,
 				'pack_item_index' as IndexColumn,
 				'pack_item_id',
-				item.packItemId,
+				item.pack_item_id,
 				'3000',
 				'1000',
 				packConditions as WhereConditions,
@@ -152,7 +152,7 @@ describe('Database Operations', () => {
 				t.packItem,
 				'pack_item_index' as IndexColumn,
 				'pack_item_id',
-				item.packItemId,
+				item.pack_item_id,
 				highPrecisionPrev,
 				highPrecisionNext,
 				packConditions as WhereConditions,
@@ -181,9 +181,9 @@ describe('Database Operations', () => {
 				.where(packConditions)
 				.orderByRaw('pack_item_index::NUMERIC ASC');
 
-			expect(rebalancedItems[0].packItemIndex).toBe('1000');
-			expect(rebalancedItems[1].packItemIndex).toBe('2000');
-			expect(rebalancedItems[2].packItemIndex).toBe('3000');
+			expect(rebalancedItems[0].pack_item_index).toBe('1000');
+			expect(rebalancedItems[1].pack_item_index).toBe('2000');
+			expect(rebalancedItems[2].pack_item_index).toBe('3000');
 		});
 
 		it('should exclude specified item', async () => {
@@ -196,13 +196,13 @@ describe('Database Operations', () => {
 				t.packItem,
 				'pack_item_index' as IndexColumn,
 				packConditions as WhereConditions,
-				excludedItem.packItemId,
+				excludedItem.pack_item_id,
 			);
 
 			const excluded = await knex(t.packItem)
-				.where('pack_item_id', excludedItem.packItemId)
+				.where('pack_item_id', excludedItem.pack_item_id)
 				.first();
-			expect(excluded.packItemIndex.toString()).toBe('500');
+			expect(excluded.pack_item_index.toString()).toBe('500');
 		});
 	});
 
@@ -218,10 +218,10 @@ describe('Database Operations', () => {
 				.orderByRaw('pack_item_index::NUMERIC ASC');
 
 			expect(movedItems).toHaveLength(2);
-			expect(movedItems[0].packId).toBeNull();
-			expect(movedItems[0].packCategoryId).toBeNull();
-			expect(parseFloat(movedItems[1].packItemIndex)).toBeGreaterThan(
-				parseFloat(movedItems[0].packItemIndex),
+			expect(movedItems[0].pack_id).toBeNull();
+			expect(movedItems[0].pack_category_id).toBeNull();
+			expect(parseFloat(movedItems[1].pack_item_index)).toBeGreaterThan(
+				parseFloat(movedItems[0].pack_item_index),
 			);
 		});
 

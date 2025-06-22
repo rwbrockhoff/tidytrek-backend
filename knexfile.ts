@@ -1,5 +1,3 @@
-import { knexCamelCaseResponse } from './server/utils/utils.js';
-import { KnexResponse } from './server/types/server/serverTypes.js';
 import dotenv from 'dotenv';
 dotenv.config({
 	path: process.env.NODE_ENV === 'production' ? 'production.env' : 'dev.env',
@@ -24,7 +22,6 @@ export default {
 			port: 5432,
 			database: dbName,
 		},
-		postProcessResponse: (result: KnexResponse) => knexCamelCaseResponse(result),
 		asyncStackTraces: true,
 		migrations: {
 			extension: 'ts',
@@ -45,7 +42,6 @@ export default {
 			password: `${process.env.PRODUCTION_DB_PASSWORD}`,
 			ssl: true,
 		},
-		postProcessResponse: (result: KnexResponse) => knexCamelCaseResponse(result),
 		migrations: {
 			directory: `${process.cwd()}/server/db/migrations`,
 		},
@@ -61,7 +57,6 @@ export default {
 			port: 5432,
 			database: `${dbName}_test`,
 		},
-		postProcessResponse: (result: KnexResponse) => knexCamelCaseResponse(result),
 		asyncStackTraces: true,
 		migrations: {
 			extension: 'js',

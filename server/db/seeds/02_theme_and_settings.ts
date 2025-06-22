@@ -10,21 +10,21 @@ export async function seed(knex: Knex): Promise<void> {
 	await knex(t.userSettings).del();
 
 	// create user settings
-	const { userId } = await knex(t.user).select('user_id').where({ email }).first();
+	const { user_id } = await knex(t.user).select('user_id').where({ email }).first();
 
 	await knex(t.userProfile).insert({
-		user_id: userId,
+		user_id,
 		trail_name: trailName,
 		username,
 	});
 
 	// create default user settings
-	await knex(t.userSettings).insert({ 
-		user_id: userId, 
+	await knex(t.userSettings).insert({
+		user_id,
 		theme_name: DEFAULT_THEME_NAME,
 		dark_mode: false,
 		public_profile: true,
 		weight_unit: 'lb',
-		currency_unit: 'USD'
+		currency_unit: 'USD',
 	});
 }
