@@ -15,7 +15,7 @@ export async function up(knex: Knex): Promise<void> {
 			.references('pack_category_id')
 			.inTable(t.packCategory)
 			.onDelete('CASCADE');
-		table.integer('pack_item_index').unsigned().notNullable();
+		table.string('pack_item_index', 20).notNullable().defaultTo('0');
 		table.index('pack_item_index');
 		table.string('pack_item_name', 100).notNullable();
 		table.text('pack_item_description').nullable();

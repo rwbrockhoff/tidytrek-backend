@@ -14,7 +14,7 @@ export const tables = {
 	userSettings: 'user_settings',
 	socialLink: 'social_link',
 	userProfile: 'user_profile',
-};
+} as const;
 
 export default {
 	development: {

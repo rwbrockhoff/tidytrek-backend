@@ -26,7 +26,7 @@ export const getPackThumbnailList = async (userId: string, isPackOwner: boolean)
 	const publicCondition = isPackOwner ? {} : { pack_public: true };
 	return await knex(t.pack)
 		.where({ user_id: userId, ...publicCondition })
-		.orderBy('pack_index');
+		.orderByRaw('pack_index::NUMERIC');
 };
 
 export default { getProfile };

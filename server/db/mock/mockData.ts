@@ -47,7 +47,7 @@ export const mockPackItems: MockPackItem[] = [
 		pack_item_weight: 28,
 		pack_item_unit: 'oz',
 		pack_item_quantity: 1,
-		pack_item_index: 0,
+		pack_item_index: '1000',
 		user_id: mockUserId,
 	},
 	{
@@ -56,7 +56,7 @@ export const mockPackItems: MockPackItem[] = [
 		pack_item_weight: 40,
 		pack_item_unit: 'oz',
 		pack_item_quantity: 1,
-		pack_item_index: 1,
+		pack_item_index: '2000',
 		user_id: mockUserId,
 	},
 	{
@@ -65,7 +65,7 @@ export const mockPackItems: MockPackItem[] = [
 		pack_item_weight: 1,
 		pack_item_unit: 'lb',
 		pack_item_quantity: 1,
-		pack_item_index: 2,
+		pack_item_index: '3000',
 		user_id: mockUserId,
 	},
 ];
@@ -94,7 +94,7 @@ export const mockGearClosetItems: MockPackItem[] = [
 		pack_item_weight: 36,
 		pack_item_unit: 'oz',
 		pack_item_quantity: 1,
-		pack_item_index: 0,
+		pack_item_index: '1000',
 		user_id: mockUserId,
 	},
 	{
@@ -103,7 +103,7 @@ export const mockGearClosetItems: MockPackItem[] = [
 		pack_item_weight: 2.5,
 		pack_item_unit: 'lb',
 		pack_item_quantity: 1,
-		pack_item_index: 1,
+		pack_item_index: '2000',
 		user_id: mockUserId,
 	},
 	{
@@ -112,7 +112,7 @@ export const mockGearClosetItems: MockPackItem[] = [
 		pack_item_weight: 18,
 		pack_item_unit: 'oz',
 		pack_item_quantity: 1,
-		pack_item_index: 2,
+		pack_item_index: '3000',
 		user_id: mockUserId,
 	},
 ];
