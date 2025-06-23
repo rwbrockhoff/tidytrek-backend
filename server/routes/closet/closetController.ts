@@ -1,16 +1,18 @@
-import knex from '../../db/connection.js';
-import { tables as t } from '../../../knexfile.js';
+import knex from '@/db/connection.js';
+import { tables as t } from '@/../knexfile.js';
 import { Request, Response } from 'express';
 import {
 	getNextAppendIndex,
 	moveWithFractionalIndex,
-} from '../../utils/fractionalIndexing.js';
+} from '@/utils/fractionalIndexing.js';
 
 async function getGearCloset(req: Request, res: Response) {
 	try {
 		const { userId } = req;
 
-		const { rows: [{ gear_closet_list }] } = await knex.raw(
+		const {
+			rows: [{ gear_closet_list }],
+		} = await knex.raw(
 			`
 		select coalesce(array_remove(array_agg(to_jsonb(pi) order by pack_item_index::NUMERIC), NULL), '{}') as gear_closet_list 
 			from (

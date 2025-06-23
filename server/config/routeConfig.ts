@@ -1,10 +1,10 @@
-import authenticationRoutes from '../routes/authentication/authenticationRoutes.js';
-import packRoutes from '../routes/pack/packRoutes.js';
-import closetRoutes from '../routes/closet/closetRoutes.js';
-import guestsRoutes from '../routes/guests/guestsRoutes.js';
-import profileSettingsRoutes from '../routes/profileSettings/profleSettingsRoutes.js';
-import profileRoutes from '../routes/profile/profileRoutes.js';
-import { protectedRoute } from '../utils/customMiddleware.js';
+import authenticationRoutes from '@/routes/authentication/authenticationRoutes.js';
+import packRoutes from '@/routes/pack/packRoutes.js';
+import closetRoutes from '@/routes/closet/closetRoutes.js';
+import guestsRoutes from '@/routes/guests/guestsRoutes.js';
+import profileSettingsRoutes from '@/routes/profileSettings/profleSettingsRoutes.js';
+import profileRoutes from '@/routes/profile/profileRoutes.js';
+import { protectedRoute } from '@/utils/customMiddleware.js';
 import { Application } from 'express';
 
 const routeConfig = (app: Application) => {

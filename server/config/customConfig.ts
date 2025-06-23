@@ -4,7 +4,7 @@ import {
 	attachUserToRequest,
 	convertRequestToSnakeCase,
 	convertResponseToCamelCase,
-} from '../utils/customMiddleware.js';
+} from '@/utils/customMiddleware.js';
 import { Express } from 'express';
 
 function customConfig(app: Express) {

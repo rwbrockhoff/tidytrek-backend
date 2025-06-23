@@ -1,17 +1,17 @@
 import jwt from 'jsonwebtoken';
-import knex from '../../db/connection.js';
+import knex from '@/db/connection.js';
 import { Request, Response } from 'express';
-import { tables as t } from '../../../knexfile.js';
+import { tables as t } from '@/../knexfile.js';
 import {
 	cookieName,
 	cookieOptions,
 	supabaseCookieName,
 	supabaseCookieOptions,
 	domainName,
-} from '../../utils/utils.js';
-import { supabase } from '../../db/supabaseClient.js';
-import { generateUsername } from '../../utils/usernameGenerator.js';
-import { DEFAULT_PALETTE_COLOR } from '../../utils/constants.js';
+	DEFAULT_PALETTE_COLOR,
+} from '@/utils/constants.js';
+import { supabase } from '@/db/supabaseClient.js';
+import { generateUsername } from '@/utils/usernameGenerator.js';
 
 async function register(req: Request, res: Response) {
 	try {

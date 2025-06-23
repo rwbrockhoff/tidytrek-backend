@@ -2,9 +2,9 @@ import jwt from 'jsonwebtoken';
 import snakeCaseKeys from 'snakecase-keys';
 import camelCaseKeys from 'camelcase-keys';
 import { Request, Response, NextFunction as Next } from 'express';
-import { getUser } from '../routes/authentication/authenticationController.js';
-import { cookieName, supabaseCookieName, cookieOptions } from './utils.js';
-import { supabase } from '../db/supabaseClient.js';
+import { getUser } from '@/routes/authentication/authenticationController.js';
+import { cookieName, supabaseCookieName, cookieOptions } from '@/utils/constants.js';
+import { supabase } from '@/db/supabaseClient.js';
 
 type JwtPayload = { userId: string; iat?: number };
 type SupabaseJwtPayload = { sub: string; iat?: number };

@@ -1,16 +1,16 @@
-import knex from '../../db/connection.js';
-import { tables as t } from '../../../knexfile.js';
-import { DEFAULT_PALETTE_COLOR } from '../../utils/constants.js';
+import knex from '@/db/connection.js';
+import { tables as t } from '@/../knexfile.js';
+import { DEFAULT_PALETTE_COLOR } from '@/utils/constants.js';
 import { Request, Response } from 'express';
-import { createCloudfrontUrlForPhoto, s3DeletePhoto } from '../../utils/s3.js';
-import { packScraper } from '../../utils/puppeteer.js';
-import { isError } from '../../utils/utils.js';
+import { createCloudfrontUrlForPhoto, s3DeletePhoto } from '@/utils/s3.js';
+import { packScraper } from '@/utils/puppeteer.js';
+import { isError } from '@/utils/utils.js';
 import {
 	DEFAULT_INCREMENT,
 	getNextAppendIndex,
 	moveWithFractionalIndex,
 	bulkMoveToGearCloset,
-} from '../../utils/fractionalIndexing.js';
+} from '@/utils/fractionalIndexing.js';
 
 async function getDefaultPack(req: Request, res: Response) {
 	try {
