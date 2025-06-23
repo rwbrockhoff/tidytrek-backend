@@ -125,7 +125,7 @@ export async function moveWithFractionalIndex(
 	whereConditions: WhereConditions,
 	updateFields: UpdateFields = {},
 ): Promise<MoveResult> {
-	// Check for invalid ordering - indicates corrupted list requiring rebalance
+	// Check for invalid ordering (would need rebalancing)
 	if (prevIndex && nextIndex) {
 		const prevFloat = parseFloat(prevIndex);
 		const nextFloat = parseFloat(nextIndex);
@@ -187,7 +187,6 @@ export async function moveWithFractionalIndex(
 			...updateFields,
 		})
 		.where({ [itemIdColumn]: itemId, ...whereConditions });
-
 	return { newIndex, rebalanced };
 }
 
