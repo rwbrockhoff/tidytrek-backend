@@ -2,7 +2,8 @@ import server from '../../server.js';
 import initialRequest from 'supertest';
 const request = initialRequest(server);
 import knex from '../../db/connection.js';
-import { loginMockUser } from '../../utils/testUtils.js';
+import { loginMockUser, registerNewUser } from '../../utils/testUtils.js';
+import { mockUser, notSeededUser } from '../../db/mock/mockData.js';
 
 beforeEach(async () => {
 	await knex.migrate.rollback();
@@ -17,11 +18,6 @@ afterAll(async () => {
 const validSocialLink = {
 	platform_name: 'instagram',
 	social_link_url: 'www.instagram.com/@tidytrek',
-};
-
-const invalidSocialLink = {
-	platform_name: 'mobysocial',
-	social_link_url: 'www.mobysocialisfake.com/@tidytrek',
 };
 
 const updatedProfileInfo = {
@@ -91,5 +87,24 @@ describe('User Profile Routes ', () => {
 		const response = await userAgent.put('/profile-settings/').send(updatedProfileInfo);
 
 		expect(response.statusCode).toEqual(200);
+	});
+
+	it('POST / -> Should allow unique username to be registered', async () => {
+		const userInput = { username: notSeededUser.username, trailName: '' };
+		const newUser = await registerNewUser();
+
+		const response = await newUser.put('/profile-settings/username').send(userInput);
+
+		expect(response.statusCode).toEqual(200);
+	});
+
+	it('POST / -> Should NOT allow existing username to be registered', async () => {
+		const userInput = { username: mockUser.username, trailName: '' };
+		const newUser = await registerNewUser();
+
+		const response = await newUser.put('/profile-settings/username').send(userInput);
+
+		expect(response.statusCode).toEqual(409);
+		expect(response.body).toHaveProperty('error');
 	});
 });

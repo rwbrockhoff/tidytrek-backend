@@ -53,14 +53,6 @@ describe('Auth Routes: ', () => {
 		expect(response.statusCode).toEqual(200);
 	});
 
-	it.skip('POST /register -> Should NOT allow existing username to be registered', async () => {
-		notSeededUser.username = mockUser.username;
-		const response = await request.post('/auth/register').send(notSeededUser);
-
-		expect(response.statusCode).toEqual(409);
-		expect(response.body).toHaveProperty('error');
-	});
-
 	it('POST /login -> Should allow registered users to log in', async () => {
 		const userAgent = await loginMockUser();
 		const response = await userAgent.post('/auth/login').send(mockUser);
@@ -87,6 +79,7 @@ describe('Auth Routes: ', () => {
 		expect(response.body).toHaveProperty('message');
 	});
 
+	// Endpoint includes logic to delete user auth from Supabase
 	it.skip('DELETE /account -> Should allow user to delete account', async () => {
 		const userAgent = await loginMockUser();
 		const response = await userAgent.delete('/auth/account');

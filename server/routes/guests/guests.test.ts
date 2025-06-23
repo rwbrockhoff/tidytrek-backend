@@ -43,7 +43,7 @@ describe('Guests Routes: Pack ', () => {
 		});
 	});
 
-	it('GET / -> Should update pack view count when guests view', async () => {
+	it('GET / -> Should update pack view count when non-users view pack', async () => {
 		const { packId, userAgent } = await getPackId();
 		await request.get(`/guests/pack/${packId}`).send();
 
@@ -62,7 +62,7 @@ describe('Guests Routes: Pack ', () => {
 		expect(packViews).toEqual(1);
 	});
 
-	it.skip('GET / -> Should not update view count when user views', async () => {
+	it('GET / -> Should not update view count when user views their own pack', async () => {
 		const { packId, userAgent } = await getPackId();
 		await userAgent.get(`/guests/pack/${packId}`).send();
 

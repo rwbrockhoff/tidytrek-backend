@@ -84,6 +84,7 @@ export const notSeededUser = {
 	email: 'scollins@tidytrek.co',
 	password: 'newtohiking123!',
 	userId: mockUserId2,
+	username: 'TrailRanger',
 	supabaseRefreshToken: 'test_refresh_token',
 };
 
