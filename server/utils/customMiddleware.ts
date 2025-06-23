@@ -109,6 +109,10 @@ export const protectedRoute = async (req: Request, res: Response, next: Next) =>
 	// attach userId for testing
 	if (process.env.NODE_ENV === 'test') {
 		req.userId = req.cookie;
+		// Still check if user is authenticated in test mode
+		if (!req.userId) {
+			return res.status(401).json({ error: 'Please log in to complete this request.' });
+		}
 		return next();
 	}
 

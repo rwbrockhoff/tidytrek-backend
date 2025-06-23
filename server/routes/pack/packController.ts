@@ -43,6 +43,10 @@ async function getPack(req: Request, res: Response) {
 
 		const { pack, categories } = await getPackById(userId, Number(packId));
 
+		if (!pack) {
+			return res.status(404).json({ error: 'Pack not found.' });
+		}
+
 		return res.status(200).json({ pack, categories });
 	} catch (err) {
 		return res
@@ -279,6 +283,10 @@ async function editPack(req: Request, res: Response) {
 			.update({ ...modified_pack })
 			.where({ user_id: userId, pack_id: packId })
 			.returning('*');
+
+		if (!updatedPack) {
+			return res.status(404).json({ error: 'Pack not found.' });
+		}
 
 		return res.status(200).json(updatedPack);
 	} catch (err) {
