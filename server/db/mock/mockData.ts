@@ -12,6 +12,7 @@ export const mockUser = {
 	trailName: 'Rocket',
 };
 
+
 export const mockPack = {
 	pack_name: 'Kungsleden',
 	pack_description:
@@ -21,7 +22,7 @@ export const mockPack = {
 	pack_season_tag: 'Summer',
 	pack_duration_tag: '1 Month',
 	pack_distance_tag: '300 Miles',
-	pack_index: 0,
+	pack_index: '1000',
 };
 
 export const mockPack2 = {
@@ -32,12 +33,12 @@ export const mockPack2 = {
 	pack_season_tag: 'Winter',
 	pack_duration_tag: '1-3 Nights',
 	pack_distance_tag: '50 Miles',
-	pack_index: 1,
+	pack_index: '2000',
 };
 
 export const mockPackCategory = {
 	pack_category_name: 'Big 3',
-	pack_category_index: 0,
+	pack_category_index: '1000',
 };
 
 export const mockPackItems: MockPackItem[] = [

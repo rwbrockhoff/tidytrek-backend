@@ -1,16 +1,11 @@
-import { PackItem } from '../types/packs/packTypes.js';
+import { MockPackItem } from '../types/packs/packTypes.js';
 import { mockUser } from '../db/mock/mockData.js';
 
-// Extended PackItem type that allows null values for gear closet items
-export type TestPackItem = Omit<PackItem, 'pack_id' | 'pack_category_id'> & {
-	pack_id: number | null;
-	pack_category_id: number | null;
-};
 
 export const testUserId = mockUser.userId;
 export const testPackId = 1;
 
-export const mockPackItem: Omit<TestPackItem, 'pack_item_index'> = {
+export const mockPackItem: Omit<MockPackItem, 'pack_item_index'> = {
 	pack_item_name: 'Test Item',
 	pack_item_description: 'Test Description',
 	user_id: testUserId,
@@ -32,7 +27,7 @@ export const packConditions = {
 	pack_id: testPackId,
 };
 
-export function createTestItem(overrides: Partial<TestPackItem> = {}): TestPackItem {
+export function createTestItem(overrides: Partial<MockPackItem> = {}): MockPackItem {
 	return {
 		...mockPackItem,
 		pack_item_index: '1000',
@@ -40,11 +35,15 @@ export function createTestItem(overrides: Partial<TestPackItem> = {}): TestPackI
 	};
 }
 
-export function createTestItems(count: number, startIndex = 1000, gap = 1000): TestPackItem[] {
+export function createTestItems(
+	count: number,
+	startIndex = 1000,
+	gap = 1000,
+): MockPackItem[] {
 	return Array.from({ length: count }, (_, i) =>
 		createTestItem({
 			pack_item_name: `Item ${i + 1}`,
 			pack_item_index: (startIndex + i * gap).toString(),
-		})
+		}),
 	);
 }

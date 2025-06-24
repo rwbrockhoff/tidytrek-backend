@@ -49,6 +49,7 @@ async function getPack(req: Request, res: Response) {
 
 		return res.status(200).json({ pack, categories });
 	} catch (err) {
+		console.log('error: ', err);
 		return res
 			.status(400)
 			.json({ error: 'There was an error loading your pack right now.' });

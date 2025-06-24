@@ -25,7 +25,7 @@ describe('Gear Closet Routes: ', () => {
 
 	it('GET / -> Should be a user-only protected route', async () => {
 		const response = await request.get('/closet').send();
-		expect(response.statusCode).toEqual(400);
+		expect(response.statusCode).toEqual(401);
 	});
 
 	it('POST / -> Should post an item to gear closet', async () => {
