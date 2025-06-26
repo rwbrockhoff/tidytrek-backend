@@ -28,6 +28,7 @@
 		"test:migrate": "NODE_ENV=test NODE_OPTIONS='--import=tsx' knex migrate:latest",
 		"test:migrate-rollback": "NODE_ENV=test NODE_OPTIONS='--import=tsx' knex migrate:rollback",
 		"test:seed": "NODE_ENV=test NODE_OPTIONS='--import=tsx' knex seed:run",
+		"test:seed-packs": "NODE_ENV=test NODE_OPTIONS='--import=tsx' knex seed:run --specific=03_e2e_pack_data.js",
 		"test:migrate-unlock": "NODE_ENV=test NODE_OPTIONS='--import=tsx' knex migrate:unlock",
 		"prod:migrate": "NODE_ENV=production knex migrate:latest",
 		"prod:migrate-rollback": "NODE_ENV=production knex migrate:rollback",

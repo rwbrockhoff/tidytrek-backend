@@ -1,7 +1,7 @@
 import { Knex } from 'knex';
 import { type MockPackCategory } from '@/types/packs/packTypes.js';
 import { tables as t } from '../../../knexfile.js';
-import { DEFAULT_PALETTE_COLOR, DEFAULT_THEME_NAME } from '../../utils/constants.js';
+import { DEFAULT_PALETTE_COLOR } from '../../utils/constants.js';
 import {
 	e2eTestUser,
 	e2eTestPack,
@@ -16,54 +16,14 @@ import {
 } from '../test/testData.js';
 
 export async function seed(knex: Knex): Promise<void> {
-	// Clean up existing test data
+	console.log('Seeding E2E pack data...');
+
+	// Remove previous data
 	await knex(t.packItem).where('user_id', e2eTestUser.userId).del();
 	await knex(t.packCategory).where('user_id', e2eTestUser.userId).del();
 	await knex(t.pack).where('user_id', e2eTestUser.userId).del();
-	await knex(t.socialLink).where('user_id', e2eTestUser.userId).del();
-	await knex(t.userProfile).where('user_id', e2eTestUser.userId).del();
-	await knex(t.userSettings).where('user_id', e2eTestUser.userId).del();
-	await knex(t.user).where('user_id', e2eTestUser.userId).del();
 
-	// Insert test user
-	await knex(t.user).insert({
-		user_id: e2eTestUser.userId,
-		first_name: e2eTestUser.first_name,
-		last_name: e2eTestUser.last_name,
-		email: e2eTestUser.email,
-	});
-
-	// Create user profile and settings for test user
-	await knex(t.userProfile).insert({
-		user_id: e2eTestUser.userId,
-		trail_name: e2eTestUser.trailName,
-		username: e2eTestUser.username,
-	});
-
-	await knex(t.userSettings).insert({
-		user_id: e2eTestUser.userId,
-		theme_name: DEFAULT_THEME_NAME,
-		dark_mode: false,
-		public_profile: false, // Test user has private profile
-		weight_unit: 'oz', // Different from mock user for testing
-		currency_unit: 'USD',
-	});
-
-	// Create social links for test user
-	await knex(t.socialLink).insert([
-		{
-			user_id: e2eTestUser.userId,
-			platform_name: 'Custom',
-			social_link_url: 'https://tidythruhiker.com',
-		},
-		{
-			user_id: e2eTestUser.userId,
-			platform_name: 'Twitter',
-			social_link_url: 'https://twitter.com/testhiker',
-		},
-	]);
-
-	// Create basic test pack for drag/drop testing
+	// Create basic test pack
 	const [testPack] = await knex(t.pack)
 		.insert({
 			...e2eTestPack,
@@ -80,7 +40,6 @@ export async function seed(knex: Knex): Promise<void> {
 		})
 		.returning('*');
 
-	// Add the 2 test items with predictable indexes for drag/drop testing
 	const testPackItemsWithIds = e2eTestPackItems.map((item) => ({
 		...item,
 		pack_id: testPack.pack_id,
@@ -90,7 +49,7 @@ export async function seed(knex: Knex): Promise<void> {
 
 	await knex(t.packItem).insert(testPackItemsWithIds);
 
-	// Create multi-category pack for advanced testing
+	// Create multi-category pack
 	const [multiPack] = await knex(t.pack)
 		.insert({
 			...e2eMultiCategoryPack,
@@ -98,7 +57,6 @@ export async function seed(knex: Knex): Promise<void> {
 		})
 		.returning('*');
 
-	// Create categories for multi-category pack
 	const categoriesToInsert: MockPackCategory[] = e2eTestCategories.map((category) => ({
 		...category,
 		user_id: e2eTestUser.userId,
@@ -110,29 +68,40 @@ export async function seed(knex: Knex): Promise<void> {
 		.insert(categoriesToInsert)
 		.returning('*');
 
-	// Add items to each category
+	// Add pack items for each category
 	const big3ItemsWithIds = e2eBig3Items.map((item) => ({
 		...item,
 		pack_id: multiPack.pack_id,
 		pack_category_id: createdCategories[0].pack_category_id,
+		user_id: e2eTestUser.userId,
 	}));
 
 	const clothingItemsWithIds = e2eClothingItems.map((item) => ({
 		...item,
 		pack_id: multiPack.pack_id,
 		pack_category_id: createdCategories[1].pack_category_id,
+		user_id: e2eTestUser.userId,
 	}));
 
 	const kitchenItemsWithIds = e2eKitchenItems.map((item) => ({
 		...item,
 		pack_id: multiPack.pack_id,
 		pack_category_id: createdCategories[2].pack_category_id,
+		user_id: e2eTestUser.userId,
+	}));
+
+	// Add gear closet items
+	const gearClosetItemsWithIds = e2eGearClosetItems.map((item) => ({
+		...item,
+		user_id: e2eTestUser.userId,
 	}));
 
 	await knex(t.packItem).insert([
 		...big3ItemsWithIds,
 		...clothingItemsWithIds,
 		...kitchenItemsWithIds,
-		...e2eGearClosetItems,
+		...gearClosetItemsWithIds,
 	]);
+
+	console.log('E2E pack data seeded successfully');
 }
