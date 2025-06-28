@@ -18,9 +18,12 @@ export default {
 	development: {
 		client: 'pg',
 		connection: {
-			host: '127.0.0.1',
+			// Local uses 127.0.0.1, Docker overrides DB_HOST to container name (e.g. 'postgres')
+			host: process.env.DB_HOST || '127.0.0.1',
 			port: 5432,
 			database: dbName,
+			user: 'postgres',
+			password: process.env.DB_PASSWORD || 'postgres',
 		},
 		asyncStackTraces: true,
 		migrations: {
@@ -53,9 +56,12 @@ export default {
 	test: {
 		client: 'pg',
 		connection: {
-			host: '127.0.0.1',
+			// Local uses 127.0.0.1, Docker overrides DB_HOST to container name (e.g. 'postgres-test')
+			host: process.env.DB_HOST || '127.0.0.1',
 			port: 5432,
 			database: `${dbName}_test`,
+			user: 'postgres',
+			password: process.env.DB_PASSWORD || 'postgres',
 		},
 		asyncStackTraces: true,
 		migrations: {

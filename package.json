@@ -31,8 +31,20 @@
 		"test:seed-packs": "NODE_ENV=test NODE_OPTIONS='--import=tsx' knex seed:run --specific=03_e2e_pack_data.js",
 		"test:migrate-unlock": "NODE_ENV=test NODE_OPTIONS='--import=tsx' knex migrate:unlock",
 		"prod:migrate": "NODE_ENV=production knex migrate:latest",
-		"prod:migrate-rollback": "NODE_ENV=production knex migrate:rollback",
-		"prod:migrate-unlock": "NODE_ENV=production knex migrate:unlock"
+		"docker:up": "docker compose up",
+		"docker:down": "docker compose down",
+		"docker:reset": "docker compose down -v && docker compose up -d && npm run docker:db-setup",
+		"docker:migrate": "docker compose exec api npm run dev:migrate",
+		"docker:seed": "docker compose exec api npm run dev:seed",
+		"docker:db-setup": "npm run docker:migrate && npm run docker:seed",
+		"docker:logs": "docker compose logs api",
+		"docker:test:up": "docker compose --profile test up -d",
+		"docker:test:down": "docker compose --profile test down",
+		"docker:test:reset": "docker compose --profile test down -v && npm run docker:test:up && npm run docker:test:db-setup",
+		"docker:test:migrate": "docker compose exec api-test npm run test:migrate",
+		"docker:test:seed": "docker compose exec api-test npm run test:seed",
+		"docker:test:seed-packs": "docker compose exec api-test npm run test:seed-packs",
+		"docker:test:db-setup": "npm run docker:test:migrate && npm run docker:test:seed"
 	},
 	"devDependencies": {
 		"@testing-library/jest-dom": "^6.2.1",

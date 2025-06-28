@@ -15,7 +15,8 @@ export const resetTestDatabase = async (_req: Request, res: Response) => {
 		console.log('Resetting test database...');
 
 		// Run the test setup script
-		const { stdout, stderr } = await execAsync('npm run test:setup');
+		const setupScript = process.env.DOCKER === 'true' ? 'docker:test:db-setup' : 'test:setup';
+		const { stdout, stderr } = await execAsync(`npm run ${setupScript}`);
 
 		console.log('Test database reset completed');
 		if (stdout) console.log('stdout:', stdout);
@@ -45,7 +46,8 @@ export const resetPackData = async (_req: Request, res: Response) => {
 		console.log('Resetting pack data for test user...');
 
 		// Run the pack-specific seed script
-		const { stdout, stderr } = await execAsync('npm run test:seed-packs');
+		const seedScript = process.env.DOCKER === 'true' ? 'docker:test:seed-packs' : 'test:seed-packs';
+		const { stdout, stderr } = await execAsync(`npm run ${seedScript}`);
 
 		console.log('Pack data reset completed');
 		if (stdout) console.log('stdout:', stdout);

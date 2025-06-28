@@ -1,0 +1,48 @@
+# Dependencies
+node_modules
+npm-debug.log*
+
+# Environment files
+*.env
+dev.env
+production.env
+.env.local
+.env.*.local
+
+# Development files
+.git
+.gitignore
+README.md
+LICENSE.md
+
+# Testing
+coverage/
+test-results/
+playwright-report/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+logs
+*.log
+
+# Docker files themselves
+Dockerfile*
+docker-compose*.yml
+.dockerignore
+
+# Documentation
+docs/
+*.md
+
+# Temporary files
+tmp/
+temp/
