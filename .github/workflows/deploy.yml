@@ -12,6 +12,11 @@ jobs:
       AWS_INSTANCE_SG_ID: ${{ secrets.AWS_INSTANCE_SG_ID }}
     steps:
       - uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
       - name: Install modules
         run: npm ci
       - name: Build application
