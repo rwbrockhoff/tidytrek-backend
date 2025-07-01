@@ -57,7 +57,7 @@ async function addPackViewCount({ pack_id, pack_views }: Pack) {
 async function getCategories(packId: string) {
 	// Gets categories for a pack ordered by index
 	// Groups all pack items for each category into an object {pack_items: []}
-	return await knex.raw(
+	const { rows: categories = [] } = await knex.raw(
 		`select 
 			pc.*, 
 			coalesce(array_remove(array_agg(to_jsonb(pi) order by pack_item_index::NUMERIC), NULL), '{}') as pack_items 
@@ -68,6 +68,7 @@ async function getCategories(packId: string) {
 		order by pc.pack_category_index::NUMERIC`,
 		[packId],
 	);
+	return categories;
 }
 
 async function getUserProfile(req: Request, res: Response) {
