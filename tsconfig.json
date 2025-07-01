@@ -11,10 +11,6 @@
 		"resolveJsonModule": true,
 		"types": ["node", "vitest/globals"],
 		"typeRoots": ["./node_modules", "./node_modules/@types"],
-		"baseUrl": ".",
-		"paths": {
-			"@/*": ["./server/*"]
-		},
 		/* Linting */
 		"strict": true,
 		"noImplicitAny": true,

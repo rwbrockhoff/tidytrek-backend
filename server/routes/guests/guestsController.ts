@@ -1,10 +1,10 @@
-import knex from '@/db/connection.js';
+import knex from '../../db/connection.js';
 import { Request, Response } from 'express';
-import { Pack } from '@/types/packs/packTypes.js';
-import { tables as t } from '@/../knexfile.js';
-import { getUserSettings } from '@/routes/authentication/authenticationController.js';
-import { getProfileAndPacks } from '@/routes/profile/profileController.js';
-import { getUserProfileInfo } from '@/routes/profileSettings/profileSettingsController.js';
+import { Pack } from '../../types/packs/packTypes.js';
+import { tables as t } from '../../../knexfile.js';
+import { getUserSettings } from '../authentication/authenticationController.js';
+import { getProfileAndPacks } from '../profile/profileController.js';
+import { getUserProfileInfo } from '../profileSettings/profileSettingsController.js';
 
 async function getPack(req: Request, res: Response) {
 	try {

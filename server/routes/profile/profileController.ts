@@ -1,7 +1,7 @@
-import knex from '@/db/connection.js';
+import knex from '../../db/connection.js';
 import { Request, Response } from 'express';
-import { tables as t } from '@/../knexfile.js';
-import { getUserProfileInfo } from '@/routes/profileSettings/profileSettingsController.js';
+import { tables as t } from '../../../knexfile.js';
+import { getUserProfileInfo } from '../profileSettings/profileSettingsController.js';
 
 async function getProfile(req: Request, res: Response) {
 	try {

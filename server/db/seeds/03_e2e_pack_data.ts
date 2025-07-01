@@ -1,5 +1,5 @@
 import { Knex } from 'knex';
-import { type MockPackCategory } from '@/types/packs/packTypes.js';
+import { type MockPackCategory } from '../../types/packs/packTypes.js';
 import { tables as t } from '../../../knexfile.js';
 import { DEFAULT_PALETTE_COLOR } from '../../utils/constants.js';
 import {
