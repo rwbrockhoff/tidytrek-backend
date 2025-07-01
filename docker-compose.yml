@@ -1,0 +1,89 @@
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: tidytrek_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - '5432:5432'
+    volumes:
+      # Persist database data between container restarts
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      # Wait for PostgreSQL to be ready before starting API
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # TidyTrek Backend API
+  api:
+    build:
+      context: .
+      target: development
+    ports:
+      - '4001:4001'
+    env_file:
+      - dev.env
+    environment:
+      # Override only Docker-specific settings
+      - NODE_ENV=development
+      - DB_HOST=postgres
+    volumes:
+      # Sync local code to container for live development
+      - .:/app
+      # Keep container's node_modules (don't overwrite with local)
+      - /app/node_modules
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # Test PostgreSQL Database
+  postgres-test:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: tidytrek_db_test
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - '5433:5432'
+    volumes:
+      - postgres_test_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    # Only starts when using --profile test flag
+    profiles: [test]
+
+  # Test Backend API
+  api-test:
+    build:
+      context: .
+      target: development
+    ports:
+      - '4002:4002'
+    env_file:
+      - dev.env
+    environment:
+      # Override only Docker-specific settings
+      - NODE_ENV=test
+      - DB_HOST=postgres-test
+    volumes:
+      # Mount code for hot reload, but keep node_modules in container
+      - .:/app
+      - /app/node_modules
+    depends_on:
+      postgres-test:
+        # Wait for test database to be healthy before starting
+        condition: service_healthy
+    # Only starts when using --profile test flag
+    profiles: [test]
+
+volumes:
+  # Named volumes for persistent database storage
+  postgres_data:
+  postgres_test_data:

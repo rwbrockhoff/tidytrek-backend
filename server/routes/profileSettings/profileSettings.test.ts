@@ -2,7 +2,8 @@ import server from '../../server.js';
 import initialRequest from 'supertest';
 const request = initialRequest(server);
 import knex from '../../db/connection.js';
-import { loginMockUser } from '../../utils/testUtils.js';
+import { loginMockUser, registerNewUser } from '../../utils/testUtils.js';
+import { mockUser, notSeededUser } from '../../db/mock/mockData.js';
 
 beforeEach(async () => {
 	await knex.migrate.rollback();
@@ -17,11 +18,6 @@ afterAll(async () => {
 const validSocialLink = {
 	platform_name: 'instagram',
 	social_link_url: 'www.instagram.com/@tidytrek',
-};
-
-const invalidSocialLink = {
-	platform_name: 'mobysocial',
-	social_link_url: 'www.mobysocialisfake.com/@tidytrek',
 };
 
 const updatedProfileInfo = {
@@ -41,7 +37,7 @@ describe('User Profile Routes ', () => {
 
 	it('GET / -> Should be a user-only protected route', async () => {
 		const response = await request.get('/profile-settings/').send();
-		expect(response.statusCode).toEqual(400);
+		expect(response.statusCode).toEqual(401);
 	});
 
 	it('POST / -> Should add a valid social link', async () => {
@@ -56,34 +52,57 @@ describe('User Profile Routes ', () => {
 	it('POST / -> Should only allow four social links', async () => {
 		const userAgent = await loginMockUser();
 
-		await userAgent.post('/profile-settings/social-link').send(validSocialLink);
-		await userAgent.post('/profile-settings/social-link').send(validSocialLink);
-		await userAgent.post('/profile-settings/social-link').send(validSocialLink);
-		const fourthLink = await userAgent
-			.post('/profile-settings/social-link')
-			.send(validSocialLink);
+		// Get current count of social links from seed data
+		const { userId } = mockUser;
+		const existingLinksCount = await knex('social_link')
+			.where('user_id', userId)
+			.count('* as count')
+			.first();
+
+		const currentCount = parseInt(String(existingLinksCount?.count || 0));
+		const linksToAdd = 4 - currentCount;
+
+		// Loop and insert max allowed social links
+		for (let i = 0; i < linksToAdd; i++) {
+			const response = await userAgent
+				.post('/profile-settings/social-link')
+				.send(validSocialLink);
+			expect(response.statusCode).toEqual(200);
+		}
+
+		// The next link (5th total) should be rejected
 		const fifthLink = await userAgent
 			.post('/profile-settings/social-link')
 			.send(validSocialLink);
 
-		expect(fourthLink.statusCode).toEqual(200);
 		expect(fifthLink.statusCode).toEqual(400);
 	});
 
 	it('DELETE / -> Should delete social link', async () => {
 		const userAgent = await loginMockUser();
-		await userAgent.post('/profile-settings/social-link').send(validSocialLink);
+
+		// Get current social links from seed data
 		const {
-			body: { socialLinks },
+			body: { socialLinks: initialLinks },
 		} = await userAgent.get('/profile-settings/');
 
-		expect(socialLinks).toHaveLength(1);
-		const socialLinkId = socialLinks[0].socialLinkId;
+		const initialCount = initialLinks.length;
+		expect(initialCount).toBeGreaterThan(0); // Should have links from seed data
+
+		// Delete the first existing social link
+		const socialLinkId = initialLinks[0].socialLinkId;
 		const deleteResponse = await userAgent.delete(
 			`/profile-settings/social-link/${socialLinkId}`,
 		);
 
 		expect(deleteResponse.statusCode).toEqual(200);
+
+		// Verify the link was deleted
+		const {
+			body: { socialLinks: updatedLinks },
+		} = await userAgent.get('/profile-settings/');
+
+		expect(updatedLinks).toHaveLength(initialCount - 1);
 	});
 
 	it('PUT / -> Should allow user to update profile info', async () => {
@@ -91,5 +110,24 @@ describe('User Profile Routes ', () => {
 		const response = await userAgent.put('/profile-settings/').send(updatedProfileInfo);
 
 		expect(response.statusCode).toEqual(200);
+	});
+
+	it('POST / -> Should allow unique username to be registered', async () => {
+		const userInput = { username: notSeededUser.username, trailName: '' };
+		const newUser = await registerNewUser();
+
+		const response = await newUser.put('/profile-settings/username').send(userInput);
+
+		expect(response.statusCode).toEqual(200);
+	});
+
+	it('POST / -> Should NOT allow existing username to be registered', async () => {
+		const userInput = { username: mockUser.username, trailName: '' };
+		const newUser = await registerNewUser();
+
+		const response = await newUser.put('/profile-settings/username').send(userInput);
+
+		expect(response.statusCode).toEqual(409);
+		expect(response.body).toHaveProperty('error');
 	});
 });

@@ -1,4 +1,5 @@
 import { defineConfig } from 'vitest/config';
+import { resolve } from 'path';
 
 export default defineConfig({
 	test: {
@@ -6,5 +7,9 @@ export default defineConfig({
 		poolOptions: { threads: { singleThread: true } },
 		setupFiles: './server/tests/setup.ts',
 	},
-	plugins: [], // only if you are using custom tsconfig paths
+	resolve: {
+		alias: {
+			'@': resolve(__dirname, './server'),
+		},
+	},
 });

@@ -1,5 +1,3 @@
-import { knexCamelCaseResponse } from './server/utils/utils.js';
-import { KnexResponse } from './server/types/server/serverTypes.js';
 import dotenv from 'dotenv';
 dotenv.config({
 	path: process.env.NODE_ENV === 'production' ? 'production.env' : 'dev.env',
@@ -14,17 +12,19 @@ export const tables = {
 	userSettings: 'user_settings',
 	socialLink: 'social_link',
 	userProfile: 'user_profile',
-};
+} as const;
 
 export default {
 	development: {
 		client: 'pg',
 		connection: {
-			host: '127.0.0.1',
+			// Local uses 127.0.0.1, Docker overrides DB_HOST to container name (e.g. 'postgres')
+			host: process.env.DB_HOST || '127.0.0.1',
 			port: 5432,
 			database: dbName,
+			user: 'postgres',
+			password: process.env.DB_PASSWORD || 'postgres',
 		},
-		postProcessResponse: (result: KnexResponse) => knexCamelCaseResponse(result),
 		asyncStackTraces: true,
 		migrations: {
 			extension: 'ts',
@@ -45,7 +45,6 @@ export default {
 			password: `${process.env.PRODUCTION_DB_PASSWORD}`,
 			ssl: true,
 		},
-		postProcessResponse: (result: KnexResponse) => knexCamelCaseResponse(result),
 		migrations: {
 			directory: `${process.cwd()}/server/db/migrations`,
 		},
@@ -57,11 +56,13 @@ export default {
 	test: {
 		client: 'pg',
 		connection: {
-			host: '127.0.0.1',
+			// Local uses 127.0.0.1, Docker overrides DB_HOST to container name (e.g. 'postgres-test')
+			host: process.env.DB_HOST || '127.0.0.1',
 			port: 5432,
 			database: `${dbName}_test`,
+			user: 'postgres',
+			password: process.env.DB_PASSWORD || 'postgres',
 		},
-		postProcessResponse: (result: KnexResponse) => knexCamelCaseResponse(result),
 		asyncStackTraces: true,
 		migrations: {
 			extension: 'js',

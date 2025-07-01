@@ -1,32 +1,38 @@
 import jwt from 'jsonwebtoken';
-import knex from '../../db/connection.js';
+import knex from '@/db/connection.js';
 import { Request, Response } from 'express';
-import { tables as t } from '../../../knexfile.js';
-import { cookieName, cookieOptions, domainName } from '../../utils/utils.js';
-import { supabase } from '../../db/supabaseClient.js';
-import { generateUsername } from '../../utils/usernameGenerator.js';
-import { DEFAULT_PALETTE_COLOR } from '../../utils/constants.js';
+import { tables as t } from '@/../knexfile.js';
+import {
+	cookieName,
+	cookieOptions,
+	supabaseCookieName,
+	supabaseCookieOptions,
+	domainName,
+	DEFAULT_PALETTE_COLOR,
+} from '@/utils/constants.js';
+import { supabase } from '@/db/supabaseClient.js';
+import { generateUsername } from '@/utils/usernameGenerator.js';
 
 async function register(req: Request, res: Response) {
 	try {
-		const { user_id, email } = req.body;
+		const { user_id, email, supabase_refresh_token } = req.body;
 
 		const { unique } = await isUniqueEmail(email);
 
+		// Return 200 to hide user's account status
 		if (!unique && !req.userId) return res.status(200).send();
 
-		if (!unique && req.userId) {
-			// add jwt + signed cookie for supabase verified user
-			const token = createWebToken(req.userId);
+		const actualUserId = unique ? user_id : req.userId;
+
+		// New user - create account
+		if (unique && !req.userId) await onboardUser(req.body);
+
+		// Only set cookies if user has verified email (has refresh token)
+		if (supabase_refresh_token) {
+			const token = createWebToken(actualUserId);
 			res.cookie(cookieName, token, cookieOptions);
-			return res.status(200).send();
+			res.cookie(supabaseCookieName, supabase_refresh_token, supabaseCookieOptions);
 		}
-
-		await onboardUser(req.body);
-
-		// add jwt + signed cookie
-		const token = createWebToken(user_id);
-		res.cookie(cookieName, token, cookieOptions);
 
 		return res.status(200).send();
 	} catch (err) {
@@ -58,9 +64,7 @@ async function onboardUser(userInfo: {
 async function login(req: Request, res: Response) {
 	const errorText = 'Invaid login information.';
 	try {
-		const { user_id, email } = req.body;
-		// if (!req.userId || req.userId !== user_id)
-		// 	return res.status(400).json({ error: errorText });
+		const { user_id, email, supabase_refresh_token } = req.body;
 
 		const initialUser = await knex(t.user)
 			.select('user_id')
@@ -74,9 +78,13 @@ async function login(req: Request, res: Response) {
 			await onboardUser(req.body);
 		}
 
-		// create token + cookie
+		// Set both cookies
 		const token = createWebToken(user_id);
 		res.cookie(cookieName, token, cookieOptions);
+
+		if (supabase_refresh_token) {
+			res.cookie(supabaseCookieName, supabase_refresh_token, supabaseCookieOptions);
+		}
 
 		res.status(200).json({ newUser: initialUser === undefined });
 	} catch (err) {
@@ -85,13 +93,48 @@ async function login(req: Request, res: Response) {
 }
 
 async function logout(_req: Request, res: Response) {
-	return res.status(200).clearCookie(cookieName, { domain: domainName }).json({
-		message: 'User has been logged out.',
-	});
+	return res
+		.status(200)
+		.clearCookie(cookieName, { domain: domainName })
+		.clearCookie(supabaseCookieName, { domain: domainName })
+		.json({
+			message: 'User has been logged out.',
+		});
 }
 
 async function getAuthStatus(req: Request, res: Response) {
 	try {
+		// Basic cookie validation
+		if (!req.userId) {
+			return res.status(200).json({ isAuthenticated: false });
+		}
+
+		// Validate Supabase refresh token for authenticated users
+		const supabaseRefreshToken = req.signedCookies[supabaseCookieName];
+		if (supabaseRefreshToken) {
+			try {
+				const { data, error } = await supabase.auth.refreshSession({
+					refresh_token: supabaseRefreshToken,
+				});
+
+				// If Supabase token is invalid or user ID mismatch, force logout
+				if (error || !data.session || data.session.user?.id !== req.userId) {
+					return res
+						.status(200)
+						.clearCookie(cookieName, { domain: domainName })
+						.clearCookie(supabaseCookieName, { domain: domainName })
+						.json({ isAuthenticated: false });
+				}
+			} catch (supabaseError) {
+				// Supabase validation error - clear cookies and force logout
+				return res
+					.status(200)
+					.clearCookie(cookieName, { domain: domainName })
+					.clearCookie(supabaseCookieName, { domain: domainName })
+					.json({ isAuthenticated: false });
+			}
+		}
+
 		if (req.user && req.userId) {
 			// attach settings
 			const settings = await getUserSettings(req.userId);
@@ -125,6 +168,36 @@ export async function getUserSettings(userId: string) {
 		.select('public_profile', 'theme_name', 'dark_mode', 'weight_unit', 'currency_unit')
 		.where({ user_id: userId })
 		.first();
+}
+
+async function refreshSupabaseSession(req: Request, res: Response) {
+	try {
+		const refreshToken = req.signedCookies[supabaseCookieName];
+
+		if (!refreshToken) {
+			return res.status(401).json({ error: 'No refresh token available' });
+		}
+
+		const { data, error } = await supabase.auth.refreshSession({
+			refresh_token: refreshToken,
+		});
+
+		if (error || !data.session) {
+			return res.status(401).json({ error: 'Invalid refresh token' });
+		}
+
+		// Update the refresh token cookie if it changed
+		if (data.session.refresh_token !== refreshToken) {
+			res.cookie(supabaseCookieName, data.session.refresh_token, supabaseCookieOptions);
+		}
+
+		res.status(200).json({
+			access_token: data.session.access_token,
+			expires_at: data.session.expires_at,
+		});
+	} catch (err) {
+		res.status(400).json({ error: 'Error refreshing session' });
+	}
 }
 
 async function deleteAccount(req: Request, res: Response) {
@@ -167,30 +240,33 @@ async function createUserSettings(user_id: string, profile_photo_url: string | n
 	});
 }
 
-async function createDefaultPack(userId: string) {
+async function createDefaultPack(user_id: string) {
 	try {
-		const [{ packId }] = await knex(t.pack)
+		// Create default pack
+		const [{ pack_id }] = await knex(t.pack)
 			.insert({
-				user_id: userId,
+				user_id,
 				pack_name: 'Default Pack',
 				pack_index: 0,
 			})
 			.returning('pack_id');
 
-		const [{ packCategoryId }] = await knex(t.packCategory)
+		// Create default category
+		const [{ pack_category_id }] = await knex(t.packCategory)
 			.insert({
-				user_id: userId,
-				pack_id: packId,
+				user_id,
+				pack_id,
 				pack_category_name: '',
 				pack_category_index: 0,
 				pack_category_color: DEFAULT_PALETTE_COLOR,
 			})
 			.returning('pack_category_id');
 
+		// Create default pack item
 		await knex(t.packItem).insert({
-			user_id: userId,
-			pack_id: packId,
-			pack_category_id: packCategoryId,
+			user_id,
+			pack_id,
+			pack_category_id,
 			pack_item_name: '',
 			pack_item_index: 0,
 		});
@@ -215,5 +291,6 @@ export default {
 	login,
 	logout,
 	getAuthStatus,
+	refreshSupabaseSession,
 	deleteAccount,
 };

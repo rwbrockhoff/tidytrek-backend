@@ -6,7 +6,7 @@ export async function up(knex: Knex): Promise<void> {
 		table.increments('pack_id').unsigned().primary();
 		table.uuid('user_id').unsigned().notNullable();
 		table.foreign('user_id').references('user_id').inTable(t.user).onDelete('CASCADE');
-		table.integer('pack_index').unsigned().notNullable();
+		table.string('pack_index', 20).notNullable().defaultTo('0');
 		table.index('pack_index');
 		table.string('pack_name', 100).notNullable();
 		table.text('pack_description').nullable();

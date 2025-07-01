@@ -26,7 +26,8 @@ describe('Pack Routes: Pack ', () => {
 
 	it('GET / -> Should be a user-only protected route', async () => {
 		const response = await request.get('/packs/').send();
-		expect(response.statusCode).toEqual(400);
+		expect(response.statusCode).toEqual(401);
+		expect(response.body).toHaveProperty('error');
 	});
 
 	it('GET /:packId -> Should get a pack by packId', async () => {
@@ -62,7 +63,7 @@ describe('Pack Routes: Pack ', () => {
 		const { packId } = packResponse.body.pack;
 		const response = await userAgent
 			.put(`/packs/${packId}`)
-			.send({ modified_pack: { packName: 'Updated Pack Name' } });
+			.send({ packName: 'Updated Pack Name' });
 		expect(response.status).toEqual(200);
 	});
 
@@ -97,6 +98,24 @@ describe('Pack Routes: Pack ', () => {
 		const response = await userAgent.delete(`/packs/items/${packId}`).send();
 		expect(response.status).toEqual(200);
 		expect(response.body).toHaveProperty('deletedPackId');
+	});
+});
+
+describe('Pack Routes: Error Handling', () => {
+	describe('Not Found Errors', () => {
+		it('GET /:packId -> Should return 404 for non-existent pack', async () => {
+			const userAgent = await loginMockUser();
+			const response = await userAgent.get('/packs/99999').send();
+			expect(response.statusCode).toEqual(404);
+			expect(response.body).toHaveProperty('error');
+		});
+
+		it('PUT /:packId -> Should return 404 for non-existent pack', async () => {
+			const userAgent = await loginMockUser();
+			const response = await userAgent.put('/packs/99999').send({ packName: 'Test' });
+			expect(response.statusCode).toEqual(404);
+			expect(response.body).toHaveProperty('error');
+		});
 	});
 });
 

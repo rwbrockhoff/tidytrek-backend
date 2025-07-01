@@ -10,7 +10,7 @@ export async function up(knex: Knex): Promise<void> {
 		table.foreign('pack_id').references('pack_id').inTable(t.pack).onDelete('CASCADE');
 		table.string('pack_category_name', 100).notNullable().defaultTo('');
 		table.string('pack_category_color', 50).nullable();
-		table.integer('pack_category_index').unsigned().notNullable();
+		table.string('pack_category_index', 20).notNullable().defaultTo('0');
 		table.index('pack_category_index');
 		table.index(['pack_id', 'pack_category_index']);
 	});
