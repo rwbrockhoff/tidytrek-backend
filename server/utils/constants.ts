@@ -5,7 +5,7 @@ export const cookieName = 'tidytrek_token';
 export const supabaseCookieName = 'supabase_refresh';
 
 export const domainName =
-	process.env.NODE_ENV === 'production' ? 'tidytrek.co' : undefined;
+	process.env.NODE_ENV === 'production' ? '.tidytrek.co' : undefined;
 
 export const cookieOptions = {
 	httpOnly: true,
