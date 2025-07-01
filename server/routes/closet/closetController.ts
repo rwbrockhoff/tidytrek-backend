@@ -1,10 +1,10 @@
-import knex from '@/db/connection.js';
-import { tables as t } from '@/../knexfile.js';
+import knex from '../../db/connection.js';
+import { tables as t } from '../../../knexfile.js';
 import { Request, Response } from 'express';
 import {
 	getNextAppendIndex,
 	moveWithFractionalIndex,
-} from '@/utils/fractionalIndexing.js';
+} from '../../utils/fractionalIndexing.js';
 
 async function getGearCloset(req: Request, res: Response) {
 	try {

@@ -1,8 +1,8 @@
-import knex from '@/db/connection.js';
-import { tables as t } from '@/../knexfile.js';
+import knex from '../../db/connection.js';
+import { tables as t } from '../../../knexfile.js';
 import { Request, Response } from 'express';
-import { createCloudfrontUrlForPhoto, s3DeletePhoto } from '@/utils/s3.js';
-import { generateUsername } from '@/utils/usernameGenerator.js';
+import { createCloudfrontUrlForPhoto, s3DeletePhoto } from '../../utils/s3.js';
+import { generateUsername } from '../../utils/usernameGenerator.js';
 
 async function getProfileSettings(req: Request, res: Response) {
 	try {
