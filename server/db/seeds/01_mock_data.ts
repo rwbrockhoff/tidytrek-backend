@@ -8,10 +8,22 @@ import {
 	mockPackCategory,
 	mockPackItems,
 	mockGearClosetItems,
+	mockPrivateUser,
+	mockPrivatePack,
+	mockPrivatePackCategory,
+	mockPrivatePackItems,
 } from '../mock/mockData.js';
 import { type MockPackItem } from '../../types/packs/packTypes.js';
 
 const { first_name, last_name, email, userId: user_id, trailName, username } = mockUser;
+const {
+	first_name: privateFirstName,
+	last_name: privateLastName,
+	email: privateEmail,
+	userId: privateUserId,
+	trailName: privateTrailName,
+	username: privateUsername,
+} = mockPrivateUser;
 
 export async function seed(knex: Knex): Promise<void> {
 	// Clean up all mock data
@@ -26,10 +38,24 @@ export async function seed(knex: Knex): Promise<void> {
 	// Insert mock user, profile, and settings
 	await knex(t.user).insert({ user_id, first_name, last_name, email });
 
+	// Insert mock private user
+	await knex(t.user).insert({
+		user_id: privateUserId,
+		first_name: privateFirstName,
+		last_name: privateLastName,
+		email: privateEmail,
+	});
+
 	await knex(t.userProfile).insert({
 		user_id,
 		trail_name: trailName,
 		username,
+	});
+
+	await knex(t.userProfile).insert({
+		user_id: privateUserId,
+		trail_name: privateTrailName,
+		username: privateUsername,
 	});
 
 	await knex(t.userSettings).insert({
@@ -37,6 +63,15 @@ export async function seed(knex: Knex): Promise<void> {
 		theme_name: DEFAULT_THEME_NAME,
 		dark_mode: false,
 		public_profile: true,
+		weight_unit: 'lb',
+		currency_unit: 'USD',
+	});
+
+	await knex(t.userSettings).insert({
+		user_id: privateUserId,
+		theme_name: DEFAULT_THEME_NAME,
+		dark_mode: false,
+		public_profile: false, // Private profile
 		weight_unit: 'lb',
 		currency_unit: 'USD',
 	});
@@ -80,4 +115,26 @@ export async function seed(knex: Knex): Promise<void> {
 	await knex(t.pack)
 		.insert({ ...mockPack2, user_id: user_id })
 		.returning('*');
+
+	// Create pack for private user
+	const [privatePack] = await knex(t.pack)
+		.insert({ ...mockPrivatePack, user_id: privateUserId })
+		.returning('*');
+
+	const [privatePackCategory] = await knex(t.packCategory)
+		.insert({
+			...mockPrivatePackCategory,
+			user_id: privateUserId,
+			pack_id: privatePack.pack_id,
+			pack_category_color: DEFAULT_PALETTE_COLOR,
+		})
+		.returning('*');
+
+	const privatePackItemsWithIds = mockPrivatePackItems.map((item: MockPackItem) => {
+		item['pack_id'] = privatePack.pack_id;
+		item['pack_category_id'] = privatePackCategory.pack_category_id;
+		return item;
+	});
+
+	await knex(t.packItem).insert(privatePackItemsWithIds);
 }

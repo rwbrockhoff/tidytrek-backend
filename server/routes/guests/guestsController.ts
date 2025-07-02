@@ -76,12 +76,15 @@ async function getUserProfile(req: Request, res: Response) {
 		const { username } = req.params;
 		const resolvedId = await getIdFromUsername(username);
 
+		// User doesn't exist
+		if (!resolvedId) return res.status(404).json({ error: 'User not found.' });
+
 		const { public_profile } = await knex(t.userSettings)
 			.select('public_profile')
 			.where({ user_id: resolvedId })
 			.first();
 
-		// handle private profiles or non-existent users
+		// User exists but profile is private
 		if (!public_profile) {
 			return res.status(200).json({
 				user: null,
@@ -100,11 +103,8 @@ async function getUserProfile(req: Request, res: Response) {
 }
 
 async function getIdFromUsername(username: string) {
-	const { user_id } = await knex(t.userProfile)
-		.select('user_id')
-		.where({ username })
-		.first();
-	return user_id;
+	const result = await knex(t.userProfile).select('user_id').where({ username }).first();
+	return result?.user_id;
 }
 
 export default { getPack, getUserProfile };

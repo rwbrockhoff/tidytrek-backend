@@ -2,6 +2,7 @@ import { type MockPackItem } from '../../types/packs/packTypes.js';
 
 const mockUserId = '60094a8e-a1fe-423a-abca-637381b33950';
 const mockUserId2 = '670098f4-4c1e-40a4-8896-e0f8968a90ac';
+const mockPrivateUserId = '780081c3-5d2e-41b5-9987-f1f9078b91bd';
 
 export const mockUser = {
 	userId: mockUserId,
@@ -11,7 +12,6 @@ export const mockUser = {
 	username: 'tidyTrekHiker171',
 	trailName: 'Rocket',
 };
-
 
 export const mockPack = {
 	pack_name: 'Kungsleden',
@@ -116,5 +116,51 @@ export const mockGearClosetItems: MockPackItem[] = [
 		pack_item_quantity: 1,
 		pack_item_index: '3000',
 		user_id: mockUserId,
+	},
+];
+
+export const mockPrivateUser = {
+	userId: mockPrivateUserId,
+	first_name: 'Alex',
+	last_name: 'Chen',
+	email: 'alex@tidytrek.co',
+	username: 'privateHiker',
+	trailName: 'Shadow',
+};
+
+export const mockPrivatePack = {
+	pack_name: 'Day Hike Pack',
+	pack_description: 'Simple pack for local day hikes.',
+	pack_public: true,
+	pack_location_tag: 'Local',
+	pack_season_tag: 'Spring',
+	pack_duration_tag: '1 Day',
+	pack_distance_tag: '10 Miles',
+	pack_index: '1000',
+};
+
+export const mockPrivatePackCategory = {
+	pack_category_name: 'Essentials',
+	pack_category_index: '1000',
+};
+
+export const mockPrivatePackItems: MockPackItem[] = [
+	{
+		pack_item_name: 'Water Bottle',
+		pack_item_description: '32oz Nalgene',
+		pack_item_weight: 6,
+		pack_item_unit: 'oz',
+		pack_item_quantity: 1,
+		pack_item_index: '1000',
+		user_id: mockPrivateUserId,
+	},
+	{
+		pack_item_name: 'First Aid Kit',
+		pack_item_description: 'Basic supplies',
+		pack_item_weight: 4,
+		pack_item_unit: 'oz',
+		pack_item_quantity: 1,
+		pack_item_index: '2000',
+		user_id: mockPrivateUserId,
 	},
 ];

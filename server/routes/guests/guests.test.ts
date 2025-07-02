@@ -2,6 +2,7 @@ import server from '../../server.js';
 import initialRequest from 'supertest';
 const request = initialRequest(server);
 import knex from '../../db/connection.js';
+import { mockPrivateUser } from '../../db/mock/mockData.js';
 import { loginMockUser, registerNewUser } from '../../utils/testUtils.js';
 
 beforeEach(async () => {
@@ -69,5 +70,24 @@ describe('Guests Routes: Pack ', () => {
 		const { body: packResponse } = await userAgent.get('/packs/').send();
 		const { packViews } = packResponse.pack;
 		expect(packViews).toEqual(0);
+	});
+
+	it('GET /user -> Should handle user profile not found', async () => {
+		const response = await request.get(`/guests/user/nonExistentHiker321`).send();
+		// Should provide a 404 response with error response
+		expect(response.statusCode).toEqual(404);
+		expect(response.body).toHaveProperty('error');
+	});
+
+	it('GET /user -> Should not show private user profile', async () => {
+		const { username } = mockPrivateUser;
+		const response = await request.get(`/guests/user/${username}`).send();
+		// Should provide a 400 response with error response
+		expect(response.statusCode).toEqual(200);
+		expect(response.body).toEqual({
+			user: null,
+			packs: [],
+			settings: null,
+		});
 	});
 });
