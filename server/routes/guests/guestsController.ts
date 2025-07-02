@@ -87,8 +87,8 @@ async function getUserProfile(req: Request, res: Response) {
 		// User exists but profile is private
 		if (!public_profile) {
 			return res.status(200).json({
-				user: null,
-				packs: [],
+				userProfile: null,
+				packThumbnailList: [],
 				settings: null,
 			});
 		}
