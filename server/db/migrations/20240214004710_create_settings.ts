@@ -1,6 +1,6 @@
 import type { Knex } from 'knex';
 import { tables as t } from '../../../knexfile.js';
-import { DEFAULT_THEME_NAME } from '../../utils/constants.js';
+import { DEFAULT_PALETTE } from '../../utils/constants.js';
 
 const weightUnitConstraints = ['lb', 'kg', 'oz', 'g'];
 
@@ -10,7 +10,7 @@ export async function up(knex: Knex): Promise<void> {
 		table.uuid('user_id').unsigned().notNullable();
 		table.foreign('user_id').references('user_id').inTable(t.user).onDelete('CASCADE');
 		table.boolean('public_profile').defaultTo(true).notNullable();
-		table.string('theme_name', 25).defaultTo(DEFAULT_THEME_NAME).notNullable();
+		table.string('palette', 25).defaultTo(DEFAULT_PALETTE).notNullable();
 		table.boolean('dark_mode').defaultTo(false).notNullable();
 		table
 			.string('weight_unit', 10)

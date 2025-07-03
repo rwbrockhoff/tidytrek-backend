@@ -1,6 +1,6 @@
 import { Knex } from 'knex';
 import { tables as t } from '../../../knexfile.js';
-import { DEFAULT_PALETTE_COLOR, DEFAULT_THEME_NAME } from '../../utils/constants.js';
+import { DEFAULT_PALETTE_COLOR, DEFAULT_PALETTE } from '../../utils/constants.js';
 import {
 	mockUser,
 	mockPack,
@@ -60,7 +60,7 @@ export async function seed(knex: Knex): Promise<void> {
 
 	await knex(t.userSettings).insert({
 		user_id,
-		theme_name: DEFAULT_THEME_NAME,
+		palette: DEFAULT_PALETTE,
 		dark_mode: false,
 		public_profile: true,
 		weight_unit: 'lb',
@@ -69,7 +69,7 @@ export async function seed(knex: Knex): Promise<void> {
 
 	await knex(t.userSettings).insert({
 		user_id: privateUserId,
-		theme_name: DEFAULT_THEME_NAME,
+		palette: DEFAULT_PALETTE,
 		dark_mode: false,
 		public_profile: false, // Private profile
 		weight_unit: 'lb',

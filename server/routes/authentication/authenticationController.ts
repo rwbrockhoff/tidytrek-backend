@@ -165,7 +165,7 @@ export async function getUser(userId: string) {
 
 export async function getUserSettings(userId: string) {
 	return await knex(t.userSettings)
-		.select('public_profile', 'theme_name', 'dark_mode', 'weight_unit', 'currency_unit')
+		.select('public_profile', 'palette', 'dark_mode', 'weight_unit', 'currency_unit')
 		.where({ user_id: userId })
 		.first();
 }
