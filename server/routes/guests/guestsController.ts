@@ -2,7 +2,7 @@ import knex from '../../db/connection.js';
 import { Request, Response } from 'express';
 import { Pack } from '../../types/packs/packTypes.js';
 import { tables as t } from '../../../knexfile.js';
-import { getUserSettings } from '../authentication/authenticationController.js';
+import { getUserSettingsData } from '../userSettings/userSettingsController.js';
 import { getProfileAndPacks } from '../profile/profileController.js';
 import { getUserProfileInfo } from '../profileSettings/profileSettingsController.js';
 
@@ -30,7 +30,7 @@ async function getPack(req: Request, res: Response) {
 		// Add count for public non-user view
 		if (!req.userId) await addPackViewCount(pack);
 
-		const settings = await getUserSettings(pack.user_id);
+		const settings = await getUserSettingsData(pack.user_id);
 
 		const { profileInfo, socialLinks } = await getUserProfileInfo(pack.user_id);
 
@@ -94,7 +94,7 @@ async function getUserProfile(req: Request, res: Response) {
 		}
 		const isPackOwner = req.userId === resolvedId;
 		const profile = await getProfileAndPacks(resolvedId, isPackOwner);
-		const settings = await getUserSettings(resolvedId);
+		const settings = await getUserSettingsData(resolvedId);
 
 		return res.status(200).json({ ...profile, settings });
 	} catch (err) {
