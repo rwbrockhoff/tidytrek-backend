@@ -12,6 +12,7 @@ import {
 } from '../../utils/constants.js';
 import { supabase } from '../../db/supabaseClient.js';
 import { generateUsername } from '../../utils/usernameGenerator.js';
+import { getUserSettingsData } from '../userSettings/userSettingsController.js';
 
 async function register(req: Request, res: Response) {
 	try {
@@ -137,7 +138,7 @@ async function getAuthStatus(req: Request, res: Response) {
 
 		if (req.user && req.userId) {
 			// attach settings
-			const settings = await getUserSettings(req.userId);
+			const settings = await getUserSettingsData(req.userId);
 			res.status(200).json({ isAuthenticated: true, user: req.user, settings });
 		} else {
 			res.status(200).json({ isAuthenticated: req.userId !== undefined });
@@ -163,12 +164,6 @@ export async function getUser(userId: string) {
 		.first();
 }
 
-export async function getUserSettings(userId: string) {
-	return await knex(t.userSettings)
-		.select('public_profile', 'palette', 'dark_mode', 'weight_unit', 'currency_unit')
-		.where({ user_id: userId })
-		.first();
-}
 
 async function refreshSupabaseSession(req: Request, res: Response) {
 	try {
