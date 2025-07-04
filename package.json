@@ -22,7 +22,7 @@
 		"dev:db-setup": "npm run dev:migrate && npm run dev:seed",
 		"dev:db-reset": "npm run dev:migrate-rollback && npm run dev:migrate && npm run dev:seed",
 		"test": "NODE_ENV=test npm run test:setup && vitest --run",
-		"test:coverage": "NODE_ENV=test npm run test:setup && vitest run --coverage",
+		"test:coverage": "NODE_ENV=test npm run test:setup && vitest run --coverage --coverage.reporter=html",
 		"test:setup": "npm run test:db-reset && npm run test:migrate && npm run test:seed",
 		"test:db-reset": "npm run test:migrate-unlock && npm run test:migrate-rollback",
 		"test:migrate": "NODE_ENV=test NODE_OPTIONS='--import=tsx' knex migrate:latest",
