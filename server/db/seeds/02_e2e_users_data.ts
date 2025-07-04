@@ -30,7 +30,7 @@ export async function seed(knex: Knex): Promise<void> {
 		user_id: e2eTestUser.userId,
 		palette: DEFAULT_PALETTE,
 		dark_mode: false,
-		public_profile: false,
+		public_profile: true,
 		weight_unit: 'lb',
 		currency_unit: 'USD',
 	});

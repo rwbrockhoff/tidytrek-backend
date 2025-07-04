@@ -11,6 +11,8 @@ import {
 	moveWithFractionalIndex,
 	bulkMoveToGearCloset,
 } from '../../utils/fractionalIndexing.js';
+import logger from '../../config/logger.js';
+import { createErrorLogData } from '../../utils/loggerUtils.js';
 
 async function getDefaultPack(req: Request, res: Response) {
 	try {
@@ -32,6 +34,12 @@ async function getDefaultPack(req: Request, res: Response) {
 			return res.status(200).send();
 		}
 	} catch (err) {
+		logger.error(
+			'Failed to load default pack',
+			createErrorLogData(err, {
+				userId: req.userId,
+			}),
+		);
 		res.status(400).json({ error: "We're having trouble loading your packs right now." });
 	}
 }
@@ -49,7 +57,13 @@ async function getPack(req: Request, res: Response) {
 
 		return res.status(200).json({ pack, categories });
 	} catch (err) {
-		console.log('error: ', err);
+		logger.error(
+			'Failed to load pack',
+			createErrorLogData(err, {
+				userId: req.userId,
+				packId: req.params.packId,
+			}),
+		);
 		return res
 			.status(400)
 			.json({ error: 'There was an error loading your pack right now.' });
@@ -86,6 +100,12 @@ async function getPackList(req: Request, res: Response) {
 
 		return res.status(200).json({ packList });
 	} catch (err) {
+		logger.error(
+			'Failed to load pack list',
+			createErrorLogData(err, {
+				userId: req.userId,
+			}),
+		);
 		return res.status(400).json({ error: 'There was an error getting your pack list.' });
 	}
 }
@@ -100,8 +120,22 @@ async function addNewPack(req: Request, res: Response) {
 		if (newPackError) return res.status(400).json({ error: errorMessage });
 
 		const { pack, categories } = newPack;
+
+		logger.info('Pack created successfully', {
+			userId: req.userId,
+			packId: pack.pack_id,
+			packName: pack.pack_name,
+			timestamp: new Date(),
+		});
+
 		return res.status(200).json({ pack, categories });
 	} catch (err) {
+		logger.error(
+			'Failed to create new pack',
+			createErrorLogData(err, {
+				userId: req.userId,
+			}),
+		);
 		return res.status(400).json({ error: errorMessage });
 	}
 }
@@ -158,7 +192,15 @@ async function importNewPack(req: Request, res: Response) {
 
 		// handle error
 		const isPackError = isError(importedPack);
-		if (isPackError) return res.status(400).json({ error: importErrorMessage });
+		if (isPackError) {
+			logger.warn('Pack import failed - invalid pack data', {
+				userId,
+				packUrl: pack_url,
+				error: 'Pack scraper returned error or invalid data',
+				scrapedData: importedPack,
+			});
+			return res.status(400).json({ error: importErrorMessage });
+		}
 
 		// save new pack to db
 		const { pack_name, pack_description, pack_categories } = importedPack;
@@ -211,8 +253,20 @@ async function importNewPack(req: Request, res: Response) {
 			await knex(t.packItem).insert(packItemsWithIds);
 		});
 
+		logger.info('User imported external pack successfully', {
+			userId,
+			packUrl: pack_url,
+		});
+
 		return res.status(200).send();
 	} catch (err) {
+		logger.error(
+			"Import user's external pack failed",
+			createErrorLogData(err, {
+				userId: req.body?.user_id,
+				packUrl: req.body?.pack_url,
+			}),
+		);
 		return res.status(400).json({ error: importErrorMessage });
 	}
 }
@@ -241,6 +295,15 @@ async function uploadPackPhoto(req: Request, res: Response) {
 
 		return res.status(200).send();
 	} catch (err) {
+		logger.error(
+			'Upload pack photo failed',
+			createErrorLogData(err, {
+				userId: req.body?.user_id,
+				packId: req.params?.packId,
+				// @ts-expect-error: key value exists for File type
+				file: req.file?.key,
+			}),
+		);
 		return res
 			.status(400)
 			.json({ error: 'There was an error uploading your pack photo.' });
@@ -452,6 +515,14 @@ async function movePackItem(req: Request, res: Response) {
 			message: 'Pack item moved successfully',
 		});
 	} catch (err) {
+		logger.error(
+			'Move pack item failed',
+			createErrorLogData(err, {
+				userId: req.body?.user_id,
+				operation: 'drag_drop_reorder',
+				body: req.body,
+			}),
+		);
 		return res.status(400).json({ error: 'There was an error moving your pack item.' });
 	}
 }
@@ -578,6 +649,14 @@ async function movePackCategory(req: Request, res: Response) {
 			message: 'Pack category moved successfully',
 		});
 	} catch (err) {
+		logger.error(
+			'Move pack category failed',
+			createErrorLogData(err, {
+				userId: req.body?.user_id,
+				operation: 'drag_drop_reorder',
+				body: req.body,
+			}),
+		);
 		return res
 			.status(400)
 			.json({ error: 'There was an error changing your pack order.' });

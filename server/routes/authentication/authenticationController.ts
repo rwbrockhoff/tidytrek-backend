@@ -14,6 +14,7 @@ import { supabase } from '../../db/supabaseClient.js';
 import { generateUsername } from '../../utils/usernameGenerator.js';
 import { getUserSettingsData } from '../userSettings/userSettingsController.js';
 import logger from '../../config/logger.js';
+import { createErrorLogData } from '../../utils/loggerUtils.js';
 
 async function register(req: Request, res: Response) {
 	try {
@@ -55,11 +56,13 @@ async function register(req: Request, res: Response) {
 
 		return res.status(200).send();
 	} catch (err) {
-		logger.error('User registration failed', {
-			error: err instanceof Error ? err.message : err,
-			userId: req.body.user_id,
-			email: req.body.email,
-		});
+		logger.error(
+			'User registration failed',
+			createErrorLogData(err, {
+				userId: req.body.user_id,
+				email: req.body.email,
+			}),
+		);
 		res.status(400).json({ error: err });
 	}
 }
@@ -112,11 +115,14 @@ async function login(req: Request, res: Response) {
 
 		res.status(200).json({ newUser: initialUser === undefined });
 	} catch (err) {
-		logger.error('User login failed', {
-			error: err instanceof Error ? err.message : err,
-			userId: req.body.user_id,
-			email: req.body.email,
-		});
+		logger.error(
+			'User login failed',
+			createErrorLogData(err, {
+				userId: req.body.user_id,
+				email: req.body.email,
+			}),
+		);
+
 		res.status(400).json({ error: errorText });
 	}
 }
@@ -170,11 +176,13 @@ async function getAuthStatus(req: Request, res: Response) {
 			res.status(200).json({ isAuthenticated: req.userId !== undefined });
 		}
 	} catch (err) {
-		logger.error('User auth status check failed', {
-			error: err instanceof Error ? err.message : err,
-			userId: req?.userId,
-			supabaseRefreshToken: req?.signedCookies[supabaseCookieName],
-		});
+		logger.error(
+			'User auth status check failed',
+			createErrorLogData(err, {
+				userId: req?.userId,
+				supabaseRefreshToken: req?.signedCookies[supabaseCookieName],
+			}),
+		);
 		res.status(400).json({ error: 'There was an error checking your log in status.' });
 	}
 }
@@ -221,10 +229,12 @@ async function refreshSupabaseSession(req: Request, res: Response) {
 			expires_at: data.session.expires_at,
 		});
 	} catch (err) {
-		logger.error('Refresh user Supabase token failed', {
-			error: err instanceof Error ? err.message : err,
-			supabaseRefreshToken: req?.signedCookies[supabaseCookieName],
-		});
+		logger.error(
+			'Refresh user Supabase token failed',
+			createErrorLogData(err, {
+				supabaseRefreshToken: req?.signedCookies[supabaseCookieName],
+			}),
+		);
 		res.status(400).json({ error: 'Error refreshing session' });
 	}
 }
@@ -245,10 +255,10 @@ async function deleteAccount(req: Request, res: Response) {
 			message: 'User account has been deleted.',
 		});
 	} catch (err) {
-		logger.error('Delete user account failed', {
-			error: err instanceof Error ? err.message : err,
-			userId: req?.userId,
-		});
+		logger.error(
+			'Delete user account failed',
+			createErrorLogData(err, { userId: req?.userId }),
+		);
 		return res.status(400).json({ error: 'There was an error deleting your account.' });
 	}
 }

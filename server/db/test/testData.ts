@@ -13,7 +13,7 @@ export const e2eTestUser = {
 export const e2eTestPack = {
 	pack_name: 'Test Pack',
 	pack_description: 'Pack for E2E testing',
-	pack_public: false,
+	pack_public: true,
 	pack_location_tag: 'Test Location',
 	pack_season_tag: 'Test Season',
 	pack_duration_tag: 'Test Duration',

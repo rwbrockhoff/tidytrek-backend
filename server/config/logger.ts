@@ -1,7 +1,7 @@
 import winston from 'winston';
 
 // Build transports array conditionally
-const transports = [
+const transports: winston.transport[] = [
 	// Always log to console
 	new winston.transports.Console(),
 ];
