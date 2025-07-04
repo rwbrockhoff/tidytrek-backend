@@ -13,20 +13,38 @@ import {
 import { supabase } from '../../db/supabaseClient.js';
 import { generateUsername } from '../../utils/usernameGenerator.js';
 import { getUserSettingsData } from '../userSettings/userSettingsController.js';
+import logger from '../../config/logger.js';
 
 async function register(req: Request, res: Response) {
 	try {
 		const { user_id, email, supabase_refresh_token } = req.body;
 
+		logger.info('User registration attempt', {
+			userId: user_id,
+			email,
+			hasRefreshToken: !!supabase_refresh_token,
+		});
+
 		const { unique } = await isUniqueEmail(email);
 
 		// Return 200 to hide user's account status
-		if (!unique && !req.userId) return res.status(200).send();
+		if (!unique && !req.userId) {
+			logger.warn('Registration attempt for existing user without authentication', {
+				email,
+			});
+			return res.status(200).send();
+		}
 
 		const actualUserId = unique ? user_id : req.userId;
 
 		// New user - create account
-		if (unique && !req.userId) await onboardUser(req.body);
+		if (unique && !req.userId) {
+			await onboardUser(req.body);
+			logger.info('New user registered successfully', {
+				userId: actualUserId,
+				email,
+			});
+		}
 
 		// Only set cookies if user has verified email (has refresh token)
 		if (supabase_refresh_token) {
@@ -37,6 +55,11 @@ async function register(req: Request, res: Response) {
 
 		return res.status(200).send();
 	} catch (err) {
+		logger.error('User registration failed', {
+			error: err instanceof Error ? err.message : err,
+			userId: req.body.user_id,
+			email: req.body.email,
+		});
 		res.status(400).json({ error: err });
 	}
 }
@@ -89,6 +112,11 @@ async function login(req: Request, res: Response) {
 
 		res.status(200).json({ newUser: initialUser === undefined });
 	} catch (err) {
+		logger.error('User login failed', {
+			error: err instanceof Error ? err.message : err,
+			userId: req.body.user_id,
+			email: req.body.email,
+		});
 		res.status(400).json({ error: errorText });
 	}
 }
@@ -106,9 +134,7 @@ async function logout(_req: Request, res: Response) {
 async function getAuthStatus(req: Request, res: Response) {
 	try {
 		// Basic cookie validation
-		if (!req.userId) {
-			return res.status(200).json({ isAuthenticated: false });
-		}
+		if (!req.userId) return res.status(200).json({ isAuthenticated: false });
 
 		// Validate Supabase refresh token for authenticated users
 		const supabaseRefreshToken = req.signedCookies[supabaseCookieName];
@@ -144,6 +170,11 @@ async function getAuthStatus(req: Request, res: Response) {
 			res.status(200).json({ isAuthenticated: req.userId !== undefined });
 		}
 	} catch (err) {
+		logger.error('User auth status check failed', {
+			error: err instanceof Error ? err.message : err,
+			userId: req?.userId,
+			supabaseRefreshToken: req?.signedCookies[supabaseCookieName],
+		});
 		res.status(400).json({ error: 'There was an error checking your log in status.' });
 	}
 }
@@ -163,7 +194,6 @@ export async function getUser(userId: string) {
 		.where({ 'user.user_id': userId })
 		.first();
 }
-
 
 async function refreshSupabaseSession(req: Request, res: Response) {
 	try {
@@ -191,6 +221,10 @@ async function refreshSupabaseSession(req: Request, res: Response) {
 			expires_at: data.session.expires_at,
 		});
 	} catch (err) {
+		logger.error('Refresh user Supabase token failed', {
+			error: err instanceof Error ? err.message : err,
+			supabaseRefreshToken: req?.signedCookies[supabaseCookieName],
+		});
 		res.status(400).json({ error: 'Error refreshing session' });
 	}
 }
@@ -211,6 +245,10 @@ async function deleteAccount(req: Request, res: Response) {
 			message: 'User account has been deleted.',
 		});
 	} catch (err) {
+		logger.error('Delete user account failed', {
+			error: err instanceof Error ? err.message : err,
+			userId: req?.userId,
+		});
 		return res.status(400).json({ error: 'There was an error deleting your account.' });
 	}
 }
