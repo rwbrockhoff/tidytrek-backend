@@ -6,6 +6,7 @@ import profileSettingsRoutes from '../routes/profileSettings/profleSettingsRoute
 import profileRoutes from '../routes/profile/profileRoutes.js';
 import userSettingsRoutes from '../routes/userSettings/userSettingsRoutes.js';
 import testRoutes from '../routes/test/testRoutes.js';
+import sentryTestRoutes from '../routes/sentry/sentry-test.js';
 import { protectedRoute } from '../utils/customMiddleware.js';
 import { Application } from 'express';
 
@@ -20,6 +21,9 @@ const routeConfig = (app: Application) => {
 
 	// Test routes - only available in test environment
 	if (process.env.NODE_ENV === 'test') app.use('/test', testRoutes);
+
+	// Sentry test routes - dev only
+	if (process.env.NODE_ENV === 'development') app.use('/sentry', sentryTestRoutes);
 };
 
 export default routeConfig;

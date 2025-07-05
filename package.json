@@ -9,9 +9,9 @@
 	"license": "UNLICENSED",
 	"scripts": {
 		"build": "npx tsc",
-		"start": "NODE_ENV=production node server/index.js",
-		"dev": "NODE_ENV=development tsx watch server/index.ts",
-		"dev:test": "NODE_ENV=test PORT=4002 tsx watch server/index.ts",
+		"start": "NODE_ENV=production node --import=./instrument.js server/index.js",
+		"dev": "NODE_ENV=development tsx watch --import=./instrument.js server/index.ts",
+		"dev:test": "NODE_ENV=test PORT=4002 tsx watch --import=./instrument.js server/index.ts",
 		"lint": "eslint server/**/*.ts",
 		"dev:migrate-make": "NODE_OPTIONS='--import=tsx' knex migrate:make",
 		"dev:migrate": "NODE_OPTIONS='--import=tsx' knex migrate:latest",
@@ -70,6 +70,7 @@
 	},
 	"dependencies": {
 		"@aws-sdk/client-s3": "^3.515.0",
+		"@sentry/node": "^9.35.0",
 		"@supabase/supabase-js": "^2.39.7",
 		"camelcase-keys": "^9.1.2",
 		"cookie-parser": "^1.4.6",

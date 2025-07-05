@@ -1,5 +1,5 @@
-import express from "express";
 import "./config/config.js"; //dotenv
+import express from "express";
 
 import mainConfig from "./config/mainConfig.js";
 import routeConfig from "./config/routeConfig.js";
