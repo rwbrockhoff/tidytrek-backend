@@ -3,8 +3,7 @@ import { tables as t } from '../../../knexfile.js';
 import { Request, Response } from 'express';
 import { createCloudfrontUrlForPhoto, s3DeletePhoto } from '../../utils/s3.js';
 import { generateUsername } from '../../utils/usernameGenerator.js';
-import { createErrorLogData } from '../../utils/loggerUtils.js';
-import logger from '../../config/logger.js';
+import { logError } from '../../config/logger.js';
 
 async function getProfileSettings(req: Request, res: Response) {
 	try {
@@ -91,14 +90,11 @@ async function uploadProfilePhoto(req: Request, res: Response) {
 
 		return res.status(200).send();
 	} catch (err) {
-		logger.error(
-			'Upload profile avatar photo failed',
-			createErrorLogData(err, {
-				userId: req.body?.user_id,
-				// @ts-expect-error: key value exists for File type
-				file: req.file?.key,
-			}),
-		);
+		logError('Upload profile avatar photo failed', err, {
+			userId: req.body?.user_id,
+			// @ts-expect-error: key value exists for File type
+			file: req.file?.key,
+		});
 		return res.status(400).json({ error: 'There was an error updating your profile.' });
 	}
 }
@@ -153,14 +149,11 @@ async function uploadBannerPhoto(req: Request, res: Response) {
 
 		return res.status(200).send();
 	} catch (err) {
-		logger.error(
-			'Upload profile banner photo failed',
-			createErrorLogData(err, {
-				userId: req.body?.user_id,
-				// @ts-expect-error: key value exists for File type
-				file: req.file?.key,
-			}),
-		);
+		logError('Upload profile banner photo failed', err, {
+			userId: req.body?.user_id,
+			// @ts-expect-error: key value exists for File type
+			file: req.file?.key,
+		});
 		return res.status(400).json({ error: 'There was an error updating your profile.' });
 	}
 }

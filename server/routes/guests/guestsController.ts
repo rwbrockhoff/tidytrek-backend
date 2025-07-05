@@ -5,8 +5,7 @@ import { tables as t } from '../../../knexfile.js';
 import { getUserSettingsData } from '../userSettings/userSettingsController.js';
 import { getProfileAndPacks } from '../profile/profileController.js';
 import { getUserProfileInfo } from '../profileSettings/profileSettingsController.js';
-import logger from '../../config/logger.js';
-import { createErrorLogData } from '../../utils/loggerUtils.js';
+import { logError } from '../../config/logger.js';
 
 async function getPack(req: Request, res: Response) {
 	try {
@@ -42,13 +41,10 @@ async function getPack(req: Request, res: Response) {
 			.status(200)
 			.json({ pack, categories, settings, userProfile: { profileInfo, socialLinks } });
 	} catch (err) {
-		logger.error(
-			'Get guest view of pack failed',
-			createErrorLogData(err, {
-				packId: req.params?.packId,
-				userId: req?.userId,
-			}),
-		);
+		logError('Get guest view of pack failed', err, {
+			packId: req.params?.packId,
+			userId: req?.userId,
+		});
 		return res.status(400).json({ error: 'There was an error getting this pack.' });
 	}
 }
@@ -107,13 +103,10 @@ async function getUserProfile(req: Request, res: Response) {
 
 		return res.status(200).json({ ...profile, settings });
 	} catch (err) {
-		logger.error(
-			'Get guest view of user profile failed',
-			createErrorLogData(err, {
-				username: req.params?.username,
-				userId: req?.userId,
-			}),
-		);
+		logError('Get guest view of user profile failed', err, {
+			username: req.params?.username,
+			userId: req?.userId,
+		});
 		return res.status(400).json({ error: 'There was an error loading the profile.' });
 	}
 }

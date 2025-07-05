@@ -1,6 +1,31 @@
 import winston from 'winston';
 import * as Sentry from '@sentry/node';
 
+// Simple type guard for Error objects
+const isError = (error: unknown): error is Error => {
+	return error instanceof Error;
+};
+
+// Extract error details safely from unknown error
+const extractErrorDetails = (error: unknown) => {
+	if (isError(error)) {
+		return {
+			message: error.message,
+			stack: error.stack,
+			actualError: error
+		};
+	}
+	
+	// Handle undefined/null or convert other types to Error
+	const errorMessage = error ? String(error) : 'Unknown error';
+	const newError = new Error(errorMessage);
+	return {
+		message: errorMessage,
+		stack: newError.stack,
+		actualError: newError
+	};
+};
+
 // Build transports array conditionally
 const transports: winston.transport[] = [
 	// Always log to console
@@ -18,7 +43,7 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 // Create the logger instance
-const logger = winston.createLogger({
+export const logger = winston.createLogger({
 	level: process.env.NODE_ENV === 'production' ? 'info' : 'debug',
 	format: winston.format.combine(
 		winston.format.timestamp(),
@@ -36,20 +61,23 @@ const logger = winston.createLogger({
 // Simple wrapper to also send errors to Sentry
 export const logError = (
 	message: string,
-	error?: Error,
-	context?: { userId?: string },
+	error?: unknown,
+	context?: Record<string, unknown> & { userId?: string },
 ) => {
+	const { message: errorMessage, stack, actualError } = extractErrorDetails(error);
+	
 	// Keep using Winston like before
-	logger.error(message, { error: error?.message, stack: error?.stack, ...context });
+	logger.error(message, { 
+		error: errorMessage, 
+		stack, 
+		...context 
+	});
 
-	// Also send to Sentry if it's configured
-	if (process.env.SENTRY_DSN && error) {
+	// Also send to Sentry in production only
+	if (process.env.SENTRY_DSN && process.env.NODE_ENV === 'production') {
 		Sentry.withScope((scope) => {
 			if (context?.userId) scope.setUser({ id: context.userId });
-
-			Sentry.captureException(error);
+			Sentry.captureException(actualError);
 		});
 	}
 };
-
-export default logger;
