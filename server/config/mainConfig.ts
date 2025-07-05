@@ -29,8 +29,8 @@ const mainConfig = (app: Express) => {
 		app.use(morgan(logFormat));
 	}
 
-	app.use(express.urlencoded({ extended: false }));
-	app.use(express.json());
+	app.use(express.urlencoded({ extended: false, limit: '1mb' }));
+	app.use(express.json({ limit: '1mb' }));
 	
 	// General API rate limiting
 	app.use(apiRateLimit);
