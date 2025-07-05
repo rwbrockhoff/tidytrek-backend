@@ -1,6 +1,7 @@
 import express from 'express';
 import packController from './packController.js';
 import { s3UploadPhoto } from '../../utils/s3.js';
+import { uploadRateLimit, importRateLimit } from '../../config/rateLimiting.js';
 
 const router = express.Router();
 
@@ -10,10 +11,11 @@ router.get('/:packId', packController.getPack);
 router.post('/', packController.addNewPack);
 router.post(
 	'/:packId/pack-photo',
+	uploadRateLimit,
 	s3UploadPhoto('packPhotoBucket').single('packPhoto'),
 	packController.uploadPackPhoto,
 );
-router.post('/import', packController.importNewPack);
+router.post('/import', importRateLimit, packController.importNewPack);
 router.put('/:packId', packController.editPack);
 router.put('/index/:packId', packController.movePack);
 router.delete('/:packId', packController.deletePack);

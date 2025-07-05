@@ -4,6 +4,7 @@ import cookieParser from 'cookie-parser';
 import morgan from 'morgan';
 import { Express } from 'express';
 import { acceptedOrigins, corsErrorMessage } from './configurationVariables.js';
+import { apiRateLimit } from './rateLimiting.js';
 
 const mainConfig = (app: Express) => {
 	// HTTP request logging - skip during tests
@@ -18,6 +19,9 @@ const mainConfig = (app: Express) => {
 
 	app.use(express.urlencoded({ extended: false }));
 	app.use(express.json());
+	
+	// General API rate limiting
+	app.use(apiRateLimit);
 	app.use(
 		cors({
 			credentials: true,
