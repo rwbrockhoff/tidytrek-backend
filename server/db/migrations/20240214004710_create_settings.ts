@@ -2,8 +2,6 @@ import type { Knex } from 'knex';
 import { tables as t } from '../../../knexfile.js';
 import { DEFAULT_PALETTE } from '../../utils/constants.js';
 
-const weightUnitConstraints = ['lb', 'kg', 'oz', 'g'];
-
 export async function up(knex: Knex): Promise<void> {
 	await knex.schema.createTable(t.userSettings, (table) => {
 		table.increments('user_settings_id').unsigned().primary();
@@ -14,8 +12,8 @@ export async function up(knex: Knex): Promise<void> {
 		table.boolean('dark_mode').defaultTo(false).notNullable();
 		table
 			.string('weight_unit', 10)
-			.checkIn(weightUnitConstraints)
-			.defaultTo('lb')
+			.checkIn(['imperial', 'metric'])
+			.defaultTo('metric')
 			.notNullable();
 		table.string('currency_unit', 10).defaultTo('USD').notNullable();
 	});

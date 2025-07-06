@@ -63,7 +63,7 @@ export async function seed(knex: Knex): Promise<void> {
 		palette: DEFAULT_PALETTE,
 		dark_mode: false,
 		public_profile: true,
-		weight_unit: 'lb',
+		weight_unit: 'metric',
 		currency_unit: 'USD',
 	});
 
@@ -72,7 +72,7 @@ export async function seed(knex: Knex): Promise<void> {
 		palette: DEFAULT_PALETTE,
 		dark_mode: false,
 		public_profile: false, // Private profile
-		weight_unit: 'lb',
+		weight_unit: 'metric',
 		currency_unit: 'USD',
 	});
 
