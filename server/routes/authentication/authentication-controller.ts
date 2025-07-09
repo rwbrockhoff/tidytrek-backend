@@ -12,7 +12,7 @@ import {
 } from '../../utils/constants.js';
 import { supabase } from '../../db/supabase-client.js';
 import { generateUsername } from '../../utils/username-generator.js';
-import { getUserSettingsData } from '../user-settings/user-settings-controller.js';
+import { getUserSettingsData } from '../../services/user-service.js';
 import { logger, logError } from '../../config/logger.js';
 
 async function register(req: Request, res: Response) {

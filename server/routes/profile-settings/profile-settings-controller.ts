@@ -4,6 +4,7 @@ import { Request, Response } from 'express';
 import { createCloudfrontUrlForPhoto, s3DeletePhoto } from '../../utils/s3.js';
 import { generateUsername } from '../../utils/username-generator.js';
 import { logError } from '../../config/logger.js';
+import { getUserProfileInfo } from '../../services/profile-service.js';
 
 async function getProfileSettings(req: Request, res: Response) {
 	try {
@@ -19,27 +20,6 @@ async function getProfileSettings(req: Request, res: Response) {
 	}
 }
 
-export const getUserProfileInfo = async (userId: string) => {
-	const profileInfo = await knex(t.user)
-		.leftJoin(t.userProfile, `${t.user}.user_id`, `${t.userProfile}.user_id`)
-		.select(
-			'first_name',
-			'trail_name',
-			'username',
-			'profile_photo_url',
-			'banner_photo_url',
-			'user_bio',
-			'user_location',
-		)
-		.where({ [`${t.user}.user_id`]: userId })
-		.first();
-
-	const socialLinks = await knex(t.socialLink)
-		.select('social_link_id', 'platform_name', 'social_link_url')
-		.where({ user_id: userId });
-
-	return { profileInfo, socialLinks };
-};
 
 async function editProfileSettings(req: Request, res: Response) {
 	try {

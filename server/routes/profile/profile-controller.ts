@@ -1,7 +1,7 @@
 import knex from '../../db/connection.js';
 import { Request, Response } from 'express';
 import { tables as t } from '../../../knexfile.js';
-import { getUserProfileInfo } from '../profile-settings/profile-settings-controller.js';
+import { getProfileAndPacks } from '../../services/profile-service.js';
 
 async function getProfile(req: Request, res: Response) {
 	try {
@@ -14,13 +14,6 @@ async function getProfile(req: Request, res: Response) {
 		return res.status(400).json({ error: 'There was an error loading your profile.' });
 	}
 }
-
-export const getProfileAndPacks = async (userId: string, isPackOwner: boolean) => {
-	const { profileInfo, socialLinks } = await getUserProfileInfo(userId);
-
-	const packThumbnailList = await getPackThumbnailList(userId, isPackOwner);
-	return { userProfile: { profileInfo, socialLinks }, packThumbnailList };
-};
 
 export const getPackThumbnailList = async (userId: string, isPackOwner: boolean) => {
 	const publicCondition = isPackOwner ? {} : { pack_public: true };
