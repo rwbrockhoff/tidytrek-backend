@@ -4,7 +4,7 @@ import { Request, Response } from 'express';
 import {
 	getNextAppendIndex,
 	moveWithFractionalIndex,
-} from '../../utils/fractionalIndexing.js';
+} from '../../utils/fractional-indexing/fractional-indexing.js';
 
 async function getGearCloset(req: Request, res: Response) {
 	try {

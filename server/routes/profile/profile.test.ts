@@ -2,8 +2,8 @@ import server from '../../server.js';
 import initialRequest from 'supertest';
 const request = initialRequest(server);
 import knex from '../../db/connection.js';
-import { loginMockUser } from '../../utils/testUtils.js';
-import { mockUser } from '../../db/mock/mockData.js';
+import { loginMockUser } from '../../utils/test-utils.js';
+import { mockUser } from '../../db/mock/mock-data.js';
 import { tables as t } from '../../../knexfile.js';
 
 beforeEach(async () => {

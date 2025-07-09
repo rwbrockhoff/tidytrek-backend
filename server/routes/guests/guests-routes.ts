@@ -1,5 +1,5 @@
 import express from 'express';
-import guestsController from './guestsController.js';
+import guestsController from './guests-controller.js';
 
 const router = express.Router();
 

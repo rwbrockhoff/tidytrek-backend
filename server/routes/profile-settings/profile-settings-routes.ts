@@ -1,5 +1,5 @@
 import express from 'express';
-import userProfileController from './profileSettingsController.js';
+import userProfileController from './profile-settings-controller.js';
 import { s3UploadPhoto } from '../../utils/s3.js';
 
 const router = express.Router();

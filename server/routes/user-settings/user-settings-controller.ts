@@ -23,6 +23,9 @@ async function updateUserSettings(req: Request, res: Response) {
 		];
 
 		// Filter request body to only include allowed fields
+		console.log('Request body:', req.body);
+		console.log('Allowed fields:', allowedFields);
+		
 		const updates = Object.keys(req.body)
 			.filter((key): key is keyof UserSettingsUpdate => allowedFields.includes(key as keyof UserSettingsUpdate))
 			.reduce((obj, key) => {
@@ -30,14 +33,19 @@ async function updateUserSettings(req: Request, res: Response) {
 				return obj;
 			}, {} as UserSettingsUpdate);
 
+		console.log('Filtered updates:', updates);
+		console.log('Updates length:', Object.keys(updates).length);
+
 		if (Object.keys(updates).length === 0) {
 			return res.status(400).json({ error: 'No valid settings provided to update.' });
 		}
 
-		await knex(t.userSettings).update(updates).where({ user_id: userId });
+		const result = await knex(t.userSettings).update(updates).where({ user_id: userId });
+		console.log('Database update result:', result);
 
 		return res.status(200).json({ message: 'Settings updated successfully.' });
 	} catch (err) {
+		console.error('Error in updateUserSettings:', err);
 		return res.status(400).json({ error: 'There was an error updating your settings.' });
 	}
 }

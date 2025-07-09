@@ -10,7 +10,7 @@ import {
 	getNextAppendIndex,
 	moveWithFractionalIndex,
 	bulkMoveToGearCloset,
-} from '../../utils/fractionalIndexing.js';
+} from '../../utils/fractional-indexing/fractional-indexing.js';
 import { logError, logger } from '../../config/logger.js';
 
 async function getDefaultPack(req: Request, res: Response) {

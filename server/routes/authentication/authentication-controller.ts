@@ -10,9 +10,9 @@ import {
 	domainName,
 	DEFAULT_PALETTE_COLOR,
 } from '../../utils/constants.js';
-import { supabase } from '../../db/supabaseClient.js';
-import { generateUsername } from '../../utils/usernameGenerator.js';
-import { getUserSettingsData } from '../userSettings/userSettingsController.js';
+import { supabase } from '../../db/supabase-client.js';
+import { generateUsername } from '../../utils/username-generator.js';
+import { getUserSettingsData } from '../user-settings/user-settings-controller.js';
 import { logger, logError } from '../../config/logger.js';
 
 async function register(req: Request, res: Response) {

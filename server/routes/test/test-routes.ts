@@ -1,5 +1,5 @@
 import express from 'express';
-import { resetTestDatabase, resetPackData } from './testController.js';
+import { resetTestDatabase, resetPackData } from './test-controller.js';
 
 const router = express.Router();
 

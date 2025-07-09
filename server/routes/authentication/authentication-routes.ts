@@ -1,6 +1,6 @@
 import express from 'express';
-import authenticationController from './authenticationController.js';
-import { authRateLimit } from '../../config/rateLimiting.js';
+import authenticationController from './authentication-controller.js';
+import { authRateLimit } from '../../config/rate-limiting.js';
 
 const router = express.Router();
 

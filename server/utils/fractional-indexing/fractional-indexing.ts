@@ -1,9 +1,9 @@
 // Fractional Indexing for Drag & Drop
 // Uses VARCHAR storage with ::NUMERIC casting for proper sorting
 
-import knex from '../db/connection.js';
-import { tables as t } from '../../knexfile.js';
-import { PackItem } from '../types/packs/packTypes.js';
+import knex from '../../db/connection.js';
+import { tables as t } from '../../../knexfile.js';
+import { PackItem } from '../../types/packs/pack-types.js';
 
 // Type for items that can be moved to gear closet (allows null pack_id/pack_category_id)
 type MovablePackItem = Omit<PackItem, 'pack_id' | 'pack_category_id'> & {

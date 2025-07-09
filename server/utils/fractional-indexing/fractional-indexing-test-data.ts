@@ -1,6 +1,5 @@
-import { MockPackItem } from '../types/packs/packTypes.js';
-import { mockUser } from '../db/mock/mockData.js';
-
+import { MockPackItem } from '../../types/packs/pack-types.js';
+import { mockUser } from '../../db/mock/mock-data.js';
 
 export const testUserId = mockUser.userId;
 export const testPackId = 1;

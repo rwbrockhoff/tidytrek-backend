@@ -1,7 +1,7 @@
 import express from 'express';
-import packController from './packController.js';
+import packController from './pack-controller.js';
 import { s3UploadPhoto } from '../../utils/s3.js';
-import { uploadRateLimit, importRateLimit } from '../../config/rateLimiting.js';
+import { uploadRateLimit, importRateLimit } from '../../config/rate-limiting.js';
 
 const router = express.Router();
 

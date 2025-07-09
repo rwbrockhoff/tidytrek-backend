@@ -2,7 +2,7 @@ import server from '../../server.js';
 import initialRequest from 'supertest';
 const request = initialRequest(server);
 import knex from '../../db/connection.js';
-import { loginMockUser } from '../../utils/testUtils.js';
+import { loginMockUser } from '../../utils/test-utils.js';
 
 beforeEach(async () => {
 	await knex.migrate.rollback();

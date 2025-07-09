@@ -1,4 +1,4 @@
-import { type MockPackItem } from '../../types/packs/packTypes.js';
+import { type MockPackItem } from '../../types/packs/pack-types.js';
 
 // Test user for e2e tests
 export const e2eTestUser = {

@@ -1,7 +1,7 @@
 import server from '../server.js';
 import supertest, { type Test } from 'supertest';
 import type TestAgent from 'supertest/lib/agent.js';
-import { mockUser, notSeededUser } from '../db/mock/mockData.js';
+import { mockUser, notSeededUser } from '../db/mock/mock-data.js';
 
 const { userId, email } = mockUser;
 

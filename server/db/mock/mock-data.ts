@@ -1,4 +1,4 @@
-import { type MockPackItem } from '../../types/packs/packTypes.js';
+import { type MockPackItem } from '../../types/packs/pack-types.js';
 
 const mockUserId = '60094a8e-a1fe-423a-abca-637381b33950';
 const mockUserId2 = '670098f4-4c1e-40a4-8896-e0f8968a90ac';

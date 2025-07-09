@@ -1,13 +1,13 @@
-import authenticationRoutes from '../routes/authentication/authenticationRoutes.js';
-import packRoutes from '../routes/pack/packRoutes.js';
-import closetRoutes from '../routes/closet/closetRoutes.js';
-import guestsRoutes from '../routes/guests/guestsRoutes.js';
-import profileSettingsRoutes from '../routes/profileSettings/profleSettingsRoutes.js';
-import profileRoutes from '../routes/profile/profileRoutes.js';
-import userSettingsRoutes from '../routes/userSettings/userSettingsRoutes.js';
-import testRoutes from '../routes/test/testRoutes.js';
+import authenticationRoutes from '../routes/authentication/authentication-routes.js';
+import packRoutes from '../routes/pack/pack-routes.js';
+import closetRoutes from '../routes/closet/closet-routes.js';
+import guestsRoutes from '../routes/guests/guests-routes.js';
+import profileSettingsRoutes from '../routes/profile-settings/profile-settings-routes.js';
+import profileRoutes from '../routes/profile/profile-routes.js';
+import userSettingsRoutes from '../routes/user-settings/user-settings-routes.js';
+import testRoutes from '../routes/test/test-routes.js';
 import sentryTestRoutes from '../routes/sentry/sentry-test.js';
-import { protectedRoute } from '../utils/customMiddleware.js';
+import { protectedRoute } from '../utils/custom-middleware.js';
 import { Application } from 'express';
 
 const routeConfig = (app: Application) => {

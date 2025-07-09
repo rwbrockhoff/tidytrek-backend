@@ -12,8 +12,8 @@ import {
 	mockPrivatePack,
 	mockPrivatePackCategory,
 	mockPrivatePackItems,
-} from '../mock/mockData.js';
-import { type MockPackItem } from '../../types/packs/packTypes.js';
+} from '../mock/mock-data.js';
+import { type MockPackItem } from '../../types/packs/pack-types.js';
 
 const { first_name, last_name, email, userId: user_id, trailName, username } = mockUser;
 const {

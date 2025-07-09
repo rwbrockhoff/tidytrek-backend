@@ -1,7 +1,7 @@
 import { Knex } from 'knex';
 import { tables as t } from '../../../knexfile.js';
 import { DEFAULT_PALETTE } from '../../utils/constants.js';
-import { e2eTestUser } from '../test/testData.js';
+import { e2eTestUser } from '../test/test-data.js';
 
 export async function seed(knex: Knex): Promise<void> {
 	// Clean up existing test user data

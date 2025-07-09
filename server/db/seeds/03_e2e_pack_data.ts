@@ -1,5 +1,5 @@
 import { Knex } from 'knex';
-import { type MockPackCategory } from '../../types/packs/packTypes.js';
+import { type MockPackCategory } from '../../types/packs/pack-types.js';
 import { tables as t } from '../../../knexfile.js';
 import { DEFAULT_PALETTE_COLOR } from '../../utils/constants.js';
 import {
@@ -13,7 +13,7 @@ import {
 	e2eClothingItems,
 	e2eKitchenItems,
 	e2eGearClosetItems,
-} from '../test/testData.js';
+} from '../test/test-data.js';
 
 export async function seed(knex: Knex): Promise<void> {
 	console.log('Seeding E2E pack data...');

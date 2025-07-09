@@ -1,5 +1,5 @@
 import express from 'express';
-import closetController from './closetController.js';
+import closetController from './closet-controller.js';
 
 const router = express.Router();
 

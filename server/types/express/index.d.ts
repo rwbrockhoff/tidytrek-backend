@@ -1,4 +1,4 @@
-import { UserAttachedToRequest } from '../server/serverTypes.js';
+import { UserAttachedToRequest } from '../server/server-types.ts';
 // to make the file a module and avoid the TypeScript error
 export {};
 

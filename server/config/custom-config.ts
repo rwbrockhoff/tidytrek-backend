@@ -4,7 +4,7 @@ import {
 	attachUserToRequest,
 	convertRequestToSnakeCase,
 	convertResponseToCamelCase,
-} from '../utils/customMiddleware.js';
+} from '../utils/custom-middleware.js';
 import { Express } from 'express';
 import * as Sentry from '@sentry/node';
 

@@ -8,16 +8,16 @@ import {
 	rebalanceIndexes,
 	type IndexColumn,
 	type WhereConditions,
-} from './fractionalIndexing.js';
-import knex from '../db/connection.js';
-import { tables as t } from '../../knexfile.js';
+} from './fractional-indexing.js';
+import knex from '../../db/connection.js';
+import { tables as t } from '../../../knexfile.js';
 import {
 	testUserId,
 	gearClosetConditions,
 	packConditions,
 	createTestItem,
 	createTestItems,
-} from './fractionalIndexing.testData.js';
+} from './fractional-indexing-test-data.js';
 
 beforeEach(async () => {
 	await knex.migrate.rollback();
