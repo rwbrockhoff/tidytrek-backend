@@ -1,28 +1,37 @@
 import express from 'express';
-import userProfileController from './profile-settings-controller.js';
+import controller from './profile-settings-controller.js';
 import { s3UploadPhoto } from '../../utils/s3.js';
+import { validateRequestBody as validate, withTypes } from '../../utils/validation.js';
+import { 
+	ProfileSettingsUpdateSchema, 
+	UsernameUpdateSchema, 
+	SocialLinkCreateSchema,
+	ProfileSettingsUpdate, 
+	UsernameUpdate, 
+	SocialLinkCreate 
+} from './profile-settings-schemas.js';
 
 const router = express.Router();
 
-router.get('/', userProfileController.getProfileSettings);
-router.get('/random-username', userProfileController.generateUsernamePreview);
+router.get('/', controller.getProfileSettings);
+router.get('/random-username', controller.generateUsernamePreview);
 
-router.post('/social-link', userProfileController.addSocialLink);
+router.post('/social-link', validate(SocialLinkCreateSchema), withTypes<SocialLinkCreate>(controller.addSocialLink));
 router.post(
 	'/profile-photo',
 	s3UploadPhoto('profilePhotoBucket').single('profilePhoto'),
-	userProfileController.uploadProfilePhoto,
+	controller.uploadProfilePhoto,
 );
 router.post(
 	'/banner-photo',
 	s3UploadPhoto('bannerPhotoBucket').single('bannerPhoto'),
-	userProfileController.uploadBannerPhoto,
+	controller.uploadBannerPhoto,
 );
 
-router.put('/username', userProfileController.updateUsername);
-router.put('/', userProfileController.editProfileSettings);
+router.put('/username', validate(UsernameUpdateSchema), withTypes<UsernameUpdate>(controller.updateUsername));
+router.put('/', validate(ProfileSettingsUpdateSchema), withTypes<ProfileSettingsUpdate>(controller.editProfileSettings));
 
-router.delete('/social-link/:socialLinkId', userProfileController.deleteSocialLink);
-router.delete('/profile-photo/', userProfileController.deleteProfilePhoto);
+router.delete('/social-link/:socialLinkId', controller.deleteSocialLink);
+router.delete('/profile-photo/', controller.deleteProfilePhoto);
 
 export default router;

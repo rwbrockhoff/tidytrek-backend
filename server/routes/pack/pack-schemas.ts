@@ -9,7 +9,7 @@ export const PackUpdateSchema = z.object({
 	pack_distance_tag: z.string().max(50).optional(),
 	pack_public: z.boolean().optional(),
 	pack_affiliate: z.boolean().optional(),
-	pack_affiliate_description: z.string().max(200).optional(),
+	pack_affiliate_description: z.string().max(500).optional(),
 	pack_url_name: z.string().max(100).optional(),
 	pack_url: z.string().url().optional(),
 	pack_views: z.number().int().min(0).optional(),
