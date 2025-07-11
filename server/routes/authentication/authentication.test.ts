@@ -3,7 +3,7 @@ import initialRequest from 'supertest';
 const request = initialRequest(server);
 import knex from '../../db/connection.js';
 import { loginMockUser, registerNewUser } from '../../utils/test-utils.js';
-import { mockUser, notSeededUser } from '../../db/mock/mock-data.js';
+import { mockUserAuth, notSeededUser } from '../../db/mock/mock-data.js';
 
 beforeEach(async () => {
 	await knex.migrate.rollback();
@@ -48,14 +48,14 @@ describe('Auth Routes: ', () => {
 
 	it('POST /register -> Should gracefully handle existing user trying to register', async () => {
 		const userAgent = await loginMockUser();
-		const response = await userAgent.post('/auth/register').send(mockUser);
+		const response = await userAgent.post('/auth/register').send(mockUserAuth);
 
 		expect(response.statusCode).toEqual(200);
 	});
 
 	it('POST /login -> Should allow registered users to log in', async () => {
 		const userAgent = await loginMockUser();
-		const response = await userAgent.post('/auth/login').send(mockUser);
+		const response = await userAgent.post('/auth/login').send(mockUserAuth);
 
 		expect(response.statusCode).toEqual(200);
 	});

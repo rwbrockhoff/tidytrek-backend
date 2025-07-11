@@ -1,10 +1,10 @@
 import { z } from 'zod';
 
 export const ProfileSettingsUpdateSchema = z.object({
-	username: z.string().min(1).max(50).optional(),
-	trail_name: z.string().max(100).optional(),
 	user_bio: z.string().max(500).optional(),
 	user_location: z.string().max(100).optional(),
+	username: z.string().min(1).max(50).optional(),
+	trail_name: z.string().max(100).optional(),
 }).strict();
 
 export const UsernameUpdateSchema = z.object({

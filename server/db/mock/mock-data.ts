@@ -4,13 +4,22 @@ const mockUserId = '60094a8e-a1fe-423a-abca-637381b33950';
 const mockUserId2 = '670098f4-4c1e-40a4-8896-e0f8968a90ac';
 const mockPrivateUserId = '780081c3-5d2e-41b5-9987-f1f9078b91bd';
 
+// For database seeding (snake_case fields)
 export const mockUser = {
 	userId: mockUserId,
 	first_name: 'Ryan',
 	last_name: 'Brockhoff',
 	email: 'ryan@tidytrek.co',
-	username: 'tidyTrekHiker171',
 	trailName: 'Rocket',
+	username: 'tidyTrekHiker171',
+};
+
+// For authentication API testing (camelCase fields)
+export const mockUserAuth = {
+	userId: mockUserId,
+	firstName: 'Ryan',
+	lastName: 'Brockhoff',
+	email: 'ryan@tidytrek.co',
 };
 
 export const mockPack = {
@@ -83,9 +92,7 @@ export const notSeededUser = {
 	firstName: 'Sarah',
 	lastName: 'Collins',
 	email: 'scollins@tidytrek.co',
-	password: 'newtohiking123!',
 	userId: mockUserId2,
-	username: 'TrailRanger',
 	supabaseRefreshToken: 'test_refresh_token',
 };
 

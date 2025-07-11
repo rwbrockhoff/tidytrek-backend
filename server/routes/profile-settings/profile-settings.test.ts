@@ -3,7 +3,7 @@ import initialRequest from 'supertest';
 const request = initialRequest(server);
 import knex from '../../db/connection.js';
 import { loginMockUser, registerNewUser } from '../../utils/test-utils.js';
-import { mockUser, notSeededUser } from '../../db/mock/mock-data.js';
+import { mockUser } from '../../db/mock/mock-data.js';
 
 beforeEach(async () => {
 	await knex.migrate.rollback();
@@ -113,7 +113,7 @@ describe('User Profile Routes ', () => {
 	});
 
 	it('POST / -> Should allow unique username to be registered', async () => {
-		const userInput = { username: notSeededUser.username, trailName: '' };
+		const userInput = { username: 'uniqueTestUser123', trailName: '' };
 		const newUser = await registerNewUser();
 
 		const response = await newUser.put('/profile-settings/username').send(userInput);

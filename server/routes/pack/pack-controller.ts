@@ -603,7 +603,10 @@ async function addPackCategory(req: ValidatedRequest<PackCategoryCreate>, res: R
 	}
 }
 
-async function editPackCategory(req: ValidatedRequest<PackCategoryUpdate>, res: Response) {
+async function editPackCategory(
+	req: ValidatedRequest<PackCategoryUpdate>,
+	res: Response,
+) {
 	try {
 		const { userId } = req;
 		const { categoryId } = req.params;
@@ -618,6 +621,7 @@ async function editPackCategory(req: ValidatedRequest<PackCategoryUpdate>, res: 
 
 		return res.status(200).send();
 	} catch (err) {
+		console.log('error: ', err);
 		return res
 			.status(400)
 			.json({ error: 'There was an error editing your pack category.' });

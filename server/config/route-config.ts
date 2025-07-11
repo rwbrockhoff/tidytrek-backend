@@ -5,6 +5,7 @@ import guestsRoutes from '../routes/guests/guests-routes.js';
 import profileSettingsRoutes from '../routes/profile-settings/profile-settings-routes.js';
 import profileRoutes from '../routes/profile/profile-routes.js';
 import userSettingsRoutes from '../routes/user-settings/user-settings-routes.js';
+import redirectRoutes from '../routes/redirect/redirect-routes.js';
 import testRoutes from '../routes/test/test-routes.js';
 import sentryTestRoutes from '../routes/sentry/sentry-test.js';
 import { protectedRoute } from '../utils/custom-middleware.js';
@@ -13,6 +14,7 @@ import { Application } from 'express';
 const routeConfig = (app: Application) => {
 	app.use('/auth', authenticationRoutes);
 	app.use('/guests', guestsRoutes);
+	app.use('/redirect', redirectRoutes);
 	app.use('/packs', protectedRoute, packRoutes);
 	app.use('/closet', protectedRoute, closetRoutes);
 	app.use('/profile', protectedRoute, profileRoutes);

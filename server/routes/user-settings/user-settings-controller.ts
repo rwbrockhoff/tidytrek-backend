@@ -1,6 +1,6 @@
 import knex from '../../db/connection.js';
 import { tables as t } from '../../../knexfile.js';
-import { Request, Response } from 'express';
+import { Response } from 'express';
 import { hasEmptyValidatedBody, NO_VALID_FIELDS_MESSAGE, ValidatedRequest } from '../../utils/validation.js';
 import { UserSettingsUpdate } from './user-settings-schemas.js';
 

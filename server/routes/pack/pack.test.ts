@@ -169,7 +169,7 @@ describe('Pack Items: Categories', () => {
 		const packResponse = await userAgent.get('/packs/').send();
 		const { packId } = packResponse.body.pack;
 
-		const response = await userAgent.post(`/packs/categories/${packId}`);
+		const response = await userAgent.post(`/packs/categories/${packId}`).send({ categoryColor: '#3b82f6' });
 
 		expect(response.statusCode).toEqual(200);
 		expect(response.body).toHaveProperty('packCategory');
