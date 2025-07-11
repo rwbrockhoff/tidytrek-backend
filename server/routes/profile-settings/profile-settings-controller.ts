@@ -78,7 +78,7 @@ async function uploadProfilePhoto(req: Request, res: Response) {
 		return res.status(200).send();
 	} catch (err) {
 		logError('Upload profile avatar photo failed', err, {
-			userId: req.body?.user_id,
+			userId: req.userId,
 			// @ts-expect-error: key value exists for File type
 			file: req.file?.key,
 		});
@@ -137,7 +137,7 @@ async function uploadBannerPhoto(req: Request, res: Response) {
 		return res.status(200).send();
 	} catch (err) {
 		logError('Upload profile banner photo failed', err, {
-			userId: req.body?.user_id,
+			userId: req.userId,
 			// @ts-expect-error: key value exists for File type
 			file: req.file?.key,
 		});

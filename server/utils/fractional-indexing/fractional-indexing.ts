@@ -18,7 +18,7 @@ export const DEFAULT_INCREMENT = 1000; // Default gap between fractional indexes
 export type TableName = 'pack_item' | 'pack_category' | 'pack';
 export type IndexColumn = 'pack_item_index' | 'pack_category_index' | 'pack_index';
 export type WhereConditions = Record<string, string | number | null>;
-export type UpdateFields = Record<string, string | null>;
+export type UpdateFields = Record<string, string | number | null>;
 export type KnexRecord = Record<string, string | number | null>;
 
 interface MoveResult {

@@ -23,6 +23,10 @@ import {
 	PackMove,
 	PackItemCreate,
 	PackItemUpdate,
+	PackItemMove,
+	PackCategoryCreate,
+	PackCategoryUpdate,
+	PackCategoryMove,
 } from './pack-schemas.js';
 
 async function getDefaultPack(req: Request, res: Response) {
@@ -254,8 +258,8 @@ async function importNewPack(req: ValidatedRequest<PackImport>, res: Response) {
 		return res.status(200).send();
 	} catch (err) {
 		logError("Importing user's external pack failed", err, {
-			userId: req.body?.user_id,
-			packUrl: req.body?.pack_url,
+			userId: req.userId,
+			packUrl: req.validatedBody?.pack_url,
 		});
 		return res.status(400).json({ error: importErrorMessage });
 	}
@@ -286,7 +290,7 @@ async function uploadPackPhoto(req: Request, res: Response) {
 		return res.status(200).send();
 	} catch (err) {
 		logError('Upload pack photo failed', err, {
-			userId: req.body?.user_id,
+			userId: req.userId,
 			packId: req.params?.packId,
 			// @ts-expect-error: key value exists for File type
 			file: req.file?.key,
@@ -482,13 +486,13 @@ async function editPackItem(req: ValidatedRequest<PackItemUpdate>, res: Response
 	}
 }
 
-async function movePackItem(req: Request, res: Response) {
+async function movePackItem(req: ValidatedRequest<PackItemMove>, res: Response) {
 	try {
 		const { userId } = req;
 		const { packItemId } = req.params;
 
 		const { pack_category_id, prev_pack_category_id, prev_item_index, next_item_index } =
-			req.body;
+			req.validatedBody;
 
 		const { newIndex, rebalanced } = await moveWithFractionalIndex(
 			t.packItem,
@@ -509,8 +513,8 @@ async function movePackItem(req: Request, res: Response) {
 		});
 	} catch (err) {
 		logError('Move pack item failed', err, {
-			userId: req.body?.user_id,
-			body: req.body,
+			userId: req.userId,
+			body: req.validatedBody,
 		});
 		return res.status(400).json({ error: 'There was an error moving your pack item.' });
 	}
@@ -557,11 +561,11 @@ async function deletePackItem(req: Request, res: Response) {
 	}
 }
 
-async function addPackCategory(req: Request & { params: number }, res: Response) {
+async function addPackCategory(req: ValidatedRequest<PackCategoryCreate>, res: Response) {
 	try {
 		const { userId } = req;
 		const { packId } = req.params;
-		const { category_color } = req.body;
+		const { category_color } = req.validatedBody;
 
 		// Calculate index for new category
 		const packCategoryIndex = await getNextAppendIndex(
@@ -599,13 +603,17 @@ async function addPackCategory(req: Request & { params: number }, res: Response)
 	}
 }
 
-async function editPackCategory(req: Request, res: Response) {
+async function editPackCategory(req: ValidatedRequest<PackCategoryUpdate>, res: Response) {
 	try {
-		const { userId, body } = req;
+		const { userId } = req;
 		const { categoryId } = req.params;
 
+		if (hasEmptyValidatedBody(req)) {
+			return res.status(400).json({ error: NO_VALID_FIELDS_MESSAGE });
+		}
+
 		await knex(t.packCategory)
-			.update(body)
+			.update(req.validatedBody)
 			.where({ user_id: userId, pack_category_id: categoryId });
 
 		return res.status(200).send();
@@ -616,11 +624,11 @@ async function editPackCategory(req: Request, res: Response) {
 	}
 }
 
-async function movePackCategory(req: Request, res: Response) {
+async function movePackCategory(req: ValidatedRequest<PackCategoryMove>, res: Response) {
 	try {
 		const { userId } = req;
 		const { categoryId } = req.params;
-		const { prev_category_index, next_category_index } = req.body;
+		const { prev_category_index, next_category_index } = req.validatedBody;
 
 		const { newIndex, rebalanced } = await moveWithFractionalIndex(
 			t.packCategory,
@@ -639,8 +647,8 @@ async function movePackCategory(req: Request, res: Response) {
 		});
 	} catch (err) {
 		logError('Move pack category failed', err, {
-			userId: req.body?.user_id,
-			body: req.body,
+			userId: req.userId,
+			body: req.validatedBody,
 		});
 		return res
 			.status(400)
