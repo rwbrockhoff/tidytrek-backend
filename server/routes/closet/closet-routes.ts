@@ -1,13 +1,22 @@
 import express from 'express';
-import closetController from './closet-controller.js';
+import controller from './closet-controller.js';
+import { validateRequestBody as validate, withTypes } from '../../utils/validation.js';
+import {
+	GearClosetItemUpdateSchema,
+	GearClosetItemMoveSchema,
+	MoveItemToPackSchema,
+	GearClosetItemUpdate,
+	GearClosetItemMove,
+	MoveItemToPack,
+} from './closet-schemas.js';
 
 const router = express.Router();
 
-router.get('/', closetController.getGearCloset);
-router.post('/items', closetController.addGearClosetItem);
-router.put('/items/:packItemId', closetController.editGearClosetItem);
-router.put('/items/index/:packItemId', closetController.moveGearClosetItem);
-router.put('/packs/:packItemId', closetController.moveItemToPack);
-router.delete('/items/:packItemId', closetController.deleteGearClosetItem);
+router.get('/', controller.getGearCloset);
+router.post('/items', controller.addGearClosetItem);
+router.put('/items/:packItemId', validate(GearClosetItemUpdateSchema), withTypes<GearClosetItemUpdate>(controller.editGearClosetItem));
+router.put('/items/index/:packItemId', validate(GearClosetItemMoveSchema), withTypes<GearClosetItemMove>(controller.moveGearClosetItem));
+router.put('/packs/:packItemId', validate(MoveItemToPackSchema), withTypes<MoveItemToPack>(controller.moveItemToPack));
+router.delete('/items/:packItemId', controller.deleteGearClosetItem);
 
 export default router;

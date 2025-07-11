@@ -5,6 +5,16 @@ import {
 	getNextAppendIndex,
 	moveWithFractionalIndex,
 } from '../../utils/fractional-indexing/fractional-indexing.js';
+import {
+	hasEmptyValidatedBody,
+	NO_VALID_FIELDS_MESSAGE,
+	ValidatedRequest,
+} from '../../utils/validation.js';
+import {
+	GearClosetItemUpdate,
+	GearClosetItemMove,
+	MoveItemToPack,
+} from './closet-schemas.js';
 
 async function getGearCloset(req: Request, res: Response) {
 	try {
@@ -56,13 +66,17 @@ async function addGearClosetItem(req: Request, res: Response) {
 	}
 }
 
-async function editGearClosetItem(req: Request, res: Response) {
+async function editGearClosetItem(req: ValidatedRequest<GearClosetItemUpdate>, res: Response) {
 	try {
 		const { userId } = req;
 		const { packItemId } = req.params;
 
+		if (hasEmptyValidatedBody(req)) {
+			return res.status(400).json({ error: NO_VALID_FIELDS_MESSAGE });
+		}
+
 		await knex(t.packItem)
-			.update({ ...req.body })
+			.update(req.validatedBody)
 			.where({ pack_item_id: packItemId, user_id: userId });
 
 		return res.status(200).send();
@@ -71,11 +85,11 @@ async function editGearClosetItem(req: Request, res: Response) {
 	}
 }
 
-async function moveGearClosetItem(req: Request, res: Response) {
+async function moveGearClosetItem(req: ValidatedRequest<GearClosetItemMove>, res: Response) {
 	try {
 		const { userId } = req;
 		const { packItemId } = req.params;
-		const { prev_item_index, next_item_index } = req.body;
+		const { prev_item_index, next_item_index } = req.validatedBody;
 
 		const { newIndex, rebalanced } = await moveWithFractionalIndex(
 			t.packItem,
@@ -97,11 +111,11 @@ async function moveGearClosetItem(req: Request, res: Response) {
 	}
 }
 
-async function moveItemToPack(req: Request, res: Response) {
+async function moveItemToPack(req: ValidatedRequest<MoveItemToPack>, res: Response) {
 	try {
 		const { userId } = req;
 		const { packItemId } = req.params;
-		const { pack_id, pack_category_id } = req.body;
+		const { pack_id, pack_category_id } = req.validatedBody;
 
 		// Calculate index for item moving to pack (append to end of category)
 		const newPackItemIndex = await getNextAppendIndex(t.packItem, 'pack_item_index', {
