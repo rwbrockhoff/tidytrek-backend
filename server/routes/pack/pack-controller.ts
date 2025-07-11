@@ -17,7 +17,13 @@ import {
 	NO_VALID_FIELDS_MESSAGE,
 	ValidatedRequest,
 } from '../../utils/validation.js';
-import { PackUpdate, PackImport, PackMove } from './pack-schemas.js';
+import {
+	PackUpdate,
+	PackImport,
+	PackMove,
+	PackItemCreate,
+	PackItemUpdate,
+} from './pack-schemas.js';
 
 async function getDefaultPack(req: Request, res: Response) {
 	try {
@@ -427,10 +433,10 @@ async function deletePackAndItems(req: Request, res: Response) {
 	}
 }
 
-async function addPackItem(req: Request, res: Response) {
+async function addPackItem(req: ValidatedRequest<PackItemCreate>, res: Response) {
 	try {
 		const { userId } = req;
-		const { pack_id, pack_category_id } = req.body;
+		const { pack_id, pack_category_id } = req.validatedBody;
 
 		// Calculate index for new item
 		const pack_item_index = await getNextAppendIndex(t.packItem, 'pack_item_index', {
@@ -456,13 +462,17 @@ async function addPackItem(req: Request, res: Response) {
 	}
 }
 
-async function editPackItem(req: Request, res: Response) {
+async function editPackItem(req: ValidatedRequest<PackItemUpdate>, res: Response) {
 	try {
 		const { userId } = req;
 		const { packItemId } = req.params;
 
+		if (hasEmptyValidatedBody(req)) {
+			return res.status(400).json({ error: NO_VALID_FIELDS_MESSAGE });
+		}
+
 		const [updatedItem = {}] = await knex(t.packItem)
-			.update({ ...req.body })
+			.update(req.validatedBody)
 			.where({ pack_item_id: packItemId, user_id: userId })
 			.returning('*');
 

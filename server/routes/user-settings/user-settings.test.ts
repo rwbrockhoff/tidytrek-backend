@@ -45,7 +45,7 @@ describe('User Settings Routes', () => {
 
 		expect(response.statusCode).toEqual(400);
 		expect(response.body).toHaveProperty('error');
-		expect(response.body.error).toContain('No valid settings provided');
+		expect(response.body.error).toContain('No valid fields provided');
 	});
 
 	it('PUT / -> Should update only provided fields (partial update)', async () => {
@@ -58,7 +58,7 @@ describe('User Settings Routes', () => {
 		expect(response.body).toHaveProperty('message');
 	});
 
-	it('PUT / -> Should filter out invalid fields and only update allowed settings', async () => {
+	it('PUT / -> Should reject requests with invalid fields', async () => {
 		const userAgent = await loginMockUser();
 		const mixedUpdate = {
 			...validSettingsUpdate,
@@ -67,7 +67,8 @@ describe('User Settings Routes', () => {
 
 		const response = await userAgent.put('/user-settings/').send(mixedUpdate);
 
-		expect(response.statusCode).toEqual(200);
-		expect(response.body).toHaveProperty('message');
+		expect(response.statusCode).toEqual(400);
+		expect(response.body).toHaveProperty('error');
+		expect(response.body.error).toContain('Request validation failed');
 	});
 });

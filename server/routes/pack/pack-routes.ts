@@ -3,7 +3,18 @@ import packController from './pack-controller.js';
 import { s3UploadPhoto } from '../../utils/s3.js';
 import { uploadRateLimit, importRateLimit } from '../../config/rate-limiting.js';
 import { validateRequestBody as validate, withTypes } from '../../utils/validation.js';
-import { PackUpdateSchema, PackImportSchema, PackMoveSchema, PackUpdate, PackImport, PackMove } from './pack-schemas.js';
+import { 
+	PackUpdateSchema, 
+	PackImportSchema, 
+	PackMoveSchema, 
+	PackItemCreateSchema,
+	PackItemUpdateSchema,
+	PackUpdate, 
+	PackImport, 
+	PackMove,
+	PackItemCreate,
+	PackItemUpdate
+} from './pack-schemas.js';
 
 const router = express.Router();
 
@@ -23,8 +34,8 @@ router.put('/index/:packId', validate(PackMoveSchema), withTypes<PackMove>(packC
 router.delete('/:packId', packController.deletePack);
 router.delete('/:packId/pack-photo', packController.deletePackPhoto);
 router.delete('/items/:packId', packController.deletePackAndItems);
-router.post('/pack-items', packController.addPackItem);
-router.put('/pack-items/:packItemId', packController.editPackItem);
+router.post('/pack-items', validate(PackItemCreateSchema), withTypes<PackItemCreate>(packController.addPackItem));
+router.put('/pack-items/:packItemId', validate(PackItemUpdateSchema), withTypes<PackItemUpdate>(packController.editPackItem));
 router.put('/pack-items/index/:packItemId', packController.movePackItem);
 router.put('/pack-items/closet/:packItemId', packController.moveItemToCloset);
 router.delete('/pack-items/:packItemId', packController.deletePackItem);
