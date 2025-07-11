@@ -2,6 +2,8 @@ import express from 'express';
 import packController from './pack-controller.js';
 import { s3UploadPhoto } from '../../utils/s3.js';
 import { uploadRateLimit, importRateLimit } from '../../config/rate-limiting.js';
+import { validateRequestBody as validate, withTypes } from '../../utils/validation.js';
+import { PackUpdateSchema, PackImportSchema, PackMoveSchema, PackUpdate, PackImport, PackMove } from './pack-schemas.js';
 
 const router = express.Router();
 
@@ -15,9 +17,9 @@ router.post(
 	s3UploadPhoto('packPhotoBucket').single('packPhoto'),
 	packController.uploadPackPhoto,
 );
-router.post('/import', importRateLimit, packController.importNewPack);
-router.put('/:packId', packController.editPack);
-router.put('/index/:packId', packController.movePack);
+router.post('/import', importRateLimit, validate(PackImportSchema), withTypes<PackImport>(packController.importNewPack));
+router.put('/:packId', validate(PackUpdateSchema), withTypes<PackUpdate>(packController.editPack));
+router.put('/index/:packId', validate(PackMoveSchema), withTypes<PackMove>(packController.movePack));
 router.delete('/:packId', packController.deletePack);
 router.delete('/:packId/pack-photo', packController.deletePackPhoto);
 router.delete('/items/:packId', packController.deletePackAndItems);

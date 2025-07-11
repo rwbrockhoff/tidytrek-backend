@@ -12,6 +12,12 @@ import {
 	bulkMoveToGearCloset,
 } from '../../utils/fractional-indexing/fractional-indexing.js';
 import { logError, logger } from '../../config/logger.js';
+import {
+	hasEmptyValidatedBody,
+	NO_VALID_FIELDS_MESSAGE,
+	ValidatedRequest,
+} from '../../utils/validation.js';
+import { PackUpdate, PackImport, PackMove } from './pack-schemas.js';
 
 async function getDefaultPack(req: Request, res: Response) {
 	try {
@@ -164,11 +170,11 @@ async function createNewPack(userId: string) {
 	}
 }
 
-async function importNewPack(req: Request, res: Response) {
+async function importNewPack(req: ValidatedRequest<PackImport>, res: Response) {
 	const importErrorMessage = 'There was an error importing your pack.';
 	try {
 		const { userId } = req;
-		const { pack_url, palette_list } = req.body;
+		const { pack_url, palette_list } = req.validatedBody;
 		const importedPack = await packScraper(pack_url);
 
 		// handle error
@@ -208,7 +214,7 @@ async function importNewPack(req: Request, res: Response) {
 			// get theme color based on index
 			const themeColor = palette_list?.[pack_category_index % palette_list.length];
 
-			// assign default color if theme color error
+			// assign provided palette or default
 			const pack_category_color = isError(themeColor)
 				? DEFAULT_PALETTE_COLOR
 				: themeColor;
@@ -311,15 +317,17 @@ async function deletePackPhoto(req: Request, res: Response) {
 	}
 }
 
-async function editPack(req: Request, res: Response) {
+async function editPack(req: ValidatedRequest<PackUpdate>, res: Response) {
 	try {
 		const { userId } = req;
 		const { packId } = req.params;
-		// eslint-disable-next-line @typescript-eslint/no-unused-vars
-		const { _user_id, _pack_id, _pack_index, ...modified_pack } = req.body;
+
+		if (hasEmptyValidatedBody(req)) {
+			return res.status(400).json({ error: NO_VALID_FIELDS_MESSAGE });
+		}
 
 		const [updatedPack] = await knex(t.pack)
-			.update({ ...modified_pack })
+			.update(req.validatedBody)
 			.where({ user_id: userId, pack_id: packId })
 			.returning('*');
 
@@ -333,11 +341,11 @@ async function editPack(req: Request, res: Response) {
 	}
 }
 
-async function movePack(req: Request, res: Response) {
+async function movePack(req: ValidatedRequest<PackMove>, res: Response) {
 	try {
 		const { userId } = req;
 		const { packId } = req.params;
-		const { prev_pack_index, next_pack_index } = req.body;
+		const { prev_pack_index, next_pack_index } = req.validatedBody;
 
 		const { newIndex, rebalanced } = await moveWithFractionalIndex(
 			t.pack,

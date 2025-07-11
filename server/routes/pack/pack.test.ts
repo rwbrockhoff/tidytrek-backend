@@ -73,7 +73,10 @@ describe('Pack Routes: Pack ', () => {
 		const { packList } = packResponse.body;
 		const packId = packList[0].packId;
 
-		const response = await userAgent.put(`/packs/index/${packId}`).send({ newIndex: 1 });
+		const response = await userAgent.put(`/packs/index/${packId}`).send({ 
+			prev_pack_index: '0', 
+			next_pack_index: '2' 
+		});
 
 		expect(response.status).toBe(200);
 	});

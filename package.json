@@ -87,6 +87,7 @@
 		"pg": "^8.11.3",
 		"puppeteer": "^22.6.2",
 		"snakecase-keys": "^5.5.0",
-		"winston": "^3.17.0"
+		"winston": "^3.17.0",
+		"zod": "^4.0.5"
 	}
 }
