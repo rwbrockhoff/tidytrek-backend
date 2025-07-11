@@ -14,10 +14,12 @@ import { supabase } from '../../db/supabase-client.js';
 import { generateUsername } from '../../utils/username-generator.js';
 import { getUserSettingsData } from '../../services/user-service.js';
 import { logger, logError } from '../../config/logger.js';
+import { ValidatedRequest } from '../../utils/validation.js';
+import { RegisterData, LoginData } from './authentication-schemas.js';
 
-async function register(req: Request, res: Response) {
+async function register(req: ValidatedRequest<RegisterData>, res: Response) {
 	try {
-		const { user_id, email, supabase_refresh_token } = req.body;
+		const { user_id, email, supabase_refresh_token } = req.validatedBody;
 
 		logger.info('User registration attempt', {
 			userId: user_id,
@@ -39,7 +41,7 @@ async function register(req: Request, res: Response) {
 
 		// New user - create account
 		if (unique && !req.userId) {
-			await onboardUser(req.body);
+			await onboardUser(req.validatedBody);
 			logger.info('New user registered successfully', {
 				userId: actualUserId,
 				email,
@@ -55,7 +57,7 @@ async function register(req: Request, res: Response) {
 
 		return res.status(200).send();
 	} catch (err) {
-		logError('User registration failed', err, { userId: req.body?.user_id });
+		logError('User registration failed', err, { userId: req.validatedBody?.user_id });
 		res.status(400).json({ error: err });
 	}
 }
@@ -81,10 +83,10 @@ async function onboardUser(userInfo: {
 	await createUserSettings(user_id, photoUrl);
 }
 
-async function login(req: Request, res: Response) {
+async function login(req: ValidatedRequest<LoginData>, res: Response) {
 	const errorText = 'Invaid login information.';
 	try {
-		const { user_id, email, supabase_refresh_token } = req.body;
+		const { user_id, email, supabase_refresh_token } = req.validatedBody;
 
 		const initialUser = await knex(t.user)
 			.select('user_id')
@@ -95,7 +97,7 @@ async function login(req: Request, res: Response) {
 			return res.status(400).json({ error: errorText });
 
 		if (initialUser === undefined && req.userId) {
-			await onboardUser(req.body);
+			await onboardUser(req.validatedBody);
 		}
 
 		// Set both cookies
@@ -108,7 +110,7 @@ async function login(req: Request, res: Response) {
 
 		res.status(200).json({ newUser: initialUser === undefined });
 	} catch (err) {
-		logError('User login failed', err, { userId: req.body?.user_id });
+		logError('User login failed', err, { userId: req.validatedBody?.user_id });
 		res.status(400).json({ error: errorText });
 	}
 }
