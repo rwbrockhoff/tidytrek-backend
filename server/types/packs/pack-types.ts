@@ -14,8 +14,6 @@ export type PackItem = {
 	worn_weight?: boolean;
 	consumable?: boolean;
 	favorite?: boolean;
-	created_at?: string;
-	updated_at?: string | null;
 };
 
 export type PackCategory = {
@@ -29,7 +27,7 @@ export type PackCategory = {
 
 export type MockPackItem = Omit<
 	PackItem,
-	'pack_item_id' | 'pack_id' | 'pack_category_id' | 'created_at' | 'updated_at'
+	'pack_item_id' | 'pack_id' | 'pack_category_id'
 > & {
 	pack_id?: number | null;
 	pack_category_id?: number | null;
@@ -55,6 +53,4 @@ export type Pack = {
 	pack_url_name: string;
 	pack_url: string;
 	pack_views: number;
-	created_at: string;
-	updated_at: string;
 };

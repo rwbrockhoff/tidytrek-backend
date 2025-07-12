@@ -20,10 +20,10 @@ export const PackUpdateSchema = z
 		pack_affiliate_description: z.string().max(500).nullable().optional(),
 		pack_views: z.number().int().min(0).optional(),
 		pack_bookmark_count: z.number().int().optional(),
-		created_at: z.string().optional(),
-		updated_at: z.string().optional(),
 	})
 	.strict();
+
+export const packFields = Object.keys(PackUpdateSchema.shape);
 
 export const PackImportSchema = z
 	.object({
@@ -63,8 +63,6 @@ export const PackItemUpdateSchema = z
 		favorite: z.boolean().optional(),
 		pack_item_price: z.number().min(0).optional(),
 		user_id: z.string().optional(),
-		created_at: z.string().optional(),
-		updated_at: z.string().optional(),
 	})
 	.strict();
 
@@ -101,6 +99,8 @@ export const PackCategoryMoveSchema = z
 		next_category_index: z.string().optional(),
 	})
 	.strict();
+
+export const packItemFields = Object.keys(PackItemUpdateSchema.shape);
 
 export type PackUpdate = z.infer<typeof PackUpdateSchema>;
 export type PackImport = z.infer<typeof PackImportSchema>;

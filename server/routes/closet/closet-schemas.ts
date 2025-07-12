@@ -17,8 +17,6 @@ export const GearClosetItemUpdateSchema = z
 		favorite: z.boolean().optional(),
 		pack_item_price: z.number().min(0).optional(),
 		user_id: z.string().optional(),
-		created_at: z.string().optional(),
-		updated_at: z.string().optional(),
 	})
 	.strict();
 
@@ -37,6 +35,8 @@ export const MoveItemToPackSchema = z
 		pack_item_index: z.string(),
 	})
 	.strict();
+
+export const gearClosetItemFields = Object.keys(GearClosetItemUpdateSchema.shape);
 
 export type GearClosetItemUpdate = z.infer<typeof GearClosetItemUpdateSchema>;
 export type GearClosetItemMove = z.infer<typeof GearClosetItemMoveSchema>;

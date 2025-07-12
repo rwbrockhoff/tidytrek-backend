@@ -14,21 +14,31 @@ import {
 	GearClosetItemUpdate,
 	GearClosetItemMove,
 	MoveItemToPack,
+	gearClosetItemFields,
 } from './closet-schemas.js';
 
 async function getGearCloset(req: Request, res: Response) {
 	try {
 		const { userId } = req;
 
+		// Build closet items JSON object for aggregation
+		const gearClosetItemJson = gearClosetItemFields
+			.map((f) => `'${f}', pi.${f}`)
+			.join(', ');
+
 		const {
 			rows: [{ gear_closet_list }],
 		} = await knex.raw(
 			`
-		select coalesce(array_remove(array_agg(to_jsonb(pi) order by pack_item_index::NUMERIC), NULL), '{}') as gear_closet_list 
-			from (
-				select * from pack_item
-				where user_id = ? and pack_id IS NULL
-			) pi
+		select COALESCE(
+			json_agg(
+				json_build_object(${gearClosetItemJson})
+				ORDER BY pi.pack_item_index::NUMERIC
+			) FILTER (WHERE pi.pack_item_id IS NOT NULL),
+			'[]'::json
+		) as gear_closet_list 
+			from pack_item pi
+			where pi.user_id = ? and pi.pack_id IS NULL
 	`,
 			[userId],
 		);
@@ -66,7 +76,10 @@ async function addGearClosetItem(req: Request, res: Response) {
 	}
 }
 
-async function editGearClosetItem(req: ValidatedRequest<GearClosetItemUpdate>, res: Response) {
+async function editGearClosetItem(
+	req: ValidatedRequest<GearClosetItemUpdate>,
+	res: Response,
+) {
 	try {
 		const { userId } = req;
 		const { packItemId } = req.params;
@@ -85,7 +98,10 @@ async function editGearClosetItem(req: ValidatedRequest<GearClosetItemUpdate>, r
 	}
 }
 
-async function moveGearClosetItem(req: ValidatedRequest<GearClosetItemMove>, res: Response) {
+async function moveGearClosetItem(
+	req: ValidatedRequest<GearClosetItemMove>,
+	res: Response,
+) {
 	try {
 		const { userId } = req;
 		const { packItemId } = req.params;

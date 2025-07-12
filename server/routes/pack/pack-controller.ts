@@ -27,21 +27,43 @@ import {
 	PackCategoryCreate,
 	PackCategoryUpdate,
 	PackCategoryMove,
+	packFields,
+	packItemFields,
 } from './pack-schemas.js';
 
 async function getDefaultPack(req: Request, res: Response) {
 	try {
 		const { userId } = req;
 
-		const { pack_id: defaultPackId } =
-			(await knex(t.pack)
-				.select('pack_id')
-				.where({ user_id: userId })
-				.orderByRaw('pack_index::NUMERIC')
-				.first()) || {};
+		const pack = await knex(t.pack)
+			.select(packFields) // zod schema fields
+			.where({ user_id: userId })
+			.orderByRaw('pack_index::NUMERIC')
+			.first();
 
-		if (defaultPackId) {
-			const { pack, categories } = await getPackById(userId, defaultPackId);
+		if (pack) {
+			// Gets categories for the pack ordered by category index
+			// Groups all pack items for each category ordered by pack item index
+			// Build pack item JSON object for aggregation
+			const packItemJson = packItemFields.map((f) => `'${f}', pi.${f}`).join(', ');
+
+			const { rows: categories = [] } = await knex.raw(
+				`select 
+					pc.*, 
+					COALESCE(
+						json_agg(
+							json_build_object(${packItemJson})
+							ORDER BY pi.pack_item_index::NUMERIC
+						) FILTER (WHERE pi.pack_item_id IS NOT NULL),
+						'[]'::json
+					) as pack_items 
+					from pack_category pc
+					left outer join pack_item pi on pi.pack_category_id = pc.pack_category_id	
+				where pc.user_id = ? and pc.pack_id = ?
+				group by pc.pack_category_id
+				order by pc.pack_category_index::NUMERIC`,
+				[userId, pack.pack_id],
+			);
 
 			return res.status(200).json({ pack, categories });
 		} else {
@@ -79,16 +101,26 @@ async function getPack(req: Request, res: Response) {
 
 async function getPackById(userId: string, packId: number) {
 	const pack = await knex(t.pack)
+		.select(packFields)
 		.where({ user_id: userId, pack_id: packId })
 		.orderBy('created_at')
 		.first();
 
 	// Gets categories for a pack ordered by category index
 	// Groups all pack items for each category ordered by pack item index
+	// Build pack item JSON object for aggregation
+	const packItemJson = packItemFields.map((f) => `'${f}', pi.${f}`).join(', ');
+
 	const { rows: categories = [] } = await knex.raw(
 		`select 
 			pc.*, 
-			coalesce(array_remove(array_agg(to_jsonb(pi) order by pack_item_index::NUMERIC), NULL), '{}') as pack_items 
+			COALESCE(
+				json_agg(
+					json_build_object(${packItemJson})
+					ORDER BY pi.pack_item_index::NUMERIC
+				) FILTER (WHERE pi.pack_item_id IS NOT NULL),
+				'[]'::json
+			) as pack_items 
 			from pack_category pc
 			left outer join pack_item pi on pi.pack_category_id = pc.pack_category_id	
 		where pc.user_id = ? and pc.pack_id = ?
@@ -150,7 +182,7 @@ async function createNewPack(userId: string) {
 				pack_name: 'New Pack',
 				pack_index: packIndex,
 			})
-			.returning('*');
+			.returning(packFields);
 
 		const categories = await knex(t.packCategory)
 			.insert({
