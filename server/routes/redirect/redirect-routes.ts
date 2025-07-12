@@ -5,6 +5,6 @@ import { RedirectRequestSchema, RedirectRequest } from './redirect-schemas.js';
 
 const router = express.Router();
 
-router.get('/', validate(RedirectRequestSchema), withTypes<RedirectRequest>(controller.handleRedirect));
+router.post('/', validate(RedirectRequestSchema), withTypes<RedirectRequest>(controller.handleRedirect));
 
 export default router;

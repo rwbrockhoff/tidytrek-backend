@@ -27,14 +27,17 @@ async function handleRedirect(req: ValidatedRequest<RedirectRequest>, res: Respo
 		);
 
 		if (confirmed === 'true' || isTrusted) {
-			return res.redirect(302, url);
+			return res.status(200).json({
+				trusted: true,
+				redirectUrl: url,
+			});
 		}
 
 		return res.status(200).json({
 			warning: true,
 			message: `You're about to leave TidyTrek and visit ${domain}`,
 			destination: domain,
-			continueUrl: `/redirect?url=${encodeURIComponent(url)}&confirmed=true`,
+			continueUrl: url,
 		});
 	} catch (err) {
 		return res.status(400).json({ error: 'Invalid URL provided' });
