@@ -6,7 +6,6 @@ export async function up(knex: Knex): Promise<void> {
 		table.increments('social_link_id').unsigned().primary();
 		table.uuid('user_id').unsigned().notNullable();
 		table.foreign('user_id').references('user_id').inTable(t.user).onDelete('CASCADE');
-		table.string('platform_name', 50).notNullable();
 		table.text('social_link_url').notNullable();
 		table.index('user_id');
 	});

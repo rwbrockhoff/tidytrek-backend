@@ -17,7 +17,7 @@ export const getUserProfileInfo = async (userId: string) => {
 		.first();
 
 	const socialLinks = await knex(t.socialLink)
-		.select('social_link_id', 'platform_name', 'social_link_url')
+		.select('social_link_id', 'social_link_url')
 		.where({ user_id: userId });
 
 	return { profileInfo, socialLinks };

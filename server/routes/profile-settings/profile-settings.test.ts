@@ -16,7 +16,6 @@ afterAll(async () => {
 });
 
 const validSocialLink = {
-	platform_name: 'instagram',
 	social_link_url: 'https://www.instagram.com/@tidytrek',
 };
 

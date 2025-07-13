@@ -80,12 +80,10 @@ export async function seed(knex: Knex): Promise<void> {
 	await knex(t.socialLink).insert([
 		{
 			user_id,
-			platform_name: 'Instagram',
 			social_link_url: 'https://instagram.com/tidytrekhiker',
 		},
 		{
 			user_id,
-			platform_name: 'YouTube',
 			social_link_url: 'https://youtube.com/@RocketHikes',
 		},
 	]);

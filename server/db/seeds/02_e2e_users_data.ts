@@ -38,12 +38,10 @@ export async function seed(knex: Knex): Promise<void> {
 	await knex(t.socialLink).insert([
 		{
 			user_id: e2eTestUser.userId,
-			platform_name: 'Custom',
 			social_link_url: 'https://tidythruhiker.com',
 		},
 		{
 			user_id: e2eTestUser.userId,
-			platform_name: 'Twitter',
 			social_link_url: 'https://twitter.com/testhiker',
 		},
 	]);

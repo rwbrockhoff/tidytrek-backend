@@ -5,8 +5,16 @@ import { createCloudfrontUrlForPhoto, s3DeletePhoto } from '../../utils/s3.js';
 import { generateUsername } from '../../utils/username-generator.js';
 import { logError } from '../../config/logger.js';
 import { getUserProfileInfo } from '../../services/profile-service.js';
-import { hasEmptyValidatedBody, NO_VALID_FIELDS_MESSAGE, ValidatedRequest } from '../../utils/validation.js';
-import { ProfileSettingsUpdate, UsernameUpdate, SocialLinkCreate } from './profile-settings-schemas.js';
+import {
+	hasEmptyValidatedBody,
+	NO_VALID_FIELDS_MESSAGE,
+	ValidatedRequest,
+} from '../../utils/validation.js';
+import {
+	ProfileSettingsUpdate,
+	UsernameUpdate,
+	SocialLinkCreate,
+} from './profile-settings-schemas.js';
 
 async function getProfileSettings(req: Request, res: Response) {
 	try {
@@ -22,8 +30,10 @@ async function getProfileSettings(req: Request, res: Response) {
 	}
 }
 
-
-async function editProfileSettings(req: ValidatedRequest<ProfileSettingsUpdate>, res: Response) {
+async function editProfileSettings(
+	req: ValidatedRequest<ProfileSettingsUpdate>,
+	res: Response,
+) {
 	try {
 		const { userId } = req;
 
@@ -39,9 +49,7 @@ async function editProfileSettings(req: ValidatedRequest<ProfileSettingsUpdate>,
 			if (!unique) return res.status(409).json({ error: message });
 		}
 
-		await knex(t.userProfile)
-			.update(req.validatedBody)
-			.where({ user_id: userId });
+		await knex(t.userProfile).update(req.validatedBody).where({ user_id: userId });
 
 		return res.status(200).send();
 	} catch (err) {
@@ -182,7 +190,7 @@ async function generateUsernamePreview(_req: Request, res: Response) {
 async function addSocialLink(req: ValidatedRequest<SocialLinkCreate>, res: Response) {
 	try {
 		const { userId } = req;
-		const { platform_name, social_link_url } = req.validatedBody;
+		const { social_link_url } = req.validatedBody;
 
 		// Check if user has hit social link limit
 		const countResponse = await knex(t.socialLink)
@@ -198,7 +206,6 @@ async function addSocialLink(req: ValidatedRequest<SocialLinkCreate>, res: Respo
 
 		await knex(t.socialLink).insert({
 			user_id: userId,
-			platform_name,
 			social_link_url,
 		});
 

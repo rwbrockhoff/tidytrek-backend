@@ -1,6 +1,5 @@
 import rateLimit from 'express-rate-limit';
 
-// Strict rate limiting for authentication endpoints
 export const authRateLimit = rateLimit({
 	windowMs: 15 * 60 * 1000, // 15 minutes
 	max: 5,
@@ -9,10 +8,9 @@ export const authRateLimit = rateLimit({
 	},
 	standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
 	legacyHeaders: false, // Disable the `X-RateLimit-*` headers
-	skipSuccessfulRequests: true, // Don't count successful requests
+	skipSuccessfulRequests: true,
 });
 
-// General API rate limiting
 export const apiRateLimit = rateLimit({
 	windowMs: 15 * 60 * 1000, // 15 minutes
 	max: 100,
@@ -21,9 +19,9 @@ export const apiRateLimit = rateLimit({
 	},
 	standardHeaders: true,
 	legacyHeaders: false,
+	skipSuccessfulRequests: true,
 });
 
-// File upload rate limiting (more restrictive)
 export const uploadRateLimit = rateLimit({
 	windowMs: 60 * 60 * 1000, // 1 hour
 	max: 10,
