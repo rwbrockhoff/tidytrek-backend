@@ -14,6 +14,7 @@ import {
 	e2eKitchenItems,
 	e2eGearClosetItems,
 } from '../test/test-data.js';
+import { packFields } from '../../routes/pack/pack-schemas.js';
 
 export async function seed(knex: Knex): Promise<void> {
 	console.log('Seeding E2E pack data...');
@@ -29,7 +30,7 @@ export async function seed(knex: Knex): Promise<void> {
 			...e2eTestPack,
 			user_id: e2eTestUser.userId,
 		})
-		.returning('*');
+		.returning(packFields);
 
 	const [testPackCategory] = await knex(t.packCategory)
 		.insert({
@@ -55,7 +56,7 @@ export async function seed(knex: Knex): Promise<void> {
 			...e2eMultiCategoryPack,
 			user_id: e2eTestUser.userId,
 		})
-		.returning('*');
+		.returning(packFields);
 
 	const categoriesToInsert: MockPackCategory[] = e2eTestCategories.map((category) => ({
 		...category,

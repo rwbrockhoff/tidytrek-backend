@@ -14,6 +14,7 @@ import {
 	mockPrivatePackItems,
 } from '../mock/mock-data.js';
 import { type MockPackItem } from '../../types/packs/pack-types.js';
+import { packFields } from '../../routes/pack/pack-schemas.js';
 
 const { first_name, last_name, email, userId: user_id, trailName, username } = mockUser;
 const {
@@ -91,7 +92,7 @@ export async function seed(knex: Knex): Promise<void> {
 	// Create pack for main mock user
 	const [pack] = await knex(t.pack)
 		.insert({ ...mockPack, user_id })
-		.returning('*');
+		.returning(packFields);
 
 	const [packCategory] = await knex(t.packCategory)
 		.insert({
@@ -112,12 +113,12 @@ export async function seed(knex: Knex): Promise<void> {
 
 	await knex(t.pack)
 		.insert({ ...mockPack2, user_id: user_id })
-		.returning('*');
+		.returning(packFields);
 
 	// Create pack for private user
 	const [privatePack] = await knex(t.pack)
 		.insert({ ...mockPrivatePack, user_id: privateUserId })
-		.returning('*');
+		.returning(packFields);
 
 	const [privatePackCategory] = await knex(t.packCategory)
 		.insert({

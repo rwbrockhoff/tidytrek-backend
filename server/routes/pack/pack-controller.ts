@@ -202,7 +202,7 @@ async function createNewPack(userId: string) {
 				pack_item_name: '',
 				pack_item_index: DEFAULT_INCREMENT.toString(),
 			})
-			.returning('*');
+			.returning(packItemFields);
 
 		categories[0].pack_items = packItems;
 
@@ -371,7 +371,7 @@ async function editPack(req: ValidatedRequest<PackUpdate>, res: Response) {
 		const [updatedPack] = await knex(t.pack)
 			.update(req.validatedBody)
 			.where({ user_id: userId, pack_id: packId })
-			.returning('*');
+			.returning(packFields);
 
 		if (!updatedPack) {
 			return res.status(404).json({ error: 'Pack not found.' });
@@ -490,7 +490,7 @@ async function addPackItem(req: ValidatedRequest<PackItemCreate>, res: Response)
 					pack_item_name: '',
 					pack_item_index,
 				})
-				.returning('*')) || [];
+				.returning(packItemFields)) || [];
 
 		return res.status(200).json({ packItem });
 	} catch (err) {
@@ -510,7 +510,7 @@ async function editPackItem(req: ValidatedRequest<PackItemUpdate>, res: Response
 		const [updatedItem = {}] = await knex(t.packItem)
 			.update(req.validatedBody)
 			.where({ pack_item_id: packItemId, user_id: userId })
-			.returning('*');
+			.returning(packItemFields);
 
 		return res.status(200).json(updatedItem);
 	} catch (err) {
@@ -625,7 +625,7 @@ async function addPackCategory(req: ValidatedRequest<PackCategoryCreate>, res: R
 				pack_item_name: '',
 				pack_item_index: DEFAULT_INCREMENT.toString(),
 			})
-			.returning('*');
+			.returning(packItemFields);
 
 		packCategory.pack_items = [packItem];
 

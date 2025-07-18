@@ -8,14 +8,14 @@ export const GearClosetItemUpdateSchema = z
 		pack_item_index: z.string().optional(),
 		pack_item_name: z.string().max(200).optional(),
 		pack_item_description: z.string().max(500).optional().nullish(),
-		pack_item_weight: z.number().min(0).optional(),
+		pack_item_weight: z.coerce.number().min(0).optional(),
 		pack_item_unit: z.string().max(10).optional(),
-		pack_item_quantity: z.number().int().min(1).optional(),
+		pack_item_quantity: z.coerce.number().int().min(1).optional(),
 		pack_item_url: z.string().optional().nullish(),
 		worn_weight: z.boolean().optional(),
 		consumable: z.boolean().optional(),
 		favorite: z.boolean().optional(),
-		pack_item_price: z.number().min(0).optional(),
+		pack_item_price: z.coerce.number().min(0).optional(),
 		user_id: z.string().optional(),
 	})
 	.strict();
