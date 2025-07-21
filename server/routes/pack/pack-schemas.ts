@@ -87,9 +87,12 @@ export const PackCategoryCreateSchema = z
 
 export const PackCategoryUpdateSchema = z
 	.object({
+		pack_category_id: z.number().int().positive().optional(),
+		user_id: z.string().optional(),
+		pack_id: z.number().int().positive().optional(),
 		pack_category_name: z.string().max(100).optional(),
 		pack_category_color: z.string().max(50).optional(),
-		pack_category_id: z.number().int().positive().optional(),
+		pack_category_index: z.string().optional(),
 	})
 	.strict();
 
@@ -101,6 +104,8 @@ export const PackCategoryMoveSchema = z
 	.strict();
 
 export const packItemFields = Object.keys(PackItemUpdateSchema.shape);
+
+export const packCategoryFields = Object.keys(PackCategoryUpdateSchema.shape);
 
 export type PackUpdate = z.infer<typeof PackUpdateSchema>;
 export type PackImport = z.infer<typeof PackImportSchema>;

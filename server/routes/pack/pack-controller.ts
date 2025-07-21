@@ -29,6 +29,7 @@ import {
 	PackCategoryMove,
 	packFields,
 	packItemFields,
+	packCategoryFields,
 } from './pack-schemas.js';
 
 async function getDefaultPack(req: Request, res: Response) {
@@ -192,7 +193,7 @@ async function createNewPack(userId: string) {
 				pack_category_index: DEFAULT_INCREMENT.toString(),
 				pack_category_color: DEFAULT_PALETTE_COLOR,
 			})
-			.returning('*');
+			.returning(packCategoryFields);
 
 		const packItems = await knex(t.packItem)
 			.insert({
@@ -614,7 +615,7 @@ async function addPackCategory(req: ValidatedRequest<PackCategoryCreate>, res: R
 				pack_category_index: packCategoryIndex,
 				pack_category_color: category_color,
 			})
-			.returning('*');
+			.returning(packCategoryFields);
 
 		// add default pack item (can be default index for first item)
 		const [packItem] = await knex(t.packItem)
