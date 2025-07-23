@@ -1,4 +1,5 @@
 import dotenv from 'dotenv';
+import fs from 'fs';
 dotenv.config({
 	path: process.env.NODE_ENV === 'production' ? 'production.env' : 'dev.env',
 });
@@ -43,7 +44,11 @@ export default {
 			port: 5432,
 			user: `${process.env.PRODUCTION_DB_USER}`,
 			password: `${process.env.PRODUCTION_DB_PASSWORD}`,
-			ssl: true,
+			// Use AWS RDS certificate for secure SSL connection
+			ssl: {
+				ca: fs.readFileSync('/opt/rds-certs/rds-ca-2019-root.pem'),
+				rejectUnauthorized: true,
+			},
 		},
 		migrations: {
 			directory: `${process.cwd()}/server/db/migrations`,
