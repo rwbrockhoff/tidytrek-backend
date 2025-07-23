@@ -7,7 +7,13 @@
 	"type": "module",
 	"private": true,
 	"license": "UNLICENSED",
+	"config": {
+		"commitizen": {
+			"path": "./node_modules/cz-conventional-changelog"
+		}
+	},
 	"scripts": {
+		"commit": "cz",
 		"build": "npx tsc",
 		"start": "NODE_ENV=production node --import=./instrument.js server/index.js",
 		"dev": "NODE_ENV=development tsx watch server/index.ts",
@@ -44,7 +50,8 @@
 		"docker:test:migrate": "docker compose exec api-test npm run test:migrate",
 		"docker:test:seed": "docker compose exec api-test npm run test:seed",
 		"docker:test:seed-packs": "docker compose exec api-test npm run test:seed-packs",
-		"docker:test:db-setup": "npm run docker:test:migrate && npm run docker:test:seed"
+		"docker:test:db-setup": "npm run docker:test:migrate && npm run docker:test:seed",
+		"prepare": "husky"
 	},
 	"devDependencies": {
 		"@testing-library/jest-dom": "^6.2.1",
@@ -61,7 +68,10 @@
 		"@typescript-eslint/eslint-plugin": "^6.19.1",
 		"@typescript-eslint/parser": "^6.19.1",
 		"@vitest/coverage-v8": "^1.1.0",
+		"commitizen": "^4.3.1",
+		"cz-conventional-changelog": "^3.3.0",
 		"eslint": "^8.56.0",
+		"husky": "^9.1.7",
 		"supertest": "^6.3.3",
 		"tsx": "^4.7.0",
 		"typescript": "^5.3.3",
