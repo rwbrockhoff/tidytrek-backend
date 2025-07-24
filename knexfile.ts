@@ -45,10 +45,10 @@ export default {
 			user: `${process.env.PRODUCTION_DB_USER}`,
 			password: `${process.env.PRODUCTION_DB_PASSWORD}`,
 			// Use AWS RDS certificate for secure SSL connection
-			ssl: {
+			ssl: process.env.NODE_ENV === 'production' ? {
 				ca: fs.readFileSync('/opt/rds-certs/rds-ca-2019-root.pem'),
 				rejectUnauthorized: true,
-			},
+			} : true,
 		},
 		migrations: {
 			directory: `${process.cwd()}/server/db/migrations`,
