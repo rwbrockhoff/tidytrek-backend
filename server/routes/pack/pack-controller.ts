@@ -179,13 +179,14 @@ async function addNewPack(req: Request, res: Response) {
 }
 
 async function createNewPack(userId: string) {
-	try {
-		// Calculate index for new pack (append to end of user's pack list)
-		const packIndex = await getNextAppendIndex(t.pack, 'pack_index', {
-			user_id: userId,
-		});
+	// Calculate index for new pack (append to end of user's pack list)
+	const packIndex = await getNextAppendIndex(t.pack, 'pack_index', {
+		user_id: userId,
+	});
 
-		const [pack] = await knex(t.pack)
+	const trx = await knex.transaction();
+	try {
+		const [pack] = await trx(t.pack)
 			.insert({
 				user_id: userId,
 				pack_name: 'New Pack',
@@ -193,7 +194,7 @@ async function createNewPack(userId: string) {
 			})
 			.returning(packFields);
 
-		const categories = await knex(t.packCategory)
+		const categories = await trx(t.packCategory)
 			.insert({
 				user_id: userId,
 				pack_id: pack.pack_id,
@@ -203,7 +204,7 @@ async function createNewPack(userId: string) {
 			})
 			.returning(packCategoryFields);
 
-		const packItems = await knex(t.packItem)
+		const packItems = await trx(t.packItem)
 			.insert({
 				user_id: userId,
 				pack_id: pack.pack_id,
@@ -215,9 +216,11 @@ async function createNewPack(userId: string) {
 
 		categories[0].pack_items = packItems;
 
+		await trx.commit();
 		return { pack, categories };
 	} catch (err) {
-		return new Error('There was an error creating a new pack.');
+		await trx.rollback();
+		throw new Error('There was an error creating a new pack.');
 	}
 }
 
@@ -248,48 +251,58 @@ async function importNewPack(req: ValidatedRequest<PackImport>, res: Response) {
 			user_id: userId,
 		});
 
-		// insert pack
-		const [{ pack_id }] = await knex(t.pack)
-			.insert({
-				user_id: userId,
-				pack_name,
-				pack_description,
-				pack_index: packIndex,
-			})
-			.returning('pack_id');
-
-		// insert categories and pack items
-		pack_categories.map(async (category) => {
-			const { pack_category_name, pack_category_index, pack_items } = category;
-
-			// get theme color based on index
-			const themeColor = palette_list?.[pack_category_index % palette_list.length];
-
-			// assign provided palette or default
-			const pack_category_color = isError(themeColor)
-				? DEFAULT_PALETTE_COLOR
-				: themeColor;
-
-			// insert pack category
-			const [{ pack_category_id }] = await knex(t.packCategory)
+		const trx = await knex.transaction();
+		try {
+			// insert pack
+			const [{ pack_id }] = await trx(t.pack)
 				.insert({
 					user_id: userId,
-					pack_id,
-					pack_category_name,
-					pack_category_index,
-					pack_category_color,
+					pack_name,
+					pack_description,
+					pack_index: packIndex,
 				})
-				.returning('pack_category_id');
+				.returning('pack_id');
 
-			// insert pack items
-			const packItemsWithIds = pack_items.map((item) => ({
-				...item,
-				user_id: userId,
-				pack_id,
-				pack_category_id,
-			}));
-			await knex(t.packItem).insert(packItemsWithIds);
-		});
+			// insert categories and pack items sequentially
+			for (const category of pack_categories) {
+				const { pack_category_name, pack_category_index, pack_items } = category;
+
+				// get theme color based on index
+				const themeColor = palette_list?.[pack_category_index % palette_list.length];
+
+				// assign provided palette or default
+				const pack_category_color = isError(themeColor)
+					? DEFAULT_PALETTE_COLOR
+					: themeColor;
+
+				// insert pack category
+				const [{ pack_category_id }] = await trx(t.packCategory)
+					.insert({
+						user_id: userId,
+						pack_id,
+						pack_category_name,
+						pack_category_index,
+						pack_category_color,
+					})
+					.returning('pack_category_id');
+
+				// insert pack items
+				if (pack_items.length > 0) {
+					const packItemsWithIds = pack_items.map((item) => ({
+						...item,
+						user_id: userId,
+						pack_id,
+						pack_category_id,
+					}));
+					await trx(t.packItem).insert(packItemsWithIds);
+				}
+			}
+
+			await trx.commit();
+		} catch (error) {
+			await trx.rollback();
+			throw new Error('Failed to import pack');
+		}
 
 		logger.info('User imported external pack successfully', {
 			userId,
@@ -735,9 +748,15 @@ async function deleteCategoryAndItems(req: Request, res: Response) {
 		const { userId } = req;
 		const { categoryId } = req.params;
 
-		await knex(t.packItem).del().where({ user_id: userId, pack_category_id: categoryId });
-
-		await deleteCategory(userId, categoryId);
+		const trx = await knex.transaction();
+		try {
+			await trx(t.packItem).del().where({ user_id: userId, pack_category_id: categoryId });
+			await trx(t.packCategory).del().where({ user_id: userId, pack_category_id: categoryId });
+			await trx.commit();
+		} catch (error) {
+			await trx.rollback();
+			throw new Error('Failed to delete category and items');
+		}
 
 		return successResponse(res, { deletedId: categoryId }, 'Category and items deleted successfully');
 	} catch (err) {

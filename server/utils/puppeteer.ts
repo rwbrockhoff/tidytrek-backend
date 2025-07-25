@@ -1,10 +1,28 @@
 import puppeteer from 'puppeteer';
 
-export async function packScraper(packUrl: string) {
+function isValidPackUrl(url: string): boolean {
 	try {
-		const browser = await puppeteer.launch();
+		const parsedUrl = new URL(url);
+		const allowedDomains = ['lighterpack.com', 'www.lighterpack.com'];
+		return allowedDomains.includes(parsedUrl.hostname);
+	} catch {
+		return false;
+	}
+}
+
+export async function packScraper(packUrl: string) {
+	if (!isValidPackUrl(packUrl)) {
+		return new Error('Invalid pack URL - only LighterPack URLs are supported');
+	}
+
+	let browser;
+	try {
+		browser = await puppeteer.launch({
+			args: ['--no-sandbox', '--disable-setuid-sandbox']
+		});
 		const page = await browser.newPage();
-		// navigate to link
+		
+		await page.setDefaultTimeout(30000);
 		await page.goto(packUrl);
 
 		const pack_name = await page.$eval(
@@ -97,5 +115,9 @@ export async function packScraper(packUrl: string) {
 		return { pack_name, pack_description, pack_categories };
 	} catch (err) {
 		return new Error('There was an error importing the pack.');
+	} finally {
+		if (browser) {
+			await browser.close();
+		}
 	}
 }

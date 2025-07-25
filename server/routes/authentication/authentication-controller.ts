@@ -76,17 +76,25 @@ async function onboardUser(userInfo: {
 	avatar_url?: string;
 }) {
 	const { user_id, email, first_name, last_name, avatar_url } = userInfo;
-	await knex(t.user).insert({
-		user_id,
-		email,
-		first_name,
-		last_name,
-	});
+	const trx = await knex.transaction();
+	try {
+		await trx(t.user).insert({
+			user_id,
+			email,
+			first_name,
+			last_name,
+		});
 
-	// set up defaults
-	const photoUrl = avatar_url || null;
-	await createDefaultPack(user_id);
-	await createUserSettings(user_id, photoUrl);
+		// set up defaults
+		const photoUrl = avatar_url || null;
+		await createDefaultPack(user_id, trx);
+		await createUserSettings(user_id, photoUrl, trx);
+
+		await trx.commit();
+	} catch (error) {
+		await trx.rollback();
+		throw new Error('Failed to create user account');
+	}
 }
 
 async function login(req: ValidatedRequest<LoginData>, res: Response) {
@@ -252,51 +260,47 @@ function createWebToken(userId: string) {
 	}
 }
 
-async function createUserSettings(user_id: string, profile_photo_url: string | null) {
+async function createUserSettings(user_id: string, profile_photo_url: string | null, trx = knex) {
 	const defaultUsername = generateUsername();
 
-	await knex(t.userSettings).insert({ user_id });
+	await trx(t.userSettings).insert({ user_id });
 
-	await knex(t.userProfile).insert({
+	await trx(t.userProfile).insert({
 		user_id,
 		profile_photo_url,
 		username: defaultUsername,
 	});
 }
 
-async function createDefaultPack(user_id: string) {
-	try {
-		// Create default pack
-		const [{ pack_id }] = await knex(t.pack)
-			.insert({
-				user_id,
-				pack_name: 'Default Pack',
-				pack_index: 0,
-			})
-			.returning('pack_id');
+async function createDefaultPack(user_id: string, trx = knex) {
+	// Create default pack
+	const [{ pack_id }] = await trx(t.pack)
+		.insert({
+			user_id,
+			pack_name: 'Default Pack',
+			pack_index: 0,
+		})
+		.returning('pack_id');
 
-		// Create default category
-		const [{ pack_category_id }] = await knex(t.packCategory)
-			.insert({
-				user_id,
-				pack_id,
-				pack_category_name: '',
-				pack_category_index: 0,
-				pack_category_color: DEFAULT_PALETTE_COLOR,
-			})
-			.returning('pack_category_id');
-
-		// Create default pack item
-		await knex(t.packItem).insert({
+	// Create default category
+	const [{ pack_category_id }] = await trx(t.packCategory)
+		.insert({
 			user_id,
 			pack_id,
-			pack_category_id,
-			pack_item_name: '',
-			pack_item_index: 0,
-		});
-	} catch (err) {
-		return new Error('Error creating default pack for user');
-	}
+			pack_category_name: '',
+			pack_category_index: 0,
+			pack_category_color: DEFAULT_PALETTE_COLOR,
+		})
+		.returning('pack_category_id');
+
+	// Create default pack item
+	await trx(t.packItem).insert({
+		user_id,
+		pack_id,
+		pack_category_id,
+		pack_item_name: '',
+		pack_item_index: 0,
+	});
 }
 
 async function isUniqueEmail(email: string) {
