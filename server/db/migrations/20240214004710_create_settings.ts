@@ -13,7 +13,7 @@ export async function up(knex: Knex): Promise<void> {
 		table
 			.string('weight_unit', 10)
 			.checkIn(['imperial', 'metric'])
-			.defaultTo('metric')
+			.defaultTo('imperial')
 			.notNullable();
 		table.string('currency_unit', 10).defaultTo('USD').notNullable();
 	});

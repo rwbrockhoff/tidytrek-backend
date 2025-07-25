@@ -21,22 +21,22 @@ describe('Redirect Routes:', () => {
 			.send({ url: 'https://youtube.com/watch?v=test' });
 
 		expect(response.statusCode).toEqual(200);
-		expect(response.body.trusted).toBe(true);
-		expect(response.body.redirectUrl).toBe('https://youtube.com/watch?v=test');
+		expect(response.body.data.trusted).toBe(true);
+		expect(response.body.data.redirectUrl).toBe('https://youtube.com/watch?v=test');
 	});
 
 	it('POST /redirect -> Should return warning for untrusted site', async () => {
 		const response = await request.post('/redirect').send({ url: 'https://badsite.com' });
 
 		expect(response.statusCode).toEqual(200);
-		expect(response.body.warning).toBe(true);
-		expect(response.body.destination).toBe('badsite.com');
+		expect(response.body.data.warning).toBe(true);
+		expect(response.body.data.destination).toBe('badsite.com');
 	});
 
 	it('POST /redirect -> Should handle invalid URL', async () => {
 		const response = await request.post('/redirect').send({ url: 'not-a-url' });
 
 		expect(response.statusCode).toEqual(400);
-		expect(response.body.error).toBe('Request validation failed');
+		expect(response.body.error.message).toBe('Request validation failed');
 	});
 });

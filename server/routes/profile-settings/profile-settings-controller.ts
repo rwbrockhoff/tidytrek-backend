@@ -1,6 +1,16 @@
 import knex from '../../db/connection.js';
 import { tables as t } from '../../../knexfile.js';
 import { Request, Response } from 'express';
+import { MulterS3File } from '../../types/multer.js';
+import {
+	errorResponse,
+	successResponse,
+	badRequest,
+	conflict,
+	internalError,
+	HTTP_STATUS,
+	ErrorCode,
+} from '../../utils/error-response.js';
 import { createCloudfrontUrlForPhoto, s3DeletePhoto } from '../../utils/s3.js';
 import { generateUsername } from '../../utils/username-generator.js';
 import { logError } from '../../config/logger.js';
@@ -22,11 +32,10 @@ async function getProfileSettings(req: Request, res: Response) {
 
 		const { profileInfo, socialLinks } = await getUserProfileInfo(userId);
 
-		return res.status(200).json({ profileInfo, socialLinks });
+		return successResponse(res, { profileInfo, socialLinks });
 	} catch (err) {
-		return res
-			.status(400)
-			.json({ error: 'There was an error getting your profile settings.' });
+		logError('Get profile settings failed', err, { userId: req.userId });
+		return internalError(res, 'There was an error getting your profile settings.');
 	}
 }
 
@@ -38,22 +47,23 @@ async function editProfileSettings(
 		const { userId } = req;
 
 		if (hasEmptyValidatedBody(req)) {
-			return res.status(400).json({ error: NO_VALID_FIELDS_MESSAGE });
+			return badRequest(res, NO_VALID_FIELDS_MESSAGE);
 		}
 
 		const { username } = req.validatedBody;
 
 		if (username) {
 			// check for existing username
-			const { unique, message } = await isUniqueUsername(username, userId);
-			if (!unique) return res.status(409).json({ error: message });
+			const result = await isUniqueUsername(username, userId);
+			if (!result.unique) return conflict(res, result.message || 'Username is not available');
 		}
 
 		await knex(t.userProfile).update(req.validatedBody).where({ user_id: userId });
 
-		return res.status(200).send();
+		return successResponse(res, null, 'Profile updated successfully');
 	} catch (err) {
-		return res.status(400).json({ error: 'There was an error updating your profile.' });
+		logError('Edit profile settings failed', err, { userId: req.userId });
+		return internalError(res, 'There was an error updating your profile.');
 	}
 }
 
@@ -62,13 +72,12 @@ async function uploadProfilePhoto(req: Request, res: Response) {
 		const { userId } = req;
 
 		if (!req.file) {
-			return res
-				.status(400)
-				.json({ error: 'Please include an image (jpg/png) for your profile.' });
+			return badRequest(res, 'Please include an image (jpg/png) for your profile.', {
+				code: ErrorCode.FILE_UPLOAD_ERROR,
+			});
 		}
 
-		// @ts-expect-error: key value exists for File type
-		const s3Key = req.file?.key;
+		const s3Key = (req.file as MulterS3File)?.key;
 		const defaultPosition = { x: 0, y: 0, zoom: 1.0 };
 		const profile_photo_url = createCloudfrontUrlForPhoto(
 			s3Key,
@@ -89,14 +98,18 @@ async function uploadProfilePhoto(req: Request, res: Response) {
 			profile_photo_position: defaultPosition
 		}).where({ user_id: userId });
 
-		return res.status(200).send();
+		return successResponse(res, null, 'Profile photo uploaded successfully');
 	} catch (err) {
 		logError('Upload profile avatar photo failed', err, {
 			userId: req.userId,
-			// @ts-expect-error: key value exists for File type
-			file: req.file?.key,
+			file: (req.file as MulterS3File)?.key,
 		});
-		return res.status(400).json({ error: 'There was an error updating your profile.' });
+		return errorResponse(
+			res,
+			HTTP_STATUS.INTERNAL_SERVER_ERROR,
+			'There was an error uploading your profile photo.',
+			ErrorCode.FILE_UPLOAD_ERROR
+		);
 	}
 }
 
@@ -121,9 +134,9 @@ async function deleteProfilePhoto(req: Request, res: Response) {
 			})
 			.where({ user_id: userId });
 
-		return res.status(200).send();
+		return successResponse(res, null, 'Profile photo deleted successfully');
 	} catch (err) {
-		return res.status(400).json({ error: 'There was an error deleting your photo.' });
+		return internalError(res, 'There was an error deleting your photo.');
 	}
 }
 
@@ -131,13 +144,10 @@ async function uploadBannerPhoto(req: Request, res: Response) {
 	try {
 		const { userId } = req;
 		if (!req.file) {
-			return res
-				.status(400)
-				.json({ error: 'Please include an image (jpg/png) for your profile.' });
+			return badRequest(res, 'Please include an image (jpg/png) for your profile.');
 		}
 
-		// @ts-expect-error: key value exists for File type
-		const s3Key = req.file?.key;
+		const s3Key = (req.file as MulterS3File)?.key;
 		const defaultPosition = { x: 0, y: 0, zoom: 1.0 };
 		const banner_photo_url = createCloudfrontUrlForPhoto(
 			s3Key,
@@ -158,14 +168,14 @@ async function uploadBannerPhoto(req: Request, res: Response) {
 			banner_photo_position: defaultPosition
 		}).where({ user_id: userId });
 
-		return res.status(200).send();
+		return successResponse(res, null, 'Banner photo uploaded successfully');
 	} catch (err) {
 		logError('Upload profile banner photo failed', err, {
 			userId: req.userId,
 			// @ts-expect-error: key value exists for File type
 			file: req.file?.key,
 		});
-		return res.status(400).json({ error: 'There was an error updating your profile.' });
+		return internalError(res, 'There was an error updating your profile.');
 	}
 }
 
@@ -174,32 +184,32 @@ async function updateUsername(req: ValidatedRequest<UsernameUpdate>, res: Respon
 		const { userId } = req;
 
 		if (hasEmptyValidatedBody(req)) {
-			return res.status(400).json({ error: NO_VALID_FIELDS_MESSAGE });
+			return badRequest(res, NO_VALID_FIELDS_MESSAGE);
 		}
 
 		const { username, trail_name } = req.validatedBody;
 
 		if (username) {
 			// check for existing username
-			const { unique, message } = await isUniqueUsername(username, userId);
-			if (!unique) return res.status(409).json({ error: message });
+			const result = await isUniqueUsername(username, userId);
+			if (!result.unique) return conflict(res, result.message || 'Username is not available');
 		}
 
 		await knex(t.userProfile)
 			.update({ username: username || null, trail_name })
 			.where({ user_id: userId });
-		return res.status(200).send();
+		return successResponse(res, null, 'Username updated successfully');
 	} catch (err) {
-		return res.status(400).json({ error: 'There was an error saving your username.' });
+		return internalError(res, 'There was an error saving your username.');
 	}
 }
 
 async function generateUsernamePreview(_req: Request, res: Response) {
 	try {
 		const username = generateUsername();
-		return res.status(200).json({ username });
+		return successResponse(res, { username });
 	} catch (err) {
-		return res.status(400).json({ error: 'There was an error creating a new username.' });
+		return internalError(res, 'There was an error creating a new username.');
 	}
 }
 
@@ -225,9 +235,9 @@ async function addSocialLink(req: ValidatedRequest<SocialLinkCreate>, res: Respo
 			social_link_url,
 		});
 
-		return res.status(200).send();
+		return successResponse(res, null, 'Social link added successfully');
 	} catch (err) {
-		return res.status(400).json({ error: 'There was an error adding your link.' });
+		return internalError(res, 'There was an error adding your link.');
 	}
 }
 
@@ -240,9 +250,9 @@ async function deleteSocialLink(req: Request, res: Response) {
 			.del()
 			.where({ user_id: userId, social_link_id: socialLinkId });
 
-		return res.status(200).send();
+		return successResponse(res, null, 'Social link deleted successfully');
 	} catch (err) {
-		return res.status(400).json({ error: 'There was an error deleting your link.' });
+		return internalError(res, 'There was an error deleting your link.');
 	}
 }
 

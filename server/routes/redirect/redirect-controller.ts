@@ -1,6 +1,7 @@
 import { Response } from 'express';
 import { ValidatedRequest } from '../../utils/validation.js';
 import { RedirectRequest } from './redirect-schemas.js';
+import { successResponse, badRequest } from '../../utils/error-response.js';
 
 const TRUSTED_DOMAINS = [
 	'amazon.com',
@@ -27,20 +28,20 @@ async function handleRedirect(req: ValidatedRequest<RedirectRequest>, res: Respo
 		);
 
 		if (confirmed === 'true' || isTrusted) {
-			return res.status(200).json({
+			return successResponse(res, {
 				trusted: true,
 				redirectUrl: url,
 			});
 		}
 
-		return res.status(200).json({
+		return successResponse(res, {
 			warning: true,
 			message: `You're about to leave TidyTrek and visit ${domain}`,
 			destination: domain,
 			continueUrl: url,
 		});
 	} catch (err) {
-		return res.status(400).json({ error: 'Invalid URL provided' });
+		return badRequest(res, 'Invalid URL provided');
 	}
 }
 

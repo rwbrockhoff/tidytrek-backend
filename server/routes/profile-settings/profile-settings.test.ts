@@ -30,8 +30,8 @@ describe('User Profile Routes ', () => {
 		const response = await userAgent.get('/profile-settings/');
 
 		expect(response.statusCode).toEqual(200);
-		expect(response.body).toHaveProperty('profileInfo');
-		expect(response.body).toHaveProperty('socialLinks');
+		expect(response.body.data).toHaveProperty('profileInfo');
+		expect(response.body.data).toHaveProperty('socialLinks');
 	});
 
 	it('GET / -> Should be a user-only protected route', async () => {
@@ -82,7 +82,7 @@ describe('User Profile Routes ', () => {
 
 		// Get current social links from seed data
 		const {
-			body: { socialLinks: initialLinks },
+			body: { data: { socialLinks: initialLinks } },
 		} = await userAgent.get('/profile-settings/');
 
 		const initialCount = initialLinks.length;
@@ -98,7 +98,7 @@ describe('User Profile Routes ', () => {
 
 		// Verify the link was deleted
 		const {
-			body: { socialLinks: updatedLinks },
+			body: { data: { socialLinks: updatedLinks } },
 		} = await userAgent.get('/profile-settings/');
 
 		expect(updatedLinks).toHaveLength(initialCount - 1);

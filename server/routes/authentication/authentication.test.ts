@@ -33,16 +33,16 @@ describe('Auth Routes: ', () => {
 		const response = await userAgent.get('/packs/').send();
 
 		expect(response.status).toBe(200);
-		expect(response.body).toHaveProperty('pack');
+		expect(response.body.data).toHaveProperty('pack');
 	});
 
 	it('POST /register -> Should create a default category and pack item', async () => {
 		const userAgent = await registerNewUser();
 		const response = await userAgent.get('/packs/').send();
-		const { categories } = response.body;
+		const { categories } = response.body.data;
 
 		expect(response.status).toBe(200);
-		expect(response.body).toHaveProperty('categories');
+		expect(response.body.data).toHaveProperty('categories');
 		expect(categories[0].packItems).toHaveLength(1);
 	});
 

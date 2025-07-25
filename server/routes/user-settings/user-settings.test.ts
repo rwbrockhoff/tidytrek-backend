@@ -45,7 +45,7 @@ describe('User Settings Routes', () => {
 
 		expect(response.statusCode).toEqual(400);
 		expect(response.body).toHaveProperty('error');
-		expect(response.body.error).toContain('No valid fields provided');
+		expect(response.body.error.message).toContain('No valid fields provided');
 	});
 
 	it('PUT / -> Should update only provided fields (partial update)', async () => {
@@ -69,6 +69,6 @@ describe('User Settings Routes', () => {
 
 		expect(response.statusCode).toEqual(400);
 		expect(response.body).toHaveProperty('error');
-		expect(response.body.error).toContain('Request validation failed');
+		expect(response.body.error.message).toContain('Request validation failed');
 	});
 });

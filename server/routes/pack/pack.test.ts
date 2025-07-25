@@ -20,25 +20,26 @@ describe('Pack Routes: Pack ', () => {
 		const response = await userAgent.get('/packs/').send();
 
 		expect(response.statusCode).toEqual(200);
-		expect(response.body).toHaveProperty('pack');
-		expect(response.body).toHaveProperty('categories');
+		expect(response.body.data).toHaveProperty('pack');
+		expect(response.body.data).toHaveProperty('categories');
 	});
 
 	it('GET / -> Should be a user-only protected route', async () => {
 		const response = await request.get('/packs/').send();
 		expect(response.statusCode).toEqual(401);
 		expect(response.body).toHaveProperty('error');
+		expect(response.body.error).toHaveProperty('message');
 	});
 
 	it('GET /:packId -> Should get a pack by packId', async () => {
 		const userAgent = await loginMockUser();
 		const packListResponse = await userAgent.get('/packs/pack-list').send();
-		const { packList } = packListResponse.body;
+		const { packList } = packListResponse.body.data;
 		const packId = packList[0].packId;
 		const response = await userAgent.get(`/packs/${packId}`).send();
 
 		expect(response.statusCode).toEqual(200);
-		expect(response.body).toHaveProperty('pack');
+		expect(response.body.data).toHaveProperty('pack');
 	});
 
 	it('GET /pack-list -> Should get pack list', async () => {
@@ -46,21 +47,21 @@ describe('Pack Routes: Pack ', () => {
 		const response = await userAgent.get('/packs/pack-list').send();
 
 		expect(response.statusCode).toEqual(200);
-		expect(response.body).toHaveProperty('packList');
+		expect(response.body.data).toHaveProperty('packList');
 	});
 
 	it('POST / -> Should add a new pack', async () => {
 		const userAgent = await loginMockUser();
 		const response = await userAgent.post('/packs/').send();
 		expect(response.status).toEqual(200);
-		expect(response.body).toHaveProperty('pack');
-		expect(response.body).toHaveProperty('categories');
+		expect(response.body.data).toHaveProperty('pack');
+		expect(response.body.data).toHaveProperty('categories');
 	});
 
 	it('PUT /:packId / -> Should edit a pack', async () => {
 		const userAgent = await loginMockUser();
 		const packResponse = await userAgent.get('/packs/').send();
-		const { packId } = packResponse.body.pack;
+		const { packId } = packResponse.body.data.pack;
 		const response = await userAgent
 			.put(`/packs/${packId}`)
 			.send({ packName: 'Updated Pack Name' });
@@ -70,7 +71,7 @@ describe('Pack Routes: Pack ', () => {
 	it('PUT /index/:packId -> Should move a pack', async () => {
 		const userAgent = await loginMockUser();
 		const packResponse = await userAgent.get('/packs/pack-list').send();
-		const { packList } = packResponse.body;
+		const { packList } = packResponse.body.data;
 		const packId = packList[0].packId;
 
 		const response = await userAgent.put(`/packs/index/${packId}`).send({ 
@@ -85,22 +86,22 @@ describe('Pack Routes: Pack ', () => {
 		// deletes pack but keeps pack items in "pack garage"
 		const userAgent = await loginMockUser();
 		const newPackResponse = await userAgent.post('/packs/').send();
-		const { packId } = newPackResponse.body.pack;
+		const { packId } = newPackResponse.body.data.pack;
 
 		const response = await userAgent.delete(`/packs/${packId}`).send();
 		expect(response.status).toEqual(200);
-		expect(response.body).toHaveProperty('deletedPackId');
+		expect(response.body.data).toHaveProperty('deletedPackId');
 	});
 
 	it('DELETE /items/:packId -> Should delete pack and related items', async () => {
 		// deletes pack and included items
 		const userAgent = await loginMockUser();
 		const newPackResponse = await userAgent.post('/packs/').send();
-		const { packId } = newPackResponse.body.pack;
+		const { packId } = newPackResponse.body.data.pack;
 
 		const response = await userAgent.delete(`/packs/items/${packId}`).send();
 		expect(response.status).toEqual(200);
-		expect(response.body).toHaveProperty('deletedPackId');
+		expect(response.body.data).toHaveProperty('deletedPackId');
 	});
 });
 
@@ -111,6 +112,7 @@ describe('Pack Routes: Error Handling', () => {
 			const response = await userAgent.get('/packs/99999').send();
 			expect(response.statusCode).toEqual(404);
 			expect(response.body).toHaveProperty('error');
+			expect(response.body.error).toHaveProperty('message');
 		});
 
 		it('PUT /:packId -> Should return 404 for non-existent pack', async () => {
@@ -118,6 +120,7 @@ describe('Pack Routes: Error Handling', () => {
 			const response = await userAgent.put('/packs/99999').send({ packName: 'Test' });
 			expect(response.statusCode).toEqual(404);
 			expect(response.body).toHaveProperty('error');
+			expect(response.body.error).toHaveProperty('message');
 		});
 	});
 });
@@ -126,20 +129,20 @@ describe('Pack Routes: Pack Items', () => {
 	it('POST /pack-items -> Should add pack item', async () => {
 		const userAgent = await loginMockUser();
 		const packResponse = await userAgent.get('/packs/').send();
-		const { packId } = packResponse.body.pack;
-		const { packCategoryId } = packResponse.body.categories[0];
+		const { packId } = packResponse.body.data.pack;
+		const { packCategoryId } = packResponse.body.data.categories[0];
 
 		const response = await userAgent
 			.post('/packs/pack-items')
 			.send({ packId, packCategoryId });
 		expect(response.statusCode).toEqual(200);
-		expect(response.body).toHaveProperty('packItem');
+		expect(response.body.data).toHaveProperty('packItem');
 	});
 
 	it('PUT /pack-items/:packItemId -> Should edit pack item', async () => {
 		const userAgent = await loginMockUser();
 		const packResponse = await userAgent.get('/packs/').send();
-		const { packItems } = packResponse.body.categories[0];
+		const { packItems } = packResponse.body.data.categories[0];
 		const { packItemId } = packItems[0];
 
 		const response = await userAgent.put(`/packs/pack-items/${packItemId}`).send({
@@ -154,7 +157,7 @@ describe('Pack Routes: Pack Items', () => {
 	it('DELETE /pack-items/:packItemId -> Should delete pack item', async () => {
 		const userAgent = await loginMockUser();
 		const packResponse = await userAgent.get('/packs/').send();
-		const { packItems } = packResponse.body.categories[0];
+		const { packItems } = packResponse.body.data.categories[0];
 		const { packItemId } = packItems[0];
 
 		const response = await userAgent.delete(`/packs/pack-items/${packItemId}`);
@@ -167,18 +170,18 @@ describe('Pack Items: Categories', () => {
 	it('POST /categories/:packId -> Should add pack category', async () => {
 		const userAgent = await loginMockUser();
 		const packResponse = await userAgent.get('/packs/').send();
-		const { packId } = packResponse.body.pack;
+		const { packId } = packResponse.body.data.pack;
 
 		const response = await userAgent.post(`/packs/categories/${packId}`).send({ categoryColor: '#3b82f6' });
 
 		expect(response.statusCode).toEqual(200);
-		expect(response.body).toHaveProperty('packCategory');
+		expect(response.body.data).toHaveProperty('packCategory');
 	});
 
 	it('PUT /categories/:categoryId -> Should edit pack category', async () => {
 		const userAgent = await loginMockUser();
 		const packResponse = await userAgent.get('/packs/').send();
-		const { packCategoryId } = packResponse.body.categories[0];
+		const { packCategoryId } = packResponse.body.data.categories[0];
 
 		const response = await userAgent
 			.put(`/packs/categories/${packCategoryId}`)
@@ -191,23 +194,23 @@ describe('Pack Items: Categories', () => {
 		// this route deletes categories but pack items go into pack garage
 		const userAgent = await loginMockUser();
 		const packResponse = await userAgent.get('/packs/').send();
-		const { packCategoryId } = packResponse.body.categories[0];
+		const { packCategoryId } = packResponse.body.data.categories[0];
 
 		const response = await userAgent.delete(`/packs/categories/${packCategoryId}`);
 
 		expect(response.statusCode).toEqual(200);
-		expect(response.body).toHaveProperty('deletedId');
+		expect(response.body.data).toHaveProperty('deletedId');
 	});
 
 	it('DELETE /categories/items/:categoryId -> Should delete pack category', async () => {
 		// this route deletes categories AND included pack items
 		const userAgent = await loginMockUser();
 		const packResponse = await userAgent.get('/packs/').send();
-		const { packCategoryId } = packResponse.body.categories[0];
+		const { packCategoryId } = packResponse.body.data.categories[0];
 
 		const response = await userAgent.delete(`/packs/categories/items/${packCategoryId}`);
 
 		expect(response.statusCode).toEqual(200);
-		expect(response.body).toHaveProperty('deletedId');
+		expect(response.body.data).toHaveProperty('deletedId');
 	});
 });

@@ -18,7 +18,7 @@ afterAll(async () => {
 const getPackId = async () => {
 	const userAgent = await loginMockUser();
 	const { body: packResponse } = await userAgent.get('/packs/').send();
-	const { packId } = packResponse.pack;
+	const { packId } = packResponse.data.pack;
 	return { packId, userAgent };
 };
 
@@ -28,15 +28,15 @@ describe('Guests Routes: Pack ', () => {
 		const response = await request.get(`/guests/pack/${packId}`).send();
 
 		expect(response.statusCode).toEqual(200);
-		expect(response.body).toHaveProperty('pack');
-		expect(response.body).toHaveProperty('categories');
+		expect(response.body.data).toHaveProperty('pack');
+		expect(response.body.data).toHaveProperty('categories');
 	});
 
 	it('GET / -> Should not be able to access a private pack', async () => {
 		const response = await request.get(`/guests/pack/2`).send();
 		// Should provide a 200 response with empty data
 		expect(response.statusCode).toEqual(200);
-		expect(response.body).toEqual({
+		expect(response.body.data).toEqual({
 			pack: null,
 			categories: [],
 			settings: null,
@@ -49,7 +49,7 @@ describe('Guests Routes: Pack ', () => {
 		await request.get(`/guests/pack/${packId}`).send();
 
 		const { body: packResponse } = await userAgent.get('/packs/').send();
-		const { packViews } = packResponse.pack;
+		const { packViews } = packResponse.data.pack;
 		expect(packViews).toEqual(1);
 	});
 
@@ -59,7 +59,7 @@ describe('Guests Routes: Pack ', () => {
 		await newUser.get(`/guests/pack/${packId}`).send();
 
 		const { body: packResponse } = await userAgent.get('/packs/').send();
-		const { packViews } = packResponse.pack;
+		const { packViews } = packResponse.data.pack;
 		expect(packViews).toEqual(1);
 	});
 
@@ -68,7 +68,7 @@ describe('Guests Routes: Pack ', () => {
 		await userAgent.get(`/guests/pack/${packId}`).send();
 
 		const { body: packResponse } = await userAgent.get('/packs/').send();
-		const { packViews } = packResponse.pack;
+		const { packViews } = packResponse.data.pack;
 		expect(packViews).toEqual(0);
 	});
 
@@ -77,6 +77,7 @@ describe('Guests Routes: Pack ', () => {
 		// Should provide a 404 response with error response
 		expect(response.statusCode).toEqual(404);
 		expect(response.body).toHaveProperty('error');
+		expect(response.body.error).toHaveProperty('message');
 	});
 
 	it('GET /user -> Should not show private user profile', async () => {
@@ -84,7 +85,7 @@ describe('Guests Routes: Pack ', () => {
 		const response = await request.get(`/guests/user/${username}`).send();
 		// Should provide a 400 response with error response
 		expect(response.statusCode).toEqual(200);
-		expect(response.body).toEqual({
+		expect(response.body.data).toEqual({
 			userProfile: null,
 			packThumbnailList: [],
 			settings: null,

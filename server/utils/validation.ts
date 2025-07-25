@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { type Request, type Response, type NextFunction } from 'express';
+import { badRequest } from './error-response.js';
 
 // Middleware to validate request body with Zod schema
 export function validateRequestBody<T>(schema: z.ZodSchema<T>) {
@@ -9,12 +10,9 @@ export function validateRequestBody<T>(schema: z.ZodSchema<T>) {
 			next();
 		} catch (error) {
 			if (error instanceof z.ZodError) {
-				return res.status(400).json({
-					error: 'Request validation failed',
-					details: error.issues,
-				});
+				return badRequest(res, 'Request validation failed', error.issues);
 			}
-			return res.status(400).json({ error: 'Request validation failed' });
+			return badRequest(res, 'Request validation failed');
 		}
 	};
 }
@@ -24,7 +22,7 @@ export function hasEmptyValidatedBody(req: Request): boolean {
 	return !req.validatedBody || Object.keys(req.validatedBody).length === 0;
 }
 
-// Error message const
+// Error message
 export const NO_VALID_FIELDS_MESSAGE = 'No valid fields provided to update.';
 
 // Ensures that the valdiatedBody we create in middleware is typed
@@ -45,7 +43,7 @@ export function withTypes<T>(
 			// TS now knows req is ValidatedRequest<T>
 			return controller(req, res);
 		}
-		// This should never happen if middleware ran properly
+		// Fallback
 		throw new Error('Missing validatedBody - validation middleware may not have run');
 	};
 }

@@ -3,6 +3,12 @@ import knex from '../../db/connection.js';
 import { Request, Response } from 'express';
 import { tables as t } from '../../../knexfile.js';
 import {
+	successResponse,
+	badRequest,
+	unauthorized,
+	internalError,
+} from '../../utils/error-response.js';
+import {
 	cookieName,
 	cookieOptions,
 	supabaseCookieName,
@@ -34,7 +40,7 @@ async function register(req: ValidatedRequest<RegisterData>, res: Response) {
 			logger.warn('Registration attempt for existing user without authentication', {
 				email,
 			});
-			return res.status(200).send();
+			return successResponse(res, null, 'Registration processed');
 		}
 
 		const actualUserId = unique ? user_id : req.userId;
@@ -55,10 +61,10 @@ async function register(req: ValidatedRequest<RegisterData>, res: Response) {
 			res.cookie(supabaseCookieName, supabase_refresh_token, supabaseCookieOptions);
 		}
 
-		return res.status(200).send();
+		return successResponse(res, null, 'Registration successful');
 	} catch (err) {
 		logError('User registration failed', err, { userId: req.validatedBody?.user_id });
-		res.status(400).json({ error: err });
+		return internalError(res, 'Registration failed');
 	}
 }
 
@@ -93,8 +99,7 @@ async function login(req: ValidatedRequest<LoginData>, res: Response) {
 			.where({ user_id, email })
 			.first();
 
-		if (initialUser === undefined && !req.userId)
-			return res.status(400).json({ error: errorText });
+		if (initialUser === undefined && !req.userId) return badRequest(res, errorText);
 
 		if (initialUser === undefined && req.userId) {
 			await onboardUser(req.validatedBody);
@@ -108,27 +113,27 @@ async function login(req: ValidatedRequest<LoginData>, res: Response) {
 			res.cookie(supabaseCookieName, supabase_refresh_token, supabaseCookieOptions);
 		}
 
-		res.status(200).json({ newUser: initialUser === undefined });
+		return successResponse(
+			res,
+			{ newUser: initialUser === undefined },
+			'Login successful',
+		);
 	} catch (err) {
 		logError('User login failed', err, { userId: req.validatedBody?.user_id });
-		res.status(400).json({ error: errorText });
+		return internalError(res, errorText);
 	}
 }
 
 async function logout(_req: Request, res: Response) {
-	return res
-		.status(200)
-		.clearCookie(cookieName, { domain: domainName })
-		.clearCookie(supabaseCookieName, { domain: domainName })
-		.json({
-			message: 'User has been logged out.',
-		});
+	res.clearCookie(cookieName, { domain: domainName });
+	res.clearCookie(supabaseCookieName, { domain: domainName });
+	return successResponse(res, null, 'User has been logged out.');
 }
 
 async function getAuthStatus(req: Request, res: Response) {
 	try {
 		// Basic cookie validation
-		if (!req.userId) return res.status(200).json({ isAuthenticated: false });
+		if (!req.userId) return successResponse(res, { isAuthenticated: false });
 
 		// Validate Supabase refresh token for authenticated users
 		const supabaseRefreshToken = req.signedCookies[supabaseCookieName];
@@ -140,35 +145,31 @@ async function getAuthStatus(req: Request, res: Response) {
 
 				// If Supabase token is invalid or user ID mismatch, force logout
 				if (error || !data.session || data.session.user?.id !== req.userId) {
-					return res
-						.status(200)
-						.clearCookie(cookieName, { domain: domainName })
-						.clearCookie(supabaseCookieName, { domain: domainName })
-						.json({ isAuthenticated: false });
+					res.clearCookie(cookieName, { domain: domainName });
+					res.clearCookie(supabaseCookieName, { domain: domainName });
+					return successResponse(res, { isAuthenticated: false });
 				}
 			} catch (supabaseError) {
 				// Supabase validation error - clear cookies and force logout
-				return res
-					.status(200)
-					.clearCookie(cookieName, { domain: domainName })
-					.clearCookie(supabaseCookieName, { domain: domainName })
-					.json({ isAuthenticated: false });
+				res.clearCookie(cookieName, { domain: domainName });
+				res.clearCookie(supabaseCookieName, { domain: domainName });
+				return successResponse(res, { isAuthenticated: false });
 			}
 		}
 
 		if (req.user && req.userId) {
 			// attach settings
 			const settings = await getUserSettingsData(req.userId);
-			res.status(200).json({ isAuthenticated: true, user: req.user, settings });
+			return successResponse(res, { isAuthenticated: true, user: req.user, settings });
 		} else {
-			res.status(200).json({ isAuthenticated: req.userId !== undefined });
+			return successResponse(res, { isAuthenticated: req.userId !== undefined });
 		}
 	} catch (err) {
 		logError('User auth status check failed', err, {
 			userId: req?.userId,
 			supabaseRefreshToken: req?.signedCookies[supabaseCookieName],
 		});
-		res.status(400).json({ error: 'There was an error checking your log in status.' });
+		return internalError(res, 'There was an error checking your log in status.');
 	}
 }
 
@@ -193,7 +194,7 @@ async function refreshSupabaseSession(req: Request, res: Response) {
 		const refreshToken = req.signedCookies[supabaseCookieName];
 
 		if (!refreshToken) {
-			return res.status(401).json({ error: 'No refresh token available' });
+			return unauthorized(res, 'No refresh token available');
 		}
 
 		const { data, error } = await supabase.auth.refreshSession({
@@ -201,7 +202,7 @@ async function refreshSupabaseSession(req: Request, res: Response) {
 		});
 
 		if (error || !data.session) {
-			return res.status(401).json({ error: 'Invalid refresh token' });
+			return unauthorized(res, 'Invalid refresh token');
 		}
 
 		// Update the refresh token cookie if it changed
@@ -209,15 +210,19 @@ async function refreshSupabaseSession(req: Request, res: Response) {
 			res.cookie(supabaseCookieName, data.session.refresh_token, supabaseCookieOptions);
 		}
 
-		res.status(200).json({
-			access_token: data.session.access_token,
-			expires_at: data.session.expires_at,
-		});
+		return successResponse(
+			res,
+			{
+				access_token: data.session.access_token,
+				expires_at: data.session.expires_at,
+			},
+			'Session refreshed successfully',
+		);
 	} catch (err) {
 		logError('Refresh user Supabase token failed', err, {
 			supabaseRefreshToken: req?.signedCookies[supabaseCookieName],
 		});
-		res.status(400).json({ error: 'Error refreshing session' });
+		return internalError(res, 'Error refreshing session');
 	}
 }
 
@@ -227,18 +232,15 @@ async function deleteAccount(req: Request, res: Response) {
 		const { error } = await supabase.auth.admin.deleteUser(userId);
 
 		if (error)
-			return res
-				.status(400)
-				.json({ error: 'There was an error deleting your account at this time.' });
+			return internalError(res, 'There was an error deleting your account at this time.');
 
 		await knex(t.user).del().where({ user_id: userId });
 
-		return res.status(200).clearCookie(cookieName).json({
-			message: 'User account has been deleted.',
-		});
+		res.clearCookie(cookieName);
+		return successResponse(res, null, 'User account has been deleted.');
 	} catch (err) {
 		logError('Delete user account failed', err, { userId: req?.userId });
-		return res.status(400).json({ error: 'There was an error deleting your account.' });
+		return internalError(res, 'There was an error deleting your account.');
 	}
 }
 

@@ -22,8 +22,8 @@ describe('Profile Routes:', () => {
 		const response = await userAgent.get('/profile/').send();
 
 		expect(response.statusCode).toEqual(200);
-		expect(response.body).toHaveProperty('userProfile');
-		expect(response.body).toHaveProperty('packThumbnailList');
+		expect(response.body.data).toHaveProperty('userProfile');
+		expect(response.body.data).toHaveProperty('packThumbnailList');
 	});
 
 	it('GET /profile -> Should be a protected route', async () => {
@@ -37,7 +37,7 @@ describe('Profile Routes:', () => {
 		const userAgent = await loginMockUser();
 		const response = await userAgent.get('/profile/').send();
 
-		const { packThumbnailList } = response.body;
+		const { packThumbnailList } = response.body.data;
 
 		// Should at least have a default pack
 		expect(packThumbnailList.length).toBeGreaterThan(0);
@@ -58,6 +58,6 @@ describe('Profile Routes:', () => {
 
 		// Test as pack owner (should see all packs)
 		const ownerResponse = await userAgent.get('/profile/').send();
-		expect(ownerResponse.body.packThumbnailList.length).toBe(3);
+		expect(ownerResponse.body.data.packThumbnailList.length).toBe(3);
 	});
 });

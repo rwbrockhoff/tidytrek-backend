@@ -3,8 +3,12 @@ import { Request, Response } from 'express';
 import { Pack } from '../../types/packs/pack-types.js';
 import { tables as t } from '../../../knexfile.js';
 import { getUserSettingsData } from '../../services/user-service.js';
-import { getProfileAndPacks, getUserProfileInfo } from '../../services/profile-service.js';
+import {
+	getProfileAndPacks,
+	getUserProfileInfo,
+} from '../../services/profile-service.js';
 import { logError } from '../../config/logger.js';
+import { successResponse, notFound, internalError } from '../../utils/error-response.js';
 
 async function getPack(req: Request, res: Response) {
 	try {
@@ -16,7 +20,7 @@ async function getPack(req: Request, res: Response) {
 
 		// Handle private and non-existent packs
 		if (pack === undefined) {
-			return res.status(200).json({
+			return successResponse(res, {
 				pack: null,
 				categories: [],
 				settings: null,
@@ -36,15 +40,18 @@ async function getPack(req: Request, res: Response) {
 
 		const categories = await getCategories(packId);
 
-		return res
-			.status(200)
-			.json({ pack, categories, settings, userProfile: { profileInfo, socialLinks } });
+		return successResponse(res, {
+			pack,
+			categories,
+			settings,
+			userProfile: { profileInfo, socialLinks },
+		});
 	} catch (err) {
 		logError('Get guest view of pack failed', err, {
 			packId: req.params?.packId,
 			userId: req?.userId,
 		});
-		return res.status(400).json({ error: 'There was an error getting this pack.' });
+		return internalError(res, 'There was an error getting this pack.');
 	}
 }
 
@@ -81,7 +88,7 @@ async function getUserProfile(req: Request, res: Response) {
 		const resolvedId = await getIdFromUsername(username);
 
 		// User doesn't exist
-		if (!resolvedId) return res.status(404).json({ error: 'User not found.' });
+		if (!resolvedId) return notFound(res, 'User not found.');
 
 		const { public_profile } = await knex(t.userSettings)
 			.select('public_profile')
@@ -90,7 +97,7 @@ async function getUserProfile(req: Request, res: Response) {
 
 		// User exists but profile is private
 		if (!public_profile) {
-			return res.status(200).json({
+			return successResponse(res, {
 				userProfile: null,
 				packThumbnailList: [],
 				settings: null,
@@ -100,13 +107,13 @@ async function getUserProfile(req: Request, res: Response) {
 		const profile = await getProfileAndPacks(resolvedId, isPackOwner);
 		const settings = await getUserSettingsData(resolvedId);
 
-		return res.status(200).json({ ...profile, settings });
+		return successResponse(res, { ...profile, settings });
 	} catch (err) {
 		logError('Get guest view of user profile failed', err, {
 			username: req.params?.username,
 			userId: req?.userId,
 		});
-		return res.status(400).json({ error: 'There was an error loading the profile.' });
+		return internalError(res, 'There was an error loading the profile.');
 	}
 }
 

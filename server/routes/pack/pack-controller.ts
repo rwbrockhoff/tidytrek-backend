@@ -2,6 +2,16 @@ import knex from '../../db/connection.js';
 import { tables as t } from '../../../knexfile.js';
 import { DEFAULT_PALETTE_COLOR } from '../../utils/constants.js';
 import { Request, Response } from 'express';
+import { MulterS3File } from '../../types/multer.js';
+import {
+	errorResponse,
+	successResponse,
+	badRequest,
+	notFound,
+	internalError,
+	HTTP_STATUS,
+	ErrorCode,
+} from '../../utils/error-response.js';
 import { createCloudfrontUrlForPhoto, s3DeletePhoto } from '../../utils/s3.js';
 import { packScraper } from '../../utils/puppeteer.js';
 import { isError } from '../../utils/utils.js';
@@ -66,14 +76,14 @@ async function getDefaultPack(req: Request, res: Response) {
 				[userId, pack.pack_id],
 			);
 
-			return res.status(200).json({ pack, categories });
+			return successResponse(res, { pack, categories });
 		} else {
 			// UI can handle not having a default pack.
-			return res.status(200).send();
+			return successResponse(res, null, 'No default pack found');
 		}
 	} catch (err) {
 		logError('Failed to load default pack', err, { userId: req?.userId });
-		res.status(400).json({ error: "We're having trouble loading your packs right now." });
+		return internalError(res, "We're having trouble loading your packs right now.");
 	}
 }
 
@@ -85,18 +95,16 @@ async function getPack(req: Request, res: Response) {
 		const { pack, categories } = await getPackById(userId, Number(packId));
 
 		if (!pack) {
-			return res.status(404).json({ error: 'Pack not found.' });
+			return notFound(res, 'Pack not found.');
 		}
 
-		return res.status(200).json({ pack, categories });
+		return successResponse(res, { pack, categories });
 	} catch (err) {
 		logError('Failed to load pack', err, {
 			userId: req.userId,
 			packId: req.params.packId,
 		});
-		return res
-			.status(400)
-			.json({ error: 'There was an error loading your pack right now.' });
+		return internalError(res, 'There was an error loading your pack right now.');
 	}
 }
 
@@ -138,10 +146,10 @@ async function getPackList(req: Request, res: Response) {
 		const { userId } = req;
 		const packList = await getAvailablePacks(userId);
 
-		return res.status(200).json({ packList });
+		return successResponse(res, { packList });
 	} catch (err) {
 		logError('Getting pack list failed', err, { userId: req?.userId });
-		return res.status(400).json({ error: 'There was an error getting your pack list.' });
+		return internalError(res, 'There was an error getting your pack list.');
 	}
 }
 
@@ -152,7 +160,7 @@ async function addNewPack(req: Request, res: Response) {
 		const newPack = await createNewPack(userId);
 
 		const newPackError = isError(newPack);
-		if (newPackError) return res.status(400).json({ error: errorMessage });
+		if (newPackError) return internalError(res, errorMessage);
 
 		const { pack, categories } = newPack;
 
@@ -163,10 +171,10 @@ async function addNewPack(req: Request, res: Response) {
 			timestamp: new Date(),
 		});
 
-		return res.status(200).json({ pack, categories });
+		return successResponse(res, { pack, categories });
 	} catch (err) {
 		logError('New pack creation failed', err, { userId: req?.userId });
-		return res.status(400).json({ error: errorMessage });
+		return internalError(res, errorMessage);
 	}
 }
 
@@ -229,7 +237,7 @@ async function importNewPack(req: ValidatedRequest<PackImport>, res: Response) {
 				error: 'Pack scraper returned error or invalid data',
 				scrapedData: importedPack,
 			});
-			return res.status(400).json({ error: importErrorMessage });
+			return badRequest(res, importErrorMessage);
 		}
 
 		// save new pack to db
@@ -288,13 +296,13 @@ async function importNewPack(req: ValidatedRequest<PackImport>, res: Response) {
 			packUrl: pack_url,
 		});
 
-		return res.status(200).send();
+		return successResponse(res, null, 'Pack imported successfully');
 	} catch (err) {
 		logError("Importing user's external pack failed", err, {
 			userId: req.userId,
 			packUrl: req.validatedBody?.pack_url,
 		});
-		return res.status(400).json({ error: importErrorMessage });
+		return internalError(res, importErrorMessage);
 	}
 }
 
@@ -303,8 +311,7 @@ async function uploadPackPhoto(req: Request, res: Response) {
 		const { userId } = req;
 		const { packId } = req.params;
 
-		// @ts-expect-error: key value exists for File type
-		const s3Key = req.file?.key;
+		const s3Key = (req.file as MulterS3File)?.key;
 		const defaultPosition = { x: 0, y: 0, zoom: 1.0 };
 		const newPackPhotoUrl = createCloudfrontUrlForPhoto(s3Key, 'packPhotoBucket');
 
@@ -322,11 +329,11 @@ async function uploadPackPhoto(req: Request, res: Response) {
 			.update({
 				pack_photo_url: newPackPhotoUrl,
 				pack_photo_s3_key: s3Key,
-				pack_photo_position: defaultPosition
+				pack_photo_position: defaultPosition,
 			})
 			.where({ user_id: userId, pack_id: packId });
 
-		return res.status(200).send();
+		return successResponse(res, null, 'Pack photo uploaded successfully');
 	} catch (err) {
 		logError('Upload pack photo failed', err, {
 			userId: req.userId,
@@ -334,9 +341,12 @@ async function uploadPackPhoto(req: Request, res: Response) {
 			// @ts-expect-error: key value exists for File type
 			file: req.file?.key,
 		});
-		return res
-			.status(400)
-			.json({ error: 'There was an error uploading your pack photo.' });
+		return errorResponse(
+			res,
+			HTTP_STATUS.INTERNAL_SERVER_ERROR,
+			'There was an error uploading your pack photo.',
+			ErrorCode.FILE_UPLOAD_ERROR
+		);
 	}
 }
 
@@ -358,15 +368,22 @@ async function deletePackPhoto(req: Request, res: Response) {
 			.update({
 				pack_photo_url: null,
 				pack_photo_s3_key: null,
-				pack_photo_position: null
+				pack_photo_position: null,
 			})
 			.where({ user_id: userId, pack_id: packId });
 
-		return res.status(200).send();
+		return successResponse(res, null, 'Pack photo deleted successfully');
 	} catch (err) {
-		return res
-			.status(400)
-			.json({ error: 'There was an error uploading your pack photo.' });
+		logError('Delete pack photo failed', err, { 
+			userId: req.userId, 
+			packId: req.params.packId 
+		});
+		return errorResponse(
+			res,
+			HTTP_STATUS.INTERNAL_SERVER_ERROR,
+			'There was an error deleting your pack photo.',
+			ErrorCode.FILE_UPLOAD_ERROR
+		);
 	}
 }
 
@@ -376,7 +393,7 @@ async function editPack(req: ValidatedRequest<PackUpdate>, res: Response) {
 		const { packId } = req.params;
 
 		if (hasEmptyValidatedBody(req)) {
-			return res.status(400).json({ error: NO_VALID_FIELDS_MESSAGE });
+			return badRequest(res, NO_VALID_FIELDS_MESSAGE);
 		}
 
 		const [updatedPack] = await knex(t.pack)
@@ -385,12 +402,12 @@ async function editPack(req: ValidatedRequest<PackUpdate>, res: Response) {
 			.returning(packFields);
 
 		if (!updatedPack) {
-			return res.status(404).json({ error: 'Pack not found.' });
+			return notFound(res, 'Pack not found.');
 		}
 
-		return res.status(200).json(updatedPack);
+		return successResponse(res, updatedPack, 'Pack updated successfully');
 	} catch (err) {
-		return res.status(400).json({ error: 'There was an error editing your pack.' });
+		return internalError(res, 'There was an error editing your pack.');
 	}
 }
 
@@ -410,16 +427,13 @@ async function movePack(req: ValidatedRequest<PackMove>, res: Response) {
 			{ user_id: userId }, // WHERE conditions
 		);
 
-		return res.status(200).json({
+		return successResponse(res, {
 			packId,
 			newIndex,
 			rebalanced,
-			message: 'Pack moved successfully',
-		});
+		}, 'Pack moved successfully');
 	} catch (err) {
-		return res
-			.status(400)
-			.json({ error: 'There was an error changing your pack order.' });
+		return internalError(res, 'There was an error changing your pack order.');
 	}
 }
 
@@ -453,9 +467,9 @@ async function deletePack(req: Request, res: Response) {
 			.first();
 		if (!response) await createNewPack(userId);
 
-		return res.status(200).json({ deletedPackId: packId });
+		return successResponse(res, { deletedPackId: packId }, 'Pack deleted successfully');
 	} catch (err) {
-		return res.status(400).json({ error: 'There was an error deleting your pack.' });
+		return internalError(res, 'There was an error deleting your pack.');
 	}
 }
 
@@ -474,9 +488,9 @@ async function deletePackAndItems(req: Request, res: Response) {
 			.first();
 		if (!response) await createNewPack(userId);
 
-		return res.status(200).json({ deletedPackId: packId });
+		return successResponse(res, { deletedPackId: packId }, 'Pack and items deleted successfully');
 	} catch (err) {
-		return res.status(400).json({ error: 'There was an error deleting your pack.' });
+		return internalError(res, 'There was an error deleting your pack.');
 	}
 }
 
@@ -503,9 +517,9 @@ async function addPackItem(req: ValidatedRequest<PackItemCreate>, res: Response)
 				})
 				.returning(packItemFields)) || [];
 
-		return res.status(200).json({ packItem });
+		return successResponse(res, { packItem }, 'Pack item added successfully');
 	} catch (err) {
-		res.status(400).json({ error: 'There was an error adding a new pack item.' });
+		return internalError(res, 'There was an error adding a new pack item.');
 	}
 }
 
@@ -515,7 +529,7 @@ async function editPackItem(req: ValidatedRequest<PackItemUpdate>, res: Response
 		const { packItemId } = req.params;
 
 		if (hasEmptyValidatedBody(req)) {
-			return res.status(400).json({ error: NO_VALID_FIELDS_MESSAGE });
+			return badRequest(res, NO_VALID_FIELDS_MESSAGE);
 		}
 
 		const [updatedItem = {}] = await knex(t.packItem)
@@ -523,9 +537,9 @@ async function editPackItem(req: ValidatedRequest<PackItemUpdate>, res: Response
 			.where({ pack_item_id: packItemId, user_id: userId })
 			.returning(packItemFields);
 
-		return res.status(200).json(updatedItem);
+		return successResponse(res, updatedItem, 'Pack item updated successfully');
 	} catch (err) {
-		return res.status(400).json({ error: 'There was an error saving your pack item.' });
+		return internalError(res, 'There was an error saving your pack item.');
 	}
 }
 
@@ -548,18 +562,17 @@ async function movePackItem(req: ValidatedRequest<PackItemMove>, res: Response) 
 			{ pack_category_id }, // Additional fields to update (can change category on drag/drop)
 		);
 
-		return res.status(200).json({
+		return successResponse(res, {
 			newIndex,
 			rebalanced,
 			categoryChanged: prev_pack_category_id !== pack_category_id,
-			message: 'Pack item moved successfully',
-		});
+		}, 'Pack item moved successfully');
 	} catch (err) {
 		logError('Move pack item failed', err, {
 			userId: req.userId,
 			body: req.validatedBody,
 		});
-		return res.status(400).json({ error: 'There was an error moving your pack item.' });
+		return internalError(res, 'There was an error moving your pack item.');
 	}
 }
 
@@ -583,11 +596,9 @@ async function moveItemToCloset(req: Request, res: Response) {
 			})
 			.where({ user_id: userId, pack_item_id: packItemId });
 
-		return res.status(200).send();
+		return successResponse(res, null, 'Item moved to gear closet successfully');
 	} catch (err) {
-		return res
-			.status(400)
-			.json({ error: 'There was an error moving your item to your gear closet.' });
+		return internalError(res, 'There was an error moving your item to your gear closet.');
 	}
 }
 
@@ -598,9 +609,9 @@ async function deletePackItem(req: Request, res: Response) {
 
 		await knex(t.packItem).delete().where({ user_id: userId, pack_item_id: packItemId });
 
-		return res.status(200).send();
+		return successResponse(res, null, 'Pack item deleted successfully');
 	} catch (err) {
-		return res.status(400).json({ error: 'There was an error deleting your pack item.' });
+		return internalError(res, 'There was an error deleting your pack item.');
 	}
 }
 
@@ -640,9 +651,9 @@ async function addPackCategory(req: ValidatedRequest<PackCategoryCreate>, res: R
 
 		packCategory.pack_items = [packItem];
 
-		return res.status(200).json({ packCategory });
+		return successResponse(res, { packCategory }, 'Pack category added successfully');
 	} catch (err) {
-		return res.status(400).json({ error: 'There was an error adding a new category.' });
+		return internalError(res, 'There was an error adding a new category.');
 	}
 }
 
@@ -655,19 +666,16 @@ async function editPackCategory(
 		const { categoryId } = req.params;
 
 		if (hasEmptyValidatedBody(req)) {
-			return res.status(400).json({ error: NO_VALID_FIELDS_MESSAGE });
+			return badRequest(res, NO_VALID_FIELDS_MESSAGE);
 		}
 
 		await knex(t.packCategory)
 			.update(req.validatedBody)
 			.where({ user_id: userId, pack_category_id: categoryId });
 
-		return res.status(200).send();
+		return successResponse(res, null, 'Pack category updated successfully');
 	} catch (err) {
-		console.log('error: ', err);
-		return res
-			.status(400)
-			.json({ error: 'There was an error editing your pack category.' });
+		return internalError(res, 'There was an error editing your pack category.');
 	}
 }
 
@@ -687,19 +695,16 @@ async function movePackCategory(req: ValidatedRequest<PackCategoryMove>, res: Re
 			{ user_id: userId }, // WHERE conditions
 		);
 
-		return res.status(200).json({
+		return successResponse(res, {
 			newIndex,
 			rebalanced,
-			message: 'Pack category moved successfully',
-		});
+		}, 'Pack category moved successfully');
 	} catch (err) {
 		logError('Move pack category failed', err, {
 			userId: req.userId,
 			body: req.validatedBody,
 		});
-		return res
-			.status(400)
-			.json({ error: 'There was an error changing your pack order.' });
+		return internalError(res, 'There was an error changing your pack order.');
 	}
 }
 
@@ -719,9 +724,9 @@ async function moveCategoryToCloset(req: Request, res: Response) {
 
 		await deleteCategory(userId, categoryId);
 
-		return res.status(200).json({ deletedId: categoryId });
+		return successResponse(res, { deletedId: categoryId }, 'Category moved to gear closet successfully');
 	} catch (err) {
-		return res.status(400).json({ error: 'There was an error deleting your category. ' });
+		return internalError(res, 'There was an error deleting your category.');
 	}
 }
 
@@ -734,11 +739,9 @@ async function deleteCategoryAndItems(req: Request, res: Response) {
 
 		await deleteCategory(userId, categoryId);
 
-		return res.status(200).json({ deletedId: categoryId });
+		return successResponse(res, { deletedId: categoryId }, 'Category and items deleted successfully');
 	} catch (err) {
-		return res
-			.status(400)
-			.json({ error: 'There was an error deleting your pack items.' });
+		return internalError(res, 'There was an error deleting your pack items.');
 	}
 }
 

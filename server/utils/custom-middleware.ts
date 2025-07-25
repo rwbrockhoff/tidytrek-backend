@@ -5,6 +5,7 @@ import { Request, Response, NextFunction as Next } from 'express';
 import { getUser } from '../routes/authentication/authentication-controller.js';
 import { cookieName, supabaseCookieName, cookieOptions } from './constants.js';
 import { supabase } from '../db/supabase-client.js';
+import { unauthorized } from './error-response.js';
 
 type JwtPayload = { userId: string; iat?: number };
 type SupabaseJwtPayload = { sub: string; iat?: number };
@@ -111,17 +112,17 @@ export const protectedRoute = async (req: Request, res: Response, next: Next) =>
 		req.userId = req.cookie;
 		// Still check if user is authenticated in test mode
 		if (!req.userId) {
-			return res.status(401).json({ error: 'Please log in to complete this request.' });
+			return unauthorized(res);
 		}
 		return next();
 	}
 
 	// Basic validation: cookie and userId must match
 	if (!req.userId || !req.cookie || req.userId !== req.cookie) {
-		return res.status(401).json({ error: 'Please log in to complete this request.' });
+		return unauthorized(res);
 	}
 
-	// Enhanced security: Validate Supabase token for protected routes
+	// Validate Supabase token for protected routes
 	const supabaseRefreshToken = req.signedCookies[supabaseCookieName];
 	if (supabaseRefreshToken) {
 		try {
