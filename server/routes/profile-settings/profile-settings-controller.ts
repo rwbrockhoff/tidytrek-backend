@@ -67,9 +67,11 @@ async function uploadProfilePhoto(req: Request, res: Response) {
 				.json({ error: 'Please include an image (jpg/png) for your profile.' });
 		}
 
+		// @ts-expect-error: key value exists for File type
+		const s3Key = req.file?.key;
+		const defaultPosition = { x: 0, y: 0, zoom: 1.0 };
 		const profile_photo_url = createCloudfrontUrlForPhoto(
-			// @ts-expect-error: key value exists for File type
-			req.file?.key,
+			s3Key,
 			'profilePhotoBucket',
 		);
 
@@ -81,7 +83,11 @@ async function uploadProfilePhoto(req: Request, res: Response) {
 
 		if (prevUrl) await s3DeletePhoto(prevUrl);
 
-		await knex(t.userProfile).update({ profile_photo_url }).where({ user_id: userId });
+		await knex(t.userProfile).update({
+			profile_photo_url,
+			profile_photo_s3_key: s3Key,
+			profile_photo_position: defaultPosition
+		}).where({ user_id: userId });
 
 		return res.status(200).send();
 	} catch (err) {
@@ -108,7 +114,11 @@ async function deleteProfilePhoto(req: Request, res: Response) {
 
 		// delete from DB
 		await knex(t.userProfile)
-			.update({ profile_photo_url: '' })
+			.update({
+				profile_photo_url: null,
+				profile_photo_s3_key: null,
+				profile_photo_position: null
+			})
 			.where({ user_id: userId });
 
 		return res.status(200).send();
@@ -126,9 +136,11 @@ async function uploadBannerPhoto(req: Request, res: Response) {
 				.json({ error: 'Please include an image (jpg/png) for your profile.' });
 		}
 
+		// @ts-expect-error: key value exists for File type
+		const s3Key = req.file?.key;
+		const defaultPosition = { x: 0, y: 0, zoom: 1.0 };
 		const banner_photo_url = createCloudfrontUrlForPhoto(
-			// @ts-expect-error: key value exists for File type
-			req.file?.key,
+			s3Key,
 			'bannerPhotoBucket',
 		);
 
@@ -140,7 +152,11 @@ async function uploadBannerPhoto(req: Request, res: Response) {
 
 		if (prevUrl) await s3DeletePhoto(prevUrl);
 
-		await knex(t.userProfile).update({ banner_photo_url }).where({ user_id: userId });
+		await knex(t.userProfile).update({
+			banner_photo_url,
+			banner_photo_s3_key: s3Key,
+			banner_photo_position: defaultPosition
+		}).where({ user_id: userId });
 
 		return res.status(200).send();
 	} catch (err) {

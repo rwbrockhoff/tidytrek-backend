@@ -7,6 +7,7 @@ export async function up(knex: Knex): Promise<void> {
 		table.uuid('user_id').unsigned().notNullable();
 		table.foreign('user_id').references('user_id').inTable(t.user).onDelete('CASCADE');
 		table.text('social_link_url').notNullable();
+		table.integer('social_link_clicks').defaultTo(0).notNullable();
 		table.index('user_id');
 	});
 
@@ -18,7 +19,11 @@ export async function up(knex: Knex): Promise<void> {
 		table.index('username');
 		table.string('trail_name', 100).nullable();
 		table.text('profile_photo_url').nullable();
+		table.string('profile_photo_s3_key', 500).nullable();
+		table.json('profile_photo_position').nullable();
 		table.text('banner_photo_url').nullable();
+		table.string('banner_photo_s3_key', 500).nullable();
+		table.json('banner_photo_position').nullable();
 		table.text('user_bio').nullable();
 		table.string('user_location', 100).nullable();
 	});

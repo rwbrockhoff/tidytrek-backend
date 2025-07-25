@@ -17,10 +17,18 @@ const buckets = {
 };
 
 const photoResizing: { [K in BucketName]?: { width?: number; height?: number } } = {
-	profilePhotoBucket: { width: 200 },
-	bannerPhotoBucket: { width: 1600, height: 400 },
-	packPhotoBucket: { width: 600, height: 400 },
+	profilePhotoBucket: { width: 800 },
+	bannerPhotoBucket: { width: 2000 },
+	packPhotoBucket: { width: 1200 },
 };
+
+interface PositionData {
+	x: number;
+	y: number;
+	scale: number;
+	cropWidth: number;
+	cropHeight: number;
+}
 
 type BucketName = 'profilePhotoBucket' | 'bannerPhotoBucket' | 'packPhotoBucket';
 
@@ -74,16 +82,55 @@ export const s3DeletePhoto = async (photoUrl: string) => {
 	}
 };
 
+interface CloudFrontEdits {
+	extract?: {
+		left: number;
+		top: number;
+		width: number;
+		height: number;
+	};
+	resize?: {
+		width?: number;
+		height?: number;
+		fit?: string;
+		position?: string;
+	};
+}
+
 export const createCloudfrontUrlForPhoto = (
 	key: string | undefined,
 	bucketName: BucketName,
+	positionData?: PositionData,
 ) => {
+	const targetResize = photoResizing[bucketName];
+	let edits: CloudFrontEdits = {};
+
+	if (positionData) {
+		// Apply crop first, then resize to target dimensions
+		edits = {
+			extract: {
+				left: Math.max(0, Math.floor(positionData.x)),
+				top: Math.max(0, Math.floor(positionData.y)),
+				width: Math.floor(positionData.cropWidth),
+				height: Math.floor(positionData.cropHeight),
+			},
+			resize: { ...targetResize },
+		};
+	} else {
+		// Default: use center crop with cover fit to preserve aspect ratio
+		edits = {
+			resize: {
+				...targetResize,
+				fit: 'cover',
+				position: 'center',
+			},
+		};
+	}
+
 	const imageRequest = JSON.stringify({
 		bucket: buckets[bucketName],
 		key: key,
-		edits: {
-			resize: { ...photoResizing[bucketName] },
-		},
+		edits,
 	});
 	const encodedObject = btoa(imageRequest);
 	return `${photoUploadCloudfrontUrl}/${encodedObject}`;

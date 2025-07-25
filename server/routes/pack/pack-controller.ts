@@ -241,7 +241,7 @@ async function importNewPack(req: ValidatedRequest<PackImport>, res: Response) {
 		});
 
 		// insert pack
-		const [{ packId }] = await knex(t.pack)
+		const [{ pack_id }] = await knex(t.pack)
 			.insert({
 				user_id: userId,
 				pack_name,
@@ -266,7 +266,7 @@ async function importNewPack(req: ValidatedRequest<PackImport>, res: Response) {
 			const [{ pack_category_id }] = await knex(t.packCategory)
 				.insert({
 					user_id: userId,
-					pack_id: packId,
+					pack_id,
 					pack_category_name,
 					pack_category_index,
 					pack_category_color,
@@ -277,7 +277,7 @@ async function importNewPack(req: ValidatedRequest<PackImport>, res: Response) {
 			const packItemsWithIds = pack_items.map((item) => ({
 				...item,
 				user_id: userId,
-				pack_id: packId,
+				pack_id,
 				pack_category_id,
 			}));
 			await knex(t.packItem).insert(packItemsWithIds);
@@ -304,7 +304,9 @@ async function uploadPackPhoto(req: Request, res: Response) {
 		const { packId } = req.params;
 
 		// @ts-expect-error: key value exists for File type
-		const newPackPhotoUrl = createCloudfrontUrlForPhoto(req.file?.key, 'packPhotoBucket');
+		const s3Key = req.file?.key;
+		const defaultPosition = { x: 0, y: 0, zoom: 1.0 };
+		const newPackPhotoUrl = createCloudfrontUrlForPhoto(s3Key, 'packPhotoBucket');
 
 		// check for previous pack photo url
 		const { pack_photo_url: prevPackPhotoUrl } = await knex(t.pack)
@@ -315,9 +317,13 @@ async function uploadPackPhoto(req: Request, res: Response) {
 		// Delete previous pack photo from S3
 		if (prevPackPhotoUrl) await s3DeletePhoto(prevPackPhotoUrl);
 
-		// Update pack with new S3 URL
+		// Update pack with new S3 URL and positioning data
 		await knex(t.pack)
-			.update({ pack_photo_url: newPackPhotoUrl })
+			.update({
+				pack_photo_url: newPackPhotoUrl,
+				pack_photo_s3_key: s3Key,
+				pack_photo_position: defaultPosition
+			})
 			.where({ user_id: userId, pack_id: packId });
 
 		return res.status(200).send();
@@ -349,7 +355,11 @@ async function deletePackPhoto(req: Request, res: Response) {
 
 		// Delete from DB
 		await knex(t.pack)
-			.update({ pack_photo_url: null })
+			.update({
+				pack_photo_url: null,
+				pack_photo_s3_key: null,
+				pack_photo_position: null
+			})
 			.where({ user_id: userId, pack_id: packId });
 
 		return res.status(200).send();

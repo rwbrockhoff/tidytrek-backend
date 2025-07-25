@@ -9,15 +9,14 @@ import * as Sentry from '@sentry/node';
 const dsn = process.env.SENTRY_DSN;
 const environment = process.env.NODE_ENV || 'development';
 
-if (dsn) {
+if (dsn && environment === 'production') {
 	Sentry.init({
 		dsn,
 		environment,
-		// Performance monitoring: track 100% in dev, 10% in prod
-		tracesSampleRate: environment === 'production' ? 0.1 : 1.0,
+		tracesSampleRate: 0.1,
 		// PII handling: currently only send user IDs (not emails, names, etc.)
 	});
 	console.log(`Sentry initialized for environment: ${environment}`);
 } else {
-	console.warn('Sentry DSN not configured. Skipping Sentry initialization.');
+	console.log('Sentry disabled for development environment');
 }
