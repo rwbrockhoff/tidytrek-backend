@@ -1,7 +1,7 @@
 import jwt from 'jsonwebtoken';
 import knex from '../../db/connection.js';
 import { Request, Response } from 'express';
-import { tables as t } from '../../../knexfile.js';
+import { Tables } from '../../db/tables.js';
 import {
 	successResponse,
 	badRequest,
@@ -18,6 +18,9 @@ import {
 } from '../../utils/constants.js';
 import { supabase } from '../../db/supabase-client.js';
 import { generateUsername } from '../../utils/username-generator.js';
+import { validateEnvironment } from '../../config/environment.js';
+
+const env = validateEnvironment();
 import { getUserSettingsData } from '../../services/user-service.js';
 import { logger, logError } from '../../config/logger.js';
 import { ValidatedRequest } from '../../utils/validation.js';
@@ -78,7 +81,7 @@ async function onboardUser(userInfo: {
 	const { user_id, email, first_name, last_name, avatar_url } = userInfo;
 	const trx = await knex.transaction();
 	try {
-		await trx(t.user).insert({
+		await trx(Tables.User).insert({
 			user_id,
 			email,
 			first_name,
@@ -102,7 +105,7 @@ async function login(req: ValidatedRequest<LoginData>, res: Response) {
 	try {
 		const { user_id, email, supabase_refresh_token } = req.validatedBody;
 
-		const initialUser = await knex(t.user)
+		const initialUser = await knex(Tables.User)
 			.select('user_id')
 			.where({ user_id, email })
 			.first();
@@ -182,8 +185,8 @@ async function getAuthStatus(req: Request, res: Response) {
 }
 
 export async function getUser(userId: string) {
-	return await knex(t.user)
-		.leftJoin(t.userProfile, `${t.user}.user_id`, `${t.userProfile}.user_id`)
+	return await knex(Tables.User)
+		.leftJoin(Tables.UserProfile, `${Tables.User}.user_id`, `${Tables.UserProfile}.user_id`)
 		.select(
 			'user.user_id',
 			'first_name',
@@ -242,7 +245,7 @@ async function deleteAccount(req: Request, res: Response) {
 		if (error)
 			return internalError(res, 'There was an error deleting your account at this time.');
 
-		await knex(t.user).del().where({ user_id: userId });
+		await knex(Tables.User).del().where({ user_id: userId });
 
 		res.clearCookie(cookieName);
 		return successResponse(res, null, 'User account has been deleted.');
@@ -253,19 +256,15 @@ async function deleteAccount(req: Request, res: Response) {
 }
 
 function createWebToken(userId: string) {
-	if (process.env.APP_SECRET) {
-		return jwt.sign({ userId }, process.env.APP_SECRET);
-	} else {
-		return new Error('Invalid app secret when creating JWT.');
-	}
+	return jwt.sign({ userId }, env.APP_SECRET);
 }
 
 async function createUserSettings(user_id: string, profile_photo_url: string | null, trx = knex) {
 	const defaultUsername = generateUsername();
 
-	await trx(t.userSettings).insert({ user_id });
+	await trx(Tables.UserSettings).insert({ user_id });
 
-	await trx(t.userProfile).insert({
+	await trx(Tables.UserProfile).insert({
 		user_id,
 		profile_photo_url,
 		username: defaultUsername,
@@ -274,7 +273,7 @@ async function createUserSettings(user_id: string, profile_photo_url: string | n
 
 async function createDefaultPack(user_id: string, trx = knex) {
 	// Create default pack
-	const [{ pack_id }] = await trx(t.pack)
+	const [{ pack_id }] = await trx(Tables.Pack)
 		.insert({
 			user_id,
 			pack_name: 'Default Pack',
@@ -283,7 +282,7 @@ async function createDefaultPack(user_id: string, trx = knex) {
 		.returning('pack_id');
 
 	// Create default category
-	const [{ pack_category_id }] = await trx(t.packCategory)
+	const [{ pack_category_id }] = await trx(Tables.PackCategory)
 		.insert({
 			user_id,
 			pack_id,
@@ -294,7 +293,7 @@ async function createDefaultPack(user_id: string, trx = knex) {
 		.returning('pack_category_id');
 
 	// Create default pack item
-	await trx(t.packItem).insert({
+	await trx(Tables.PackItem).insert({
 		user_id,
 		pack_id,
 		pack_category_id,
@@ -304,7 +303,7 @@ async function createDefaultPack(user_id: string, trx = knex) {
 }
 
 async function isUniqueEmail(email: string) {
-	const existingEmail = await knex(t.user).select('email').where({ email }).first();
+	const existingEmail = await knex(Tables.User).select('email').where({ email }).first();
 	if (existingEmail) {
 		return {
 			unique: false,

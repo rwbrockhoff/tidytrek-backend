@@ -18,7 +18,7 @@ export const UsernameUpdateSchema = z
 
 export const SocialLinkCreateSchema = z
 	.object({
-		social_link_url: z.string().url(),
+		social_link_url: z.url(),
 	})
 	.strict();
 

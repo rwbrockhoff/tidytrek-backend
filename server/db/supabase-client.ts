@@ -1,7 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
+import { validateEnvironment } from '../config/environment.js';
 
-const supabaseClient = process.env.SUPABASE_CLIENT;
-const supabaseKey = process.env.SUPABASE_PRIVATE_KEY;
+const env = validateEnvironment();
 
-// @ts-expect-error: value will exist as string in env file
-export const supabase = createClient(supabaseClient, supabaseKey);
+export const supabase = createClient(env.SUPABASE_CLIENT, env.SUPABASE_PRIVATE_KEY);

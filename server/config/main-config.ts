@@ -6,9 +6,11 @@ import helmet from 'helmet';
 import { Express } from 'express';
 import { acceptedOrigins, corsErrorMessage } from './config-vars.js';
 import { apiRateLimit } from './rate-limiting.js';
+import { validateEnvironment } from './environment.js';
+
+const env = validateEnvironment();
 
 const mainConfig = (app: Express) => {
-	// Security headers (minimal benefit for JSON API, but standard practice)
 	app.use(
 		helmet({
 			contentSecurityPolicy: {
@@ -21,10 +23,10 @@ const mainConfig = (app: Express) => {
 		}),
 	);
 
-	// HTTP request logging - skip during tests
-	if (process.env.NODE_ENV !== 'test') {
+	// Request logging - skip during tests
+	if (env.NODE_ENV !== 'test') {
 		const logFormat =
-			process.env.NODE_ENV === 'production'
+			env.NODE_ENV === 'production'
 				? ':method :url :status :res[content-length] - :response-time ms' // production
 				: 'dev'; // dev (colored messages)
 
@@ -51,7 +53,7 @@ const mainConfig = (app: Express) => {
 			},
 		}),
 	);
-	app.use(cookieParser(process.env.COOKIE_SECRET));
+	app.use(cookieParser(env.COOKIE_SECRET));
 };
 
 export default mainConfig;

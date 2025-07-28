@@ -5,15 +5,6 @@ dotenv.config({
 });
 const dbName = 'tidytrek_db';
 
-export const tables = {
-	user: 'user',
-	pack: 'pack',
-	packCategory: 'pack_category',
-	packItem: 'pack_item',
-	userSettings: 'user_settings',
-	socialLink: 'social_link',
-	userProfile: 'user_profile',
-} as const;
 
 export default {
 	development: {

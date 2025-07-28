@@ -9,6 +9,9 @@ import redirectRoutes from '../routes/redirect/redirect-routes.js';
 import testRoutes from '../routes/test/test-routes.js';
 import { protectedRoute } from '../utils/custom-middleware.js';
 import { Application } from 'express';
+import { validateEnvironment } from './environment.js';
+
+const env = validateEnvironment();
 
 const routeConfig = (app: Application) => {
 	app.use('/auth', authenticationRoutes);
@@ -20,9 +23,7 @@ const routeConfig = (app: Application) => {
 	app.use('/profile-settings', protectedRoute, profileSettingsRoutes);
 	app.use('/user-settings', protectedRoute, userSettingsRoutes);
 
-	// Test routes - only available in test environment
-	if (process.env.NODE_ENV === 'test') app.use('/test', testRoutes);
-
+	if (env.NODE_ENV === 'test') app.use('/test', testRoutes);
 };
 
 export default routeConfig;

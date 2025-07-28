@@ -1,5 +1,5 @@
 import { Knex } from 'knex';
-import { tables as t } from '../../../knexfile.js';
+import { Tables } from '../tables.js';
 import { DEFAULT_PALETTE_COLOR, DEFAULT_PALETTE } from '../../utils/constants.js';
 import {
 	mockUser,
@@ -28,38 +28,38 @@ const {
 
 export async function seed(knex: Knex): Promise<void> {
 	// Clean up all mock data
-	await knex(t.packItem).where('user_id', user_id).del();
-	await knex(t.packCategory).where('user_id', user_id).del();
-	await knex(t.pack).where('user_id', user_id).del();
-	await knex(t.socialLink).where('user_id', user_id).del();
-	await knex(t.userProfile).where('user_id', user_id).del();
-	await knex(t.userSettings).where('user_id', user_id).del();
-	await knex(t.user).where('user_id', user_id).del();
+	await knex(Tables.PackItem).where('user_id', user_id).del();
+	await knex(Tables.PackCategory).where('user_id', user_id).del();
+	await knex(Tables.Pack).where('user_id', user_id).del();
+	await knex(Tables.SocialLink).where('user_id', user_id).del();
+	await knex(Tables.UserProfile).where('user_id', user_id).del();
+	await knex(Tables.UserSettings).where('user_id', user_id).del();
+	await knex(Tables.User).where('user_id', user_id).del();
 
 	// Insert mock user, profile, and settings
-	await knex(t.user).insert({ user_id, first_name, last_name, email });
+	await knex(Tables.User).insert({ user_id, first_name, last_name, email });
 
 	// Insert mock private user
-	await knex(t.user).insert({
+	await knex(Tables.User).insert({
 		user_id: privateUserId,
 		first_name: privateFirstName,
 		last_name: privateLastName,
 		email: privateEmail,
 	});
 
-	await knex(t.userProfile).insert({
+	await knex(Tables.UserProfile).insert({
 		user_id,
 		trail_name: trailName,
 		username,
 	});
 
-	await knex(t.userProfile).insert({
+	await knex(Tables.UserProfile).insert({
 		user_id: privateUserId,
 		trail_name: privateTrailName,
 		username: privateUsername,
 	});
 
-	await knex(t.userSettings).insert({
+	await knex(Tables.UserSettings).insert({
 		user_id,
 		palette: DEFAULT_PALETTE,
 		dark_mode: false,
@@ -68,7 +68,7 @@ export async function seed(knex: Knex): Promise<void> {
 		currency_unit: 'USD',
 	});
 
-	await knex(t.userSettings).insert({
+	await knex(Tables.UserSettings).insert({
 		user_id: privateUserId,
 		palette: DEFAULT_PALETTE,
 		dark_mode: false,
@@ -78,7 +78,7 @@ export async function seed(knex: Knex): Promise<void> {
 	});
 
 	// Create social links for mock user
-	await knex(t.socialLink).insert([
+	await knex(Tables.SocialLink).insert([
 		{
 			user_id,
 			social_link_url: 'https://instagram.com/tidytrekhiker',
@@ -90,11 +90,11 @@ export async function seed(knex: Knex): Promise<void> {
 	]);
 
 	// Create pack for main mock user
-	const [pack] = await knex(t.pack)
+	const [pack] = await knex(Tables.Pack)
 		.insert({ ...mockPack, user_id })
 		.returning(packFields);
 
-	const [packCategory] = await knex(t.packCategory)
+	const [packCategory] = await knex(Tables.PackCategory)
 		.insert({
 			...mockPackCategory,
 			user_id,
@@ -109,18 +109,18 @@ export async function seed(knex: Knex): Promise<void> {
 		return item;
 	});
 
-	await knex(t.packItem).insert([...packItemsWithIds, ...mockGearClosetItems]);
+	await knex(Tables.PackItem).insert([...packItemsWithIds, ...mockGearClosetItems]);
 
-	await knex(t.pack)
+	await knex(Tables.Pack)
 		.insert({ ...mockPack2, user_id: user_id })
 		.returning(packFields);
 
 	// Create pack for private user
-	const [privatePack] = await knex(t.pack)
+	const [privatePack] = await knex(Tables.Pack)
 		.insert({ ...mockPrivatePack, user_id: privateUserId })
 		.returning(packFields);
 
-	const [privatePackCategory] = await knex(t.packCategory)
+	const [privatePackCategory] = await knex(Tables.PackCategory)
 		.insert({
 			...mockPrivatePackCategory,
 			user_id: privateUserId,
@@ -135,5 +135,5 @@ export async function seed(knex: Knex): Promise<void> {
 		return item;
 	});
 
-	await knex(t.packItem).insert(privatePackItemsWithIds);
+	await knex(Tables.PackItem).insert(privatePackItemsWithIds);
 }

@@ -1,5 +1,5 @@
 import knex from '../../db/connection.js';
-import { tables as t } from '../../../knexfile.js';
+import { Tables } from '../../db/tables.js';
 import { Request, Response } from 'express';
 import {
 	successResponse,
@@ -59,13 +59,13 @@ async function addGearClosetItem(req: Request, res: Response) {
 		const { userId } = req;
 
 		// Calculate index for new gear closet item (append to end)
-		const pack_item_index = await getNextAppendIndex(t.packItem, 'pack_item_index', {
+		const pack_item_index = await getNextAppendIndex(Tables.PackItem, 'pack_item_index', {
 			user_id: userId,
 			pack_id: null,
 			pack_category_id: null,
 		});
 
-		await knex(t.packItem).insert({
+		await knex(Tables.PackItem).insert({
 			user_id: userId,
 			pack_item_name: '',
 			pack_item_index,
@@ -89,7 +89,7 @@ async function editGearClosetItem(
 			return badRequest(res, NO_VALID_FIELDS_MESSAGE);
 		}
 
-		await knex(t.packItem)
+		await knex(Tables.PackItem)
 			.update(req.validatedBody)
 			.where({ pack_item_id: packItemId, user_id: userId });
 
@@ -109,7 +109,7 @@ async function moveGearClosetItem(
 		const { prev_item_index, next_item_index } = req.validatedBody;
 
 		const { newIndex, rebalanced } = await moveWithFractionalIndex(
-			t.packItem,
+			Tables.PackItem,
 			'pack_item_index',
 			'pack_item_id',
 			packItemId,
@@ -138,13 +138,13 @@ async function moveItemToPack(req: ValidatedRequest<MoveItemToPack>, res: Respon
 		const { pack_id, pack_category_id } = req.validatedBody;
 
 		// Calculate index for item moving to pack (append to end of category)
-		const newPackItemIndex = await getNextAppendIndex(t.packItem, 'pack_item_index', {
+		const newPackItemIndex = await getNextAppendIndex(Tables.PackItem, 'pack_item_index', {
 			user_id: userId,
 			pack_id,
 			pack_category_id,
 		});
 
-		await knex(t.packItem)
+		await knex(Tables.PackItem)
 			.update({ pack_id, pack_category_id, pack_item_index: newPackItemIndex })
 			.where({ user_id: userId, pack_item_id: packItemId });
 
@@ -158,7 +158,7 @@ async function deleteGearClosetItem(req: Request, res: Response) {
 		const { userId } = req;
 		const { packItemId } = req.params;
 
-		await knex(t.packItem).delete().where({ pack_item_id: packItemId, user_id: userId });
+		await knex(Tables.PackItem).delete().where({ pack_item_id: packItemId, user_id: userId });
 
 		return successResponse(res, null, 'Gear closet item deleted successfully');
 	} catch (err) {

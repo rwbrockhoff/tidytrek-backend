@@ -1,11 +1,11 @@
 import type { Knex } from 'knex';
-import { tables as t } from '../../../knexfile.js';
+import { Tables } from '../tables.js';
 
 export async function up(knex: Knex): Promise<void> {
-	await knex.schema.createTable(t.pack, (table) => {
+	await knex.schema.createTable(Tables.Pack, (table) => {
 		table.increments('pack_id').unsigned().primary();
 		table.uuid('user_id').unsigned().notNullable();
-		table.foreign('user_id').references('user_id').inTable(t.user).onDelete('CASCADE');
+		table.foreign('user_id').references('user_id').inTable(Tables.User).onDelete('CASCADE');
 		table.string('pack_index', 20).notNullable().defaultTo('0');
 		table.index('pack_index');
 		table.string('pack_name', 100).notNullable();
@@ -33,5 +33,5 @@ export async function up(knex: Knex): Promise<void> {
 }
 
 export async function down(knex: Knex): Promise<void> {
-	await knex.schema.dropTable(t.pack);
+	await knex.schema.dropTable(Tables.Pack);
 }

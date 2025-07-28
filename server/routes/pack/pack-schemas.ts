@@ -26,9 +26,19 @@ export const PackUpdateSchema = z
 
 export const packFields = Object.keys(PackUpdateSchema.shape);
 
-export const PackImportSchema = z
+export const PackMigrationSchema = z
 	.object({
-		pack_url: z.string().url(),
+		pack_url: z
+			.string()
+			.url()
+			.refine((url) => {
+				try {
+					const parsedUrl = new URL(url);
+					return ['lighterpack.com', 'www.lighterpack.com'].includes(parsedUrl.hostname);
+				} catch {
+					return false;
+				}
+			}, 'Must be a valid LighterPack URL'),
 		palette_list: z.array(z.string()).optional(),
 	})
 	.strict();
@@ -109,7 +119,7 @@ export const packItemFields = Object.keys(PackItemUpdateSchema.shape);
 export const packCategoryFields = Object.keys(PackCategoryUpdateSchema.shape);
 
 export type PackUpdate = z.infer<typeof PackUpdateSchema>;
-export type PackImport = z.infer<typeof PackImportSchema>;
+export type PackMigration = z.infer<typeof PackMigrationSchema>;
 export type PackMove = z.infer<typeof PackMoveSchema>;
 export type PackItemCreate = z.infer<typeof PackItemCreateSchema>;
 export type PackItemUpdate = z.infer<typeof PackItemUpdateSchema>;

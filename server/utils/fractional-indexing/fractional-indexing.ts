@@ -2,7 +2,7 @@
 // Uses VARCHAR storage with ::NUMERIC casting for proper sorting
 
 import knex from '../../db/connection.js';
-import { tables as t } from '../../../knexfile.js';
+import { Tables } from '../../db/tables.js';
 import { PackItem } from '../../types/packs/pack-types.js';
 
 // Type for items that can be moved to gear closet (allows null pack_id/pack_category_id)
@@ -200,7 +200,7 @@ export async function bulkMoveToGearCloset(
 
 	// Calculate starting index for gear closet items
 	const startIndex = await getNextAppendIndex(
-		t.packItem as TableName,
+		Tables.PackItem as TableName,
 		'pack_item_index',
 		{
 			user_id: userId,
@@ -220,7 +220,7 @@ export async function bulkMoveToGearCloset(
 		pack_id: null,
 	}));
 
-	await knex(t.packItem)
+	await knex(Tables.PackItem)
 		.insert(updates)
 		.onConflict('pack_item_id')
 		.merge(['pack_item_index', 'pack_category_id', 'pack_id']);
@@ -236,9 +236,9 @@ export async function rebalanceIndexes(
 ): Promise<string> {
 	// Determine primary key column for exclusion
 	const primaryKeyMap = {
-		[t.packItem]: 'pack_item_id',
-		[t.packCategory]: 'pack_category_id',
-		[t.pack]: 'pack_id',
+		[Tables.PackItem]: 'pack_item_id',
+		[Tables.PackCategory]: 'pack_category_id',
+		[Tables.Pack]: 'pack_id',
 	};
 	const primaryKey = primaryKeyMap[table];
 

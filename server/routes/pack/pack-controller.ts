@@ -1,5 +1,5 @@
 import knex from '../../db/connection.js';
-import { tables as t } from '../../../knexfile.js';
+import { Tables } from '../../db/tables.js';
 import { DEFAULT_PALETTE_COLOR } from '../../utils/constants.js';
 import { Request, Response } from 'express';
 import { MulterS3File } from '../../types/multer.js';
@@ -29,7 +29,7 @@ import {
 } from '../../utils/validation.js';
 import {
 	PackUpdate,
-	PackImport,
+	PackMigration,
 	PackMove,
 	PackItemCreate,
 	PackItemUpdate,
@@ -46,7 +46,7 @@ async function getDefaultPack(req: Request, res: Response) {
 	try {
 		const { userId } = req;
 
-		const pack = await knex(t.pack)
+		const pack = await knex(Tables.Pack)
 			.select(packFields) // zod schema fields
 			.where({ user_id: userId })
 			.orderByRaw('pack_index::NUMERIC')
@@ -109,7 +109,7 @@ async function getPack(req: Request, res: Response) {
 }
 
 async function getPackById(userId: string, packId: number) {
-	const pack = await knex(t.pack)
+	const pack = await knex(Tables.Pack)
 		.select(packFields)
 		.where({ user_id: userId, pack_id: packId })
 		.orderBy('created_at')
@@ -180,13 +180,13 @@ async function addNewPack(req: Request, res: Response) {
 
 async function createNewPack(userId: string) {
 	// Calculate index for new pack (append to end of user's pack list)
-	const packIndex = await getNextAppendIndex(t.pack, 'pack_index', {
+	const packIndex = await getNextAppendIndex(Tables.Pack, 'pack_index', {
 		user_id: userId,
 	});
 
 	const trx = await knex.transaction();
 	try {
-		const [pack] = await trx(t.pack)
+		const [pack] = await trx(Tables.Pack)
 			.insert({
 				user_id: userId,
 				pack_name: 'New Pack',
@@ -194,7 +194,7 @@ async function createNewPack(userId: string) {
 			})
 			.returning(packFields);
 
-		const categories = await trx(t.packCategory)
+		const categories = await trx(Tables.PackCategory)
 			.insert({
 				user_id: userId,
 				pack_id: pack.pack_id,
@@ -204,7 +204,7 @@ async function createNewPack(userId: string) {
 			})
 			.returning(packCategoryFields);
 
-		const packItems = await trx(t.packItem)
+		const packItems = await trx(Tables.PackItem)
 			.insert({
 				user_id: userId,
 				pack_id: pack.pack_id,
@@ -224,7 +224,7 @@ async function createNewPack(userId: string) {
 	}
 }
 
-async function importNewPack(req: ValidatedRequest<PackImport>, res: Response) {
+async function importNewPack(req: ValidatedRequest<PackMigration>, res: Response) {
 	const importErrorMessage = 'There was an error importing your pack.';
 	try {
 		const { userId } = req;
@@ -247,14 +247,14 @@ async function importNewPack(req: ValidatedRequest<PackImport>, res: Response) {
 		const { pack_name, pack_description, pack_categories } = importedPack;
 
 		// Calculate index for new imported pack (append to end of user's pack list)
-		const packIndex = await getNextAppendIndex(t.pack, 'pack_index', {
+		const packIndex = await getNextAppendIndex(Tables.Pack, 'pack_index', {
 			user_id: userId,
 		});
 
 		const trx = await knex.transaction();
 		try {
 			// insert pack
-			const [{ pack_id }] = await trx(t.pack)
+			const [{ pack_id }] = await trx(Tables.Pack)
 				.insert({
 					user_id: userId,
 					pack_name,
@@ -276,7 +276,7 @@ async function importNewPack(req: ValidatedRequest<PackImport>, res: Response) {
 					: themeColor;
 
 				// insert pack category
-				const [{ pack_category_id }] = await trx(t.packCategory)
+				const [{ pack_category_id }] = await trx(Tables.PackCategory)
 					.insert({
 						user_id: userId,
 						pack_id,
@@ -294,7 +294,7 @@ async function importNewPack(req: ValidatedRequest<PackImport>, res: Response) {
 						pack_id,
 						pack_category_id,
 					}));
-					await trx(t.packItem).insert(packItemsWithIds);
+					await trx(Tables.PackItem).insert(packItemsWithIds);
 				}
 			}
 
@@ -329,7 +329,7 @@ async function uploadPackPhoto(req: Request, res: Response) {
 		const newPackPhotoUrl = createCloudfrontUrlForPhoto(s3Key, 'packPhotoBucket');
 
 		// check for previous pack photo url
-		const { pack_photo_url: prevPackPhotoUrl } = await knex(t.pack)
+		const { pack_photo_url: prevPackPhotoUrl } = await knex(Tables.Pack)
 			.select('pack_photo_url')
 			.where({ user_id: userId, pack_id: packId })
 			.first();
@@ -338,7 +338,7 @@ async function uploadPackPhoto(req: Request, res: Response) {
 		if (prevPackPhotoUrl) await s3DeletePhoto(prevPackPhotoUrl);
 
 		// Update pack with new S3 URL and positioning data
-		await knex(t.pack)
+		await knex(Tables.Pack)
 			.update({
 				pack_photo_url: newPackPhotoUrl,
 				pack_photo_s3_key: s3Key,
@@ -358,7 +358,7 @@ async function uploadPackPhoto(req: Request, res: Response) {
 			res,
 			HTTP_STATUS.INTERNAL_SERVER_ERROR,
 			'There was an error uploading your pack photo.',
-			ErrorCode.FILE_UPLOAD_ERROR
+			ErrorCode.FILE_UPLOAD_ERROR,
 		);
 	}
 }
@@ -368,7 +368,7 @@ async function deletePackPhoto(req: Request, res: Response) {
 		const { userId } = req;
 		const { packId } = req.params;
 
-		const { pack_photo_url } = await knex(t.pack)
+		const { pack_photo_url } = await knex(Tables.Pack)
 			.select('pack_photo_url')
 			.where({ user_id: userId, pack_id: packId })
 			.first();
@@ -377,7 +377,7 @@ async function deletePackPhoto(req: Request, res: Response) {
 		await s3DeletePhoto(pack_photo_url);
 
 		// Delete from DB
-		await knex(t.pack)
+		await knex(Tables.Pack)
 			.update({
 				pack_photo_url: null,
 				pack_photo_s3_key: null,
@@ -387,15 +387,15 @@ async function deletePackPhoto(req: Request, res: Response) {
 
 		return successResponse(res, null, 'Pack photo deleted successfully');
 	} catch (err) {
-		logError('Delete pack photo failed', err, { 
-			userId: req.userId, 
-			packId: req.params.packId 
+		logError('Delete pack photo failed', err, {
+			userId: req.userId,
+			packId: req.params.packId,
 		});
 		return errorResponse(
 			res,
 			HTTP_STATUS.INTERNAL_SERVER_ERROR,
 			'There was an error deleting your pack photo.',
-			ErrorCode.FILE_UPLOAD_ERROR
+			ErrorCode.FILE_UPLOAD_ERROR,
 		);
 	}
 }
@@ -409,7 +409,7 @@ async function editPack(req: ValidatedRequest<PackUpdate>, res: Response) {
 			return badRequest(res, NO_VALID_FIELDS_MESSAGE);
 		}
 
-		const [updatedPack] = await knex(t.pack)
+		const [updatedPack] = await knex(Tables.Pack)
 			.update(req.validatedBody)
 			.where({ user_id: userId, pack_id: packId })
 			.returning(packFields);
@@ -431,7 +431,7 @@ async function movePack(req: ValidatedRequest<PackMove>, res: Response) {
 		const { prev_pack_index, next_pack_index } = req.validatedBody;
 
 		const { newIndex, rebalanced } = await moveWithFractionalIndex(
-			t.pack,
+			Tables.Pack,
 			'pack_index',
 			'pack_id',
 			packId,
@@ -440,11 +440,15 @@ async function movePack(req: ValidatedRequest<PackMove>, res: Response) {
 			{ user_id: userId }, // WHERE conditions
 		);
 
-		return successResponse(res, {
-			packId,
-			newIndex,
-			rebalanced,
-		}, 'Pack moved successfully');
+		return successResponse(
+			res,
+			{
+				packId,
+				newIndex,
+				rebalanced,
+			},
+			'Pack moved successfully',
+		);
 	} catch (err) {
 		return internalError(res, 'There was an error changing your pack order.');
 	}
@@ -456,25 +460,25 @@ async function deletePack(req: Request, res: Response) {
 		const { packId } = req.params;
 
 		// Get all items from the pack to move to gear closet
-		const packItems = await knex(t.packItem)
-			.select(`${t.packItem}.*`)
+		const packItems = await knex(Tables.PackItem)
+			.select(`${Tables.PackItem}.*`)
 			.join(
-				t.packCategory,
-				`${t.packItem}.pack_category_id`,
-				`${t.packCategory}.pack_category_id`,
+				Tables.PackCategory,
+				`${Tables.PackItem}.pack_category_id`,
+				`${Tables.PackCategory}.pack_category_id`,
 			)
-			.where({ [`${t.packItem}.user_id`]: userId, [`${t.packItem}.pack_id`]: packId })
+			.where({ [`${Tables.PackItem}.user_id`]: userId, [`${Tables.PackItem}.pack_id`]: packId })
 			.orderByRaw(
-				`${t.packCategory}.pack_category_index::NUMERIC, ${t.packItem}.pack_item_index::NUMERIC`,
+				`${Tables.PackCategory}.pack_category_index::NUMERIC, ${Tables.PackItem}.pack_item_index::NUMERIC`,
 			);
 
 		await bulkMoveToGearCloset(packItems, userId);
 
 		// DELETE ON CASCADE: pack -> pack_category -> pack_item
-		await knex(t.pack).del().where({ user_id: userId, pack_id: packId });
+		await knex(Tables.Pack).del().where({ user_id: userId, pack_id: packId });
 
 		//if no packs left, create default pack
-		const response = await knex(t.pack)
+		const response = await knex(Tables.Pack)
 			.select('pack_id')
 			.where({ user_id: userId })
 			.first();
@@ -492,16 +496,20 @@ async function deletePackAndItems(req: Request, res: Response) {
 		const { packId } = req.params;
 
 		// DELETE ON CASCADE: pack -> pack_category -> pack_item
-		await knex(t.pack).del().where({ user_id: userId, pack_id: packId });
+		await knex(Tables.Pack).del().where({ user_id: userId, pack_id: packId });
 
 		// if no packs left, ensure user has default pack
-		const response = await knex(t.pack)
+		const response = await knex(Tables.Pack)
 			.select('pack_id')
 			.where({ user_id: userId })
 			.first();
 		if (!response) await createNewPack(userId);
 
-		return successResponse(res, { deletedPackId: packId }, 'Pack and items deleted successfully');
+		return successResponse(
+			res,
+			{ deletedPackId: packId },
+			'Pack and items deleted successfully',
+		);
 	} catch (err) {
 		return internalError(res, 'There was an error deleting your pack.');
 	}
@@ -513,14 +521,14 @@ async function addPackItem(req: ValidatedRequest<PackItemCreate>, res: Response)
 		const { pack_id, pack_category_id } = req.validatedBody;
 
 		// Calculate index for new item
-		const pack_item_index = await getNextAppendIndex(t.packItem, 'pack_item_index', {
+		const pack_item_index = await getNextAppendIndex(Tables.PackItem, 'pack_item_index', {
 			user_id: userId,
 			pack_id,
 			pack_category_id,
 		});
 
 		const [packItem] =
-			(await knex(t.packItem)
+			(await knex(Tables.PackItem)
 				.insert({
 					user_id: userId,
 					pack_id,
@@ -545,7 +553,7 @@ async function editPackItem(req: ValidatedRequest<PackItemUpdate>, res: Response
 			return badRequest(res, NO_VALID_FIELDS_MESSAGE);
 		}
 
-		const [updatedItem = {}] = await knex(t.packItem)
+		const [updatedItem = {}] = await knex(Tables.PackItem)
 			.update(req.validatedBody)
 			.where({ pack_item_id: packItemId, user_id: userId })
 			.returning(packItemFields);
@@ -565,7 +573,7 @@ async function movePackItem(req: ValidatedRequest<PackItemMove>, res: Response) 
 			req.validatedBody;
 
 		const { newIndex, rebalanced } = await moveWithFractionalIndex(
-			t.packItem,
+			Tables.PackItem,
 			'pack_item_index',
 			'pack_item_id',
 			packItemId,
@@ -575,11 +583,15 @@ async function movePackItem(req: ValidatedRequest<PackItemMove>, res: Response) 
 			{ pack_category_id }, // Additional fields to update (can change category on drag/drop)
 		);
 
-		return successResponse(res, {
-			newIndex,
-			rebalanced,
-			categoryChanged: prev_pack_category_id !== pack_category_id,
-		}, 'Pack item moved successfully');
+		return successResponse(
+			res,
+			{
+				newIndex,
+				rebalanced,
+				categoryChanged: prev_pack_category_id !== pack_category_id,
+			},
+			'Pack item moved successfully',
+		);
 	} catch (err) {
 		logError('Move pack item failed', err, {
 			userId: req.userId,
@@ -595,13 +607,13 @@ async function moveItemToCloset(req: Request, res: Response) {
 		const { packItemId } = req.params;
 
 		// Calculate index for item moving to gear closet
-		const newGearClosetIndex = await getNextAppendIndex(t.packItem, 'pack_item_index', {
+		const newGearClosetIndex = await getNextAppendIndex(Tables.PackItem, 'pack_item_index', {
 			user_id: userId,
 			pack_id: null,
 			pack_category_id: null,
 		});
 
-		await knex(t.packItem)
+		await knex(Tables.PackItem)
 			.update({
 				pack_id: null,
 				pack_category_id: null,
@@ -620,7 +632,7 @@ async function deletePackItem(req: Request, res: Response) {
 		const { userId } = req;
 		const { packItemId } = req.params;
 
-		await knex(t.packItem).delete().where({ user_id: userId, pack_item_id: packItemId });
+		await knex(Tables.PackItem).delete().where({ user_id: userId, pack_item_id: packItemId });
 
 		return successResponse(res, null, 'Pack item deleted successfully');
 	} catch (err) {
@@ -636,12 +648,12 @@ async function addPackCategory(req: ValidatedRequest<PackCategoryCreate>, res: R
 
 		// Calculate index for new category
 		const packCategoryIndex = await getNextAppendIndex(
-			t.packCategory,
+			Tables.PackCategory,
 			'pack_category_index',
 			{ user_id: userId, pack_id: packId },
 		);
 
-		const [packCategory] = await knex(t.packCategory)
+		const [packCategory] = await knex(Tables.PackCategory)
 			.insert({
 				pack_category_name: '',
 				user_id: userId,
@@ -652,7 +664,7 @@ async function addPackCategory(req: ValidatedRequest<PackCategoryCreate>, res: R
 			.returning(packCategoryFields);
 
 		// add default pack item (can be default index for first item)
-		const [packItem] = await knex(t.packItem)
+		const [packItem] = await knex(Tables.PackItem)
 			.insert({
 				user_id: userId,
 				pack_id: packId,
@@ -682,7 +694,7 @@ async function editPackCategory(
 			return badRequest(res, NO_VALID_FIELDS_MESSAGE);
 		}
 
-		await knex(t.packCategory)
+		await knex(Tables.PackCategory)
 			.update(req.validatedBody)
 			.where({ user_id: userId, pack_category_id: categoryId });
 
@@ -699,7 +711,7 @@ async function movePackCategory(req: ValidatedRequest<PackCategoryMove>, res: Re
 		const { prev_category_index, next_category_index } = req.validatedBody;
 
 		const { newIndex, rebalanced } = await moveWithFractionalIndex(
-			t.packCategory,
+			Tables.PackCategory,
 			'pack_category_index',
 			'pack_category_id',
 			categoryId,
@@ -708,10 +720,14 @@ async function movePackCategory(req: ValidatedRequest<PackCategoryMove>, res: Re
 			{ user_id: userId }, // WHERE conditions
 		);
 
-		return successResponse(res, {
-			newIndex,
-			rebalanced,
-		}, 'Pack category moved successfully');
+		return successResponse(
+			res,
+			{
+				newIndex,
+				rebalanced,
+			},
+			'Pack category moved successfully',
+		);
 	} catch (err) {
 		logError('Move pack category failed', err, {
 			userId: req.userId,
@@ -727,7 +743,7 @@ async function moveCategoryToCloset(req: Request, res: Response) {
 		const { categoryId } = req.params;
 
 		// Get all items from the category to move to gear closet
-		const categoryItems = await knex(t.packItem)
+		const categoryItems = await knex(Tables.PackItem)
 			.select('*')
 			.where({ user_id: userId, pack_category_id: categoryId })
 			.orderByRaw('pack_item_index::NUMERIC');
@@ -737,7 +753,11 @@ async function moveCategoryToCloset(req: Request, res: Response) {
 
 		await deleteCategory(userId, categoryId);
 
-		return successResponse(res, { deletedId: categoryId }, 'Category moved to gear closet successfully');
+		return successResponse(
+			res,
+			{ deletedId: categoryId },
+			'Category moved to gear closet successfully',
+		);
 	} catch (err) {
 		return internalError(res, 'There was an error deleting your category.');
 	}
@@ -750,15 +770,23 @@ async function deleteCategoryAndItems(req: Request, res: Response) {
 
 		const trx = await knex.transaction();
 		try {
-			await trx(t.packItem).del().where({ user_id: userId, pack_category_id: categoryId });
-			await trx(t.packCategory).del().where({ user_id: userId, pack_category_id: categoryId });
+			await trx(Tables.PackItem)
+				.del()
+				.where({ user_id: userId, pack_category_id: categoryId });
+			await trx(Tables.PackCategory)
+				.del()
+				.where({ user_id: userId, pack_category_id: categoryId });
 			await trx.commit();
 		} catch (error) {
 			await trx.rollback();
 			throw new Error('Failed to delete category and items');
 		}
 
-		return successResponse(res, { deletedId: categoryId }, 'Category and items deleted successfully');
+		return successResponse(
+			res,
+			{ deletedId: categoryId },
+			'Category and items deleted successfully',
+		);
 	} catch (err) {
 		return internalError(res, 'There was an error deleting your pack items.');
 	}
@@ -785,7 +813,7 @@ async function getAvailablePacks(userId: string) {
 async function deleteCategory(user_id: string, pack_category_id: number | string) {
 	try {
 		// Delete ON CASCADE: pack_category -> pack_item
-		await knex(t.packCategory).del().where({ user_id, pack_category_id });
+		await knex(Tables.PackCategory).del().where({ user_id, pack_category_id });
 	} catch (err) {
 		throw new Error('Failed to delete category');
 	}

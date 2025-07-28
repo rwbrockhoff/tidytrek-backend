@@ -1,9 +1,9 @@
 import knex from '../db/connection.js';
-import { tables as t } from '../../knexfile.js';
+import { Tables } from '../db/tables.js';
 
 export const getUserProfileInfo = async (userId: string) => {
-	const profileInfo = await knex(t.user)
-		.leftJoin(t.userProfile, `${t.user}.user_id`, `${t.userProfile}.user_id`)
+	const profileInfo = await knex(Tables.User)
+		.leftJoin(Tables.UserProfile, `${Tables.User}.user_id`, `${Tables.UserProfile}.user_id`)
 		.select(
 			'first_name',
 			'trail_name',
@@ -13,10 +13,10 @@ export const getUserProfileInfo = async (userId: string) => {
 			'user_bio',
 			'user_location',
 		)
-		.where({ [`${t.user}.user_id`]: userId })
+		.where({ [`${Tables.User}.user_id`]: userId })
 		.first();
 
-	const socialLinks = await knex(t.socialLink)
+	const socialLinks = await knex(Tables.SocialLink)
 		.select('social_link_id', 'social_link_url')
 		.where({ user_id: userId });
 
@@ -32,7 +32,7 @@ export const getProfileAndPacks = async (userId: string, isPackOwner: boolean) =
 
 export const getPackThumbnailList = async (userId: string, isPackOwner: boolean) => {
 	const publicCondition = isPackOwner ? {} : { pack_public: true };
-	return await knex(t.pack)
+	return await knex(Tables.Pack)
 		.where({ user_id: userId, ...publicCondition })
 		.orderByRaw('pack_index::NUMERIC');
 };

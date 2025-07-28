@@ -1,14 +1,13 @@
-import dotenv from 'dotenv';
-dotenv.config();
 import { S3Client, DeleteObjectCommand } from '@aws-sdk/client-s3';
 import multer from 'multer';
 import multerS3 from 'multer-s3';
+import { validateEnvironment } from '../config/environment.js';
 
-// Express.MulterS3.File
+const env = validateEnvironment();
 
-const profilePhotoBucket = process.env.PROFILE_PHOTO_S3_BUCKET;
-const bannerPhotoBucket = process.env.BANNER_PHOTO_S3_BUCKET;
-const packPhotoBucket = process.env.PACK_PHOTO_S3_BUCKET;
+const profilePhotoBucket = env.PROFILE_PHOTO_S3_BUCKET;
+const bannerPhotoBucket = env.BANNER_PHOTO_S3_BUCKET;
+const packPhotoBucket = env.PACK_PHOTO_S3_BUCKET;
 
 const buckets = {
 	profilePhotoBucket,
@@ -32,15 +31,15 @@ interface PositionData {
 
 type BucketName = 'profilePhotoBucket' | 'bannerPhotoBucket' | 'packPhotoBucket';
 
-const bucketRegion = process.env.AWS_REGION;
-const accessKey = process.env.PP_S3_ACCESS_KEY;
-const secretAccessKey = process.env.PP_S3_SECRET_ACCESS_KEY;
-const photoUploadCloudfrontUrl = process.env.CLOUDFRONT_PHOTO_UPLOAD_URL ?? '';
+const bucketRegion = env.AWS_REGION;
+const accessKey = env.PP_S3_ACCESS_KEY;
+const secretAccessKey = env.PP_S3_SECRET_ACCESS_KEY;
+const photoUploadCloudfrontUrl = env.CLOUDFRONT_PHOTO_UPLOAD_URL;
 
 const s3 = new S3Client({
 	credentials: {
-		accessKeyId: accessKey ?? '',
-		secretAccessKey: secretAccessKey ?? '',
+		accessKeyId: accessKey,
+		secretAccessKey: secretAccessKey,
 	},
 	region: bucketRegion,
 });
@@ -55,7 +54,7 @@ export const s3UploadPhoto = (bucketName: BucketName) =>
 		},
 		storage: multerS3({
 			s3: s3,
-			bucket: buckets[bucketName] ?? '',
+			bucket: buckets[bucketName],
 			metadata: function (_req, file, cb) {
 				cb(null, { fieldName: file.fieldname });
 			},

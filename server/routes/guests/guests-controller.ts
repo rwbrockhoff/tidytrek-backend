@@ -1,7 +1,7 @@
 import knex from '../../db/connection.js';
 import { Request, Response } from 'express';
 import { Pack } from '../../types/packs/pack-types.js';
-import { tables as t } from '../../../knexfile.js';
+import { Tables } from '../../db/tables.js';
 import { getUserSettingsData } from '../../services/user-service.js';
 import {
 	getProfileAndPacks,
@@ -14,7 +14,7 @@ async function getPack(req: Request, res: Response) {
 	try {
 		const { packId } = req.params;
 
-		const pack: Pack = await knex(t.pack)
+		const pack: Pack = await knex(Tables.Pack)
 			.where({ pack_id: packId, pack_public: true })
 			.first();
 
@@ -57,7 +57,7 @@ async function getPack(req: Request, res: Response) {
 
 async function addPackViewCount({ pack_id, pack_views }: Pack) {
 	try {
-		return await knex(t.pack)
+		return await knex(Tables.Pack)
 			.update({ pack_views: pack_views + 1 })
 			.where({ pack_id });
 	} catch (err) {
@@ -90,7 +90,7 @@ async function getUserProfile(req: Request, res: Response) {
 		// User doesn't exist
 		if (!resolvedId) return notFound(res, 'User not found.');
 
-		const { public_profile } = await knex(t.userSettings)
+		const { public_profile } = await knex(Tables.UserSettings)
 			.select('public_profile')
 			.where({ user_id: resolvedId })
 			.first();
@@ -118,7 +118,7 @@ async function getUserProfile(req: Request, res: Response) {
 }
 
 async function getIdFromUsername(username: string) {
-	const result = await knex(t.userProfile).select('user_id').where({ username }).first();
+	const result = await knex(Tables.UserProfile).select('user_id').where({ username }).first();
 	return result?.user_id;
 }
 

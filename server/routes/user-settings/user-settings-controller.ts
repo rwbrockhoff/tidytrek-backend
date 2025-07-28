@@ -1,5 +1,5 @@
 import knex from '../../db/connection.js';
-import { tables as t } from '../../../knexfile.js';
+import { Tables } from '../../db/tables.js';
 import { Response } from 'express';
 import {
 	successResponse,
@@ -24,7 +24,7 @@ async function updateUserSettings(
 			return badRequest(res, NO_VALID_FIELDS_MESSAGE);
 		}
 
-		await knex(t.userSettings).update(req.validatedBody).where({ user_id: userId });
+		await knex(Tables.UserSettings).update(req.validatedBody).where({ user_id: userId });
 
 		return successResponse(res, null, 'Settings updated successfully.');
 	} catch (err) {
@@ -34,7 +34,7 @@ async function updateUserSettings(
 
 // Helper function for other controllers to get settings
 export async function getUserSettingsData(userId: string) {
-	return await knex(t.userSettings)
+	return await knex(Tables.UserSettings)
 		.select('public_profile', 'palette', 'dark_mode', 'weight_unit', 'currency_unit')
 		.where({ user_id: userId })
 		.first();

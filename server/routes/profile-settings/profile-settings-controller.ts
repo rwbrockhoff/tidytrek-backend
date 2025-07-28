@@ -1,5 +1,5 @@
 import knex from '../../db/connection.js';
-import { tables as t } from '../../../knexfile.js';
+import { Tables } from '../../db/tables.js';
 import { Request, Response } from 'express';
 import { MulterS3File } from '../../types/multer.js';
 import {
@@ -58,7 +58,7 @@ async function editProfileSettings(
 			if (!result.unique) return conflict(res, result.message || 'Username is not available');
 		}
 
-		await knex(t.userProfile).update(req.validatedBody).where({ user_id: userId });
+		await knex(Tables.UserProfile).update(req.validatedBody).where({ user_id: userId });
 
 		return successResponse(res, null, 'Profile updated successfully');
 	} catch (err) {
@@ -85,14 +85,14 @@ async function uploadProfilePhoto(req: Request, res: Response) {
 		);
 
 		// check for previous photo url
-		const { profile_photo_url: prevUrl } = await knex(t.userProfile)
+		const { profile_photo_url: prevUrl } = await knex(Tables.UserProfile)
 			.select('profile_photo_url')
 			.where({ user_id: userId })
 			.first();
 
 		if (prevUrl) await s3DeletePhoto(prevUrl);
 
-		await knex(t.userProfile).update({
+		await knex(Tables.UserProfile).update({
 			profile_photo_url,
 			profile_photo_s3_key: s3Key,
 			profile_photo_position: defaultPosition
@@ -117,7 +117,7 @@ async function deleteProfilePhoto(req: Request, res: Response) {
 	try {
 		const { userId } = req;
 
-		const { profile_photo_url } = await knex(t.userProfile)
+		const { profile_photo_url } = await knex(Tables.UserProfile)
 			.select('profile_photo_url')
 			.where({ user_id: userId })
 			.first();
@@ -126,7 +126,7 @@ async function deleteProfilePhoto(req: Request, res: Response) {
 		await s3DeletePhoto(profile_photo_url);
 
 		// delete from DB
-		await knex(t.userProfile)
+		await knex(Tables.UserProfile)
 			.update({
 				profile_photo_url: null,
 				profile_photo_s3_key: null,
@@ -155,14 +155,14 @@ async function uploadBannerPhoto(req: Request, res: Response) {
 		);
 
 		// check for previous photo url
-		const { banner_photo_url: prevUrl } = await knex(t.userProfile)
+		const { banner_photo_url: prevUrl } = await knex(Tables.UserProfile)
 			.select('banner_photo_url')
 			.where({ user_id: userId })
 			.first();
 
 		if (prevUrl) await s3DeletePhoto(prevUrl);
 
-		await knex(t.userProfile).update({
+		await knex(Tables.UserProfile).update({
 			banner_photo_url,
 			banner_photo_s3_key: s3Key,
 			banner_photo_position: defaultPosition
@@ -195,7 +195,7 @@ async function updateUsername(req: ValidatedRequest<UsernameUpdate>, res: Respon
 			if (!result.unique) return conflict(res, result.message || 'Username is not available');
 		}
 
-		await knex(t.userProfile)
+		await knex(Tables.UserProfile)
 			.update({ username: username || null, trail_name })
 			.where({ user_id: userId });
 		return successResponse(res, null, 'Username updated successfully');
@@ -219,7 +219,7 @@ async function addSocialLink(req: ValidatedRequest<SocialLinkCreate>, res: Respo
 		const { social_link_url } = req.validatedBody;
 
 		// Check if user has hit social link limit
-		const countResponse = await knex(t.socialLink)
+		const countResponse = await knex(Tables.SocialLink)
 			.count()
 			.where({ user_id: userId })
 			.first();
@@ -230,7 +230,7 @@ async function addSocialLink(req: ValidatedRequest<SocialLinkCreate>, res: Respo
 				.json({ error: 'You already have four links in your profile' });
 		}
 
-		await knex(t.socialLink).insert({
+		await knex(Tables.SocialLink).insert({
 			user_id: userId,
 			social_link_url,
 		});
@@ -246,7 +246,7 @@ async function deleteSocialLink(req: Request, res: Response) {
 		const { userId } = req;
 		const { socialLinkId } = req.params;
 
-		await knex(t.socialLink)
+		await knex(Tables.SocialLink)
 			.del()
 			.where({ user_id: userId, social_link_id: socialLinkId });
 
@@ -258,7 +258,7 @@ async function deleteSocialLink(req: Request, res: Response) {
 
 async function isUniqueUsername(username: string, userId: string) {
 	if (username && username.length) {
-		const existingUsername = await knex(t.userProfile)
+		const existingUsername = await knex(Tables.UserProfile)
 			.select('username')
 			.whereNot('user_id', '=', userId)
 			.andWhere({ username })

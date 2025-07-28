@@ -8,12 +8,15 @@ import {
 	HTTP_STATUS,
 	ErrorCode,
 } from '../../utils/error-response.js';
+import { validateEnvironment } from '../../config/environment.js';
+
+const env = validateEnvironment();
 
 const execAsync = promisify(exec);
 
 export const resetTestDatabase = async (_req: Request, res: Response) => {
 	try {
-		if (process.env.NODE_ENV !== 'test') {
+		if (env.NODE_ENV !== 'test') {
 			return forbidden(res, 'Test reset only available in test environment');
 		}
 
@@ -49,7 +52,7 @@ export const resetTestDatabase = async (_req: Request, res: Response) => {
 
 export const resetPackData = async (_req: Request, res: Response) => {
 	try {
-		if (process.env.NODE_ENV !== 'test') {
+		if (env.NODE_ENV !== 'test') {
 			return forbidden(res, 'Test reset only available in test environment');
 		}
 

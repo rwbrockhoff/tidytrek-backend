@@ -1,6 +1,7 @@
-const environment = process.env.NODE_ENV;
 import knex from 'knex';
 import initialConfig from '../../knexfile.js';
-// @ts-expect-error ENV coming from script
-const config = initialConfig[environment];
+import { validateEnvironment } from '../config/environment.js';
+
+const env = validateEnvironment();
+const config = initialConfig[env.NODE_ENV];
 export default knex(config);

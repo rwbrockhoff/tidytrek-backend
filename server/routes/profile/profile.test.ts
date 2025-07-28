@@ -4,7 +4,7 @@ const request = initialRequest(server);
 import knex from '../../db/connection.js';
 import { loginMockUser } from '../../utils/test-utils.js';
 import { mockUser } from '../../db/mock/mock-data.js';
-import { tables as t } from '../../../knexfile.js';
+import { Tables } from '../../db/tables.js';
 
 beforeEach(async () => {
 	await knex.migrate.rollback();
@@ -50,9 +50,9 @@ describe('Profile Routes:', () => {
 		await userAgent.post('/packs/').send(); // Creates new pack (private by default)
 
 		// Set one pack to public, one to private
-		const packs = await knex(t.pack).where({ user_id: mockUser.userId });
-		await knex(t.pack).update({ pack_public: true }).where({ pack_id: packs[0].pack_id });
-		await knex(t.pack)
+		const packs = await knex(Tables.Pack).where({ user_id: mockUser.userId });
+		await knex(Tables.Pack).update({ pack_public: true }).where({ pack_id: packs[0].pack_id });
+		await knex(Tables.Pack)
 			.update({ pack_public: false })
 			.where({ pack_id: packs[1].pack_id });
 

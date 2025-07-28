@@ -1,20 +1,20 @@
 import type { Knex } from 'knex';
-import { tables as t } from '../../../knexfile.js';
+import { Tables } from '../tables.js';
 import { WeightUnit, WEIGHT_UNIT_VALUES } from '../../types/units.js';
 
 export async function up(knex: Knex): Promise<void> {
-	await knex.schema.createTable(t.packItem, (table) => {
+	await knex.schema.createTable(Tables.PackItem, (table) => {
 		table.increments('pack_item_id').unsigned().primary();
 		table.uuid('user_id').unsigned().notNullable();
-		table.foreign('user_id').references('user_id').inTable(t.user).onDelete('CASCADE');
+		table.foreign('user_id').references('user_id').inTable(Tables.User).onDelete('CASCADE');
 		table.integer('pack_id').unsigned().nullable();
-		table.foreign('pack_id').references('pack_id').inTable(t.pack).onDelete('CASCADE');
+		table.foreign('pack_id').references('pack_id').inTable(Tables.Pack).onDelete('CASCADE');
 
 		table.integer('pack_category_id').unsigned().nullable();
 		table
 			.foreign('pack_category_id')
 			.references('pack_category_id')
-			.inTable(t.packCategory)
+			.inTable(Tables.PackCategory)
 			.onDelete('CASCADE');
 		table.string('pack_item_index', 20).notNullable().defaultTo('0');
 		table.index('pack_item_index');
@@ -39,5 +39,5 @@ export async function up(knex: Knex): Promise<void> {
 }
 
 export async function down(knex: Knex): Promise<void> {
-	await knex.schema.dropTable(t.packItem);
+	await knex.schema.dropTable(Tables.PackItem);
 }

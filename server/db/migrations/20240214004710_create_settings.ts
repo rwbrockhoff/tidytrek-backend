@@ -1,12 +1,12 @@
 import type { Knex } from 'knex';
-import { tables as t } from '../../../knexfile.js';
+import { Tables } from '../tables.js';
 import { DEFAULT_PALETTE } from '../../utils/constants.js';
 
 export async function up(knex: Knex): Promise<void> {
-	await knex.schema.createTable(t.userSettings, (table) => {
+	await knex.schema.createTable(Tables.UserSettings, (table) => {
 		table.increments('user_settings_id').unsigned().primary();
 		table.uuid('user_id').unsigned().notNullable();
-		table.foreign('user_id').references('user_id').inTable(t.user).onDelete('CASCADE');
+		table.foreign('user_id').references('user_id').inTable(Tables.User).onDelete('CASCADE');
 		table.boolean('public_profile').defaultTo(true).notNullable();
 		table.string('palette', 25).defaultTo(DEFAULT_PALETTE).notNullable();
 		table.boolean('dark_mode').defaultTo(false).notNullable();
@@ -20,5 +20,5 @@ export async function up(knex: Knex): Promise<void> {
 }
 
 export async function down(knex: Knex): Promise<void> {
-	await knex.schema.dropTable(t.userSettings);
+	await knex.schema.dropTable(Tables.UserSettings);
 }

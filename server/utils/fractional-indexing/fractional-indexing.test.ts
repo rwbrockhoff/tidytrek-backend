@@ -10,7 +10,7 @@ import {
 	type WhereConditions,
 } from './fractional-indexing.js';
 import knex from '../../db/connection.js';
-import { tables as t } from '../../../knexfile.js';
+import { Tables } from '../../db/tables.js';
 import {
 	testUserId,
 	gearClosetConditions,
@@ -23,7 +23,7 @@ beforeEach(async () => {
 	await knex.migrate.rollback();
 	await knex.migrate.latest();
 	await knex.seed.run();
-	await knex(t.packItem).where('user_id', testUserId).del();
+	await knex(Tables.PackItem).where('user_id', testUserId).del();
 });
 
 afterAll(async () => {
@@ -71,7 +71,7 @@ describe('Database Operations', () => {
 	describe('getNextAppendIndex', () => {
 		it('should return default for empty table', async () => {
 			const result = await getNextAppendIndex(
-				t.packItem,
+				Tables.PackItem,
 				'pack_item_index' as IndexColumn,
 				gearClosetConditions as WhereConditions,
 			);
@@ -79,7 +79,7 @@ describe('Database Operations', () => {
 		});
 
 		it('should calculate next after existing items', async () => {
-			await knex(t.packItem).insert(
+			await knex(Tables.PackItem).insert(
 				createTestItem({
 					pack_item_index: '1500',
 					pack_id: null,
@@ -88,7 +88,7 @@ describe('Database Operations', () => {
 			);
 
 			const result = await getNextAppendIndex(
-				t.packItem,
+				Tables.PackItem,
 				'pack_item_index' as IndexColumn,
 				gearClosetConditions as WhereConditions,
 			);
@@ -98,12 +98,12 @@ describe('Database Operations', () => {
 
 	describe('moveWithFractionalIndex', () => {
 		it('should move item with midpoint calculation', async () => {
-			const [item] = await knex(t.packItem)
+			const [item] = await knex(Tables.PackItem)
 				.insert(createTestItem())
 				.returning('pack_item_id');
 
 			const result = await moveWithFractionalIndex(
-				t.packItem,
+				Tables.PackItem,
 				'pack_item_index' as IndexColumn,
 				'pack_item_id',
 				item.pack_item_id,
@@ -115,7 +115,7 @@ describe('Database Operations', () => {
 			expect(result.newIndex).toBe('2000');
 			expect(result.rebalanced).toBe(false);
 
-			const updatedItem = await knex(t.packItem)
+			const updatedItem = await knex(Tables.PackItem)
 				.where('pack_item_id', item.pack_item_id)
 				.first();
 			expect(updatedItem.pack_item_index).toBe('2000');
@@ -123,13 +123,13 @@ describe('Database Operations', () => {
 
 		it('should trigger rebalancing on invalid ordering', async () => {
 			const items = createTestItems(2);
-			await knex(t.packItem).insert(items);
-			const [item] = await knex(t.packItem)
+			await knex(Tables.PackItem).insert(items);
+			const [item] = await knex(Tables.PackItem)
 				.where(packConditions)
 				.returning('pack_item_id');
 
 			const result = await moveWithFractionalIndex(
-				t.packItem,
+				Tables.PackItem,
 				'pack_item_index' as IndexColumn,
 				'pack_item_id',
 				item.pack_item_id,
@@ -142,14 +142,14 @@ describe('Database Operations', () => {
 		});
 
 		it('should trigger rebalancing on high precision', async () => {
-			const [item] = await knex(t.packItem)
+			const [item] = await knex(Tables.PackItem)
 				.insert(createTestItem())
 				.returning('pack_item_id');
 			const highPrecisionPrev = '1000.1234567890123';
 			const highPrecisionNext = '1000.1234567890124';
 
 			const result = await moveWithFractionalIndex(
-				t.packItem,
+				Tables.PackItem,
 				'pack_item_index' as IndexColumn,
 				'pack_item_id',
 				item.pack_item_id,
@@ -169,15 +169,15 @@ describe('Database Operations', () => {
 				createTestItem({ pack_item_name: 'Item 2', pack_item_index: '100.1234568' }),
 				createTestItem({ pack_item_name: 'Item 3', pack_item_index: '100.1234569' }),
 			];
-			await knex(t.packItem).insert(items);
+			await knex(Tables.PackItem).insert(items);
 
 			await rebalanceIndexes(
-				t.packItem,
+				Tables.PackItem,
 				'pack_item_index' as IndexColumn,
 				packConditions as WhereConditions,
 			);
 
-			const rebalancedItems = await knex(t.packItem)
+			const rebalancedItems = await knex(Tables.PackItem)
 				.where(packConditions)
 				.orderByRaw('pack_item_index::NUMERIC ASC');
 
@@ -187,19 +187,19 @@ describe('Database Operations', () => {
 		});
 
 		it('should exclude specified item', async () => {
-			const [excludedItem] = await knex(t.packItem)
+			const [excludedItem] = await knex(Tables.PackItem)
 				.insert(createTestItem({ pack_item_index: '500' }))
 				.returning('pack_item_id');
-			await knex(t.packItem).insert(createTestItem({ pack_item_index: '600' }));
+			await knex(Tables.PackItem).insert(createTestItem({ pack_item_index: '600' }));
 
 			await rebalanceIndexes(
-				t.packItem,
+				Tables.PackItem,
 				'pack_item_index' as IndexColumn,
 				packConditions as WhereConditions,
 				excludedItem.pack_item_id,
 			);
 
-			const excluded = await knex(t.packItem)
+			const excluded = await knex(Tables.PackItem)
 				.where('pack_item_id', excludedItem.pack_item_id)
 				.first();
 			expect(excluded.pack_item_index.toString()).toBe('500');
@@ -209,11 +209,11 @@ describe('Database Operations', () => {
 	describe('bulkMoveToGearCloset', () => {
 		it('should move multiple items to gear closet', async () => {
 			const items = createTestItems(2);
-			await knex(t.packItem).insert(items);
+			await knex(Tables.PackItem).insert(items);
 
 			await bulkMoveToGearCloset(items, testUserId);
 
-			const movedItems = await knex(t.packItem)
+			const movedItems = await knex(Tables.PackItem)
 				.where(gearClosetConditions)
 				.orderByRaw('pack_item_index::NUMERIC ASC');
 
