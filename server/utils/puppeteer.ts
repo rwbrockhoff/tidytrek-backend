@@ -62,7 +62,7 @@ export async function packScraper(packUrl: string) {
 							packItem.querySelector('.lpWeightCell > .lpWeight')?.textContent?.trim(),
 						) || 0;
 
-					const pack_item_unit =
+					const pack_item_weight_unit =
 						packItem
 							.querySelector('.lpWeightCell > .lpUnitSelect > .lpDisplay')
 							?.textContent?.trim() || 0;
@@ -97,7 +97,7 @@ export async function packScraper(packUrl: string) {
 						pack_item_description,
 						pack_item_quantity,
 						pack_item_weight,
-						pack_item_unit,
+						pack_item_weight_unit,
 						pack_item_price,
 						worn_weight,
 						consumable,

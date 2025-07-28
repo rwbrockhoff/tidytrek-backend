@@ -1,4 +1,5 @@
 import { type MockPackItem } from '../../types/packs/pack-types.js';
+import { WeightUnit } from '../../types/units.js';
 
 // Test user for e2e tests
 export const e2eTestUser = {
@@ -40,7 +41,7 @@ export const e2eTestPackItems = [
 		pack_item_description: '20 F Version with overstuff',
 		pack_item_quantity: 1,
 		pack_item_weight: 1.5,
-		pack_item_unit: 'lb',
+		pack_item_weight_unit: WeightUnit.lb,
 		pack_item_price: 225,
 		pack_item_index: '2000',
 	},

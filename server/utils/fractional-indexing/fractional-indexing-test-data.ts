@@ -1,5 +1,6 @@
 import { MockPackItem } from '../../types/packs/pack-types.js';
 import { mockUser } from '../../db/mock/mock-data.js';
+import { WeightUnit } from '../../types/units.js';
 
 export const testUserId = mockUser.userId;
 export const testPackId = 1;
@@ -11,7 +12,7 @@ export const mockPackItem: Omit<MockPackItem, 'pack_item_index'> = {
 	pack_id: testPackId,
 	pack_category_id: 1,
 	pack_item_weight: 1,
-	pack_item_unit: 'oz',
+	pack_item_weight_unit: WeightUnit.oz,
 	pack_item_quantity: 1,
 };
 

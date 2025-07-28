@@ -1,3 +1,5 @@
+import { WeightUnit } from '../units.js';
+
 export type PackItem = {
 	pack_item_id: number;
 	user_id: string;
@@ -8,7 +10,7 @@ export type PackItem = {
 	pack_item_description?: string | null;
 	pack_item_quantity?: number;
 	pack_item_weight?: number | null;
-	pack_item_unit?: string;
+	pack_item_weight_unit?: WeightUnit;
 	pack_item_price?: number | null;
 	pack_item_url?: string | null;
 	worn_weight?: boolean;

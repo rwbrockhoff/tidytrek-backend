@@ -1,17 +1,18 @@
 import { z } from 'zod';
+import { WeightUnit, WEIGHT_UNIT_VALUES } from '../../types/units.js';
 
 export const GearClosetItemUpdateSchema = z
 	.object({
 		pack_item_id: z.number().int().positive().optional(),
-		pack_id: z.number().int().positive().nullable().optional(),
-		pack_category_id: z.number().int().positive().nullable().optional(),
+		pack_id: z.number().int().positive().nullish(),
+		pack_category_id: z.number().int().positive().nullish(),
 		pack_item_index: z.string().optional(),
 		pack_item_name: z.string().max(200).optional(),
-		pack_item_description: z.string().max(500).optional().nullish(),
+		pack_item_description: z.string().max(500).nullish(),
 		pack_item_weight: z.coerce.number().min(0).optional(),
-		pack_item_unit: z.string().max(10).optional(),
+		pack_item_weight_unit: z.enum(WEIGHT_UNIT_VALUES).default(WeightUnit.oz).optional(),
 		pack_item_quantity: z.coerce.number().int().min(1).optional(),
-		pack_item_url: z.string().optional().nullish(),
+		pack_item_url: z.string().nullish(),
 		worn_weight: z.boolean().optional(),
 		consumable: z.boolean().optional(),
 		favorite: z.boolean().optional(),

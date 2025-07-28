@@ -1,4 +1,5 @@
 import { type MockPackItem } from '../../types/packs/pack-types.js';
+import { WeightUnit } from '../../types/units.js';
 
 const mockUserId = '60094a8e-a1fe-423a-abca-637381b33950';
 const mockUserId2 = '670098f4-4c1e-40a4-8896-e0f8968a90ac';
@@ -55,7 +56,7 @@ export const mockPackItems: MockPackItem[] = [
 		pack_item_name: 'Durston Kakwa',
 		pack_item_description: '40 Liter UL Pack',
 		pack_item_weight: 28,
-		pack_item_unit: 'oz',
+		pack_item_weight_unit: WeightUnit.oz,
 		pack_item_quantity: 1,
 		pack_item_index: '1000',
 		user_id: mockUserId,
@@ -64,7 +65,7 @@ export const mockPackItems: MockPackItem[] = [
 		pack_item_name: 'X-Mid 2',
 		pack_item_description: '2-person regular version',
 		pack_item_weight: 40,
-		pack_item_unit: 'oz',
+		pack_item_weight_unit: WeightUnit.oz,
 		pack_item_quantity: 1,
 		pack_item_index: '2000',
 		user_id: mockUserId,
@@ -73,7 +74,7 @@ export const mockPackItems: MockPackItem[] = [
 		pack_item_name: 'Nemo Tensor Insulated',
 		pack_item_description: 'Sleeping Pad',
 		pack_item_weight: 1,
-		pack_item_unit: 'lb',
+		pack_item_weight_unit: WeightUnit.lb,
 		pack_item_quantity: 1,
 		pack_item_index: '3000',
 		user_id: mockUserId,
@@ -84,7 +85,7 @@ export const notSeededPackItem = {
 	pack_item_name: 'Petz Headlamp',
 	pack_item_description: 'Rechargeable',
 	pack_item_weight: 3,
-	pack_item_unit: 'oz',
+	pack_item_weight_unit: WeightUnit.oz,
 	pack_item_quantity: 1,
 };
 
@@ -101,7 +102,7 @@ export const mockGearClosetItems: MockPackItem[] = [
 		pack_item_name: 'REI Flash',
 		pack_item_description: 'Old 55 liter pack',
 		pack_item_weight: 36,
-		pack_item_unit: 'oz',
+		pack_item_weight_unit: WeightUnit.oz,
 		pack_item_quantity: 1,
 		pack_item_index: '1000',
 		user_id: mockUserId,
@@ -110,7 +111,7 @@ export const mockGearClosetItems: MockPackItem[] = [
 		pack_item_name: 'Big Agnes Copper Spur',
 		pack_item_description: '1-person tent',
 		pack_item_weight: 2.5,
-		pack_item_unit: 'lb',
+		pack_item_weight_unit: WeightUnit.lb,
 		pack_item_quantity: 1,
 		pack_item_index: '2000',
 		user_id: mockUserId,
@@ -119,7 +120,7 @@ export const mockGearClosetItems: MockPackItem[] = [
 		pack_item_name: 'Klymit Insulated Pad',
 		pack_item_description: 'Sleeping Pad',
 		pack_item_weight: 18,
-		pack_item_unit: 'oz',
+		pack_item_weight_unit: WeightUnit.oz,
 		pack_item_quantity: 1,
 		pack_item_index: '3000',
 		user_id: mockUserId,
@@ -156,7 +157,7 @@ export const mockPrivatePackItems: MockPackItem[] = [
 		pack_item_name: 'Water Bottle',
 		pack_item_description: '32oz Nalgene',
 		pack_item_weight: 6,
-		pack_item_unit: 'oz',
+		pack_item_weight_unit: WeightUnit.oz,
 		pack_item_quantity: 1,
 		pack_item_index: '1000',
 		user_id: mockPrivateUserId,
@@ -165,7 +166,7 @@ export const mockPrivatePackItems: MockPackItem[] = [
 		pack_item_name: 'First Aid Kit',
 		pack_item_description: 'Basic supplies',
 		pack_item_weight: 4,
-		pack_item_unit: 'oz',
+		pack_item_weight_unit: WeightUnit.oz,
 		pack_item_quantity: 1,
 		pack_item_index: '2000',
 		user_id: mockPrivateUserId,

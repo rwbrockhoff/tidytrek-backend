@@ -1,5 +1,6 @@
 import type { Knex } from 'knex';
 import { tables as t } from '../../../knexfile.js';
+import { WeightUnit, WEIGHT_UNIT_VALUES } from '../../types/units.js';
 
 export async function up(knex: Knex): Promise<void> {
 	await knex.schema.createTable(t.packItem, (table) => {
@@ -21,7 +22,10 @@ export async function up(knex: Knex): Promise<void> {
 		table.text('pack_item_description').nullable();
 		table.integer('pack_item_quantity').defaultTo(1).notNullable();
 		table.decimal('pack_item_weight').nullable().defaultTo(0);
-		table.string('pack_item_unit', 10).notNullable().defaultTo('oz');
+		table.string('pack_item_weight_unit', 10)
+			.notNullable()
+			.defaultTo(WeightUnit.oz)
+			.checkIn(WEIGHT_UNIT_VALUES);
 		table.decimal('pack_item_price', 10, 4).nullable().defaultTo(0);
 		table.text('pack_item_url').nullable();
 		table.integer('pack_item_link_clicks').defaultTo(0).notNullable();
