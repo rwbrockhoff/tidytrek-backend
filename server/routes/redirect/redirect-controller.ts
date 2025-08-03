@@ -2,20 +2,7 @@ import { Response } from 'express';
 import { ValidatedRequest } from '../../utils/validation.js';
 import { RedirectRequest } from './redirect-schemas.js';
 import { successResponse, badRequest } from '../../utils/error-response.js';
-
-const TRUSTED_DOMAINS = [
-	'amazon.com',
-	'rei.com',
-	'patagonia.com',
-	'backcountry.com',
-	'cotopaxi.com',
-	'garagegrowngear.com',
-	'youtube.com',
-	'instagram.com',
-	'alltrails.com',
-	'lighterpack.com',
-	'decathalon.com',
-];
+import { TRUSTED_DOMAINS } from '../../config/trusted-domains.js';
 
 async function handleRedirect(req: ValidatedRequest<RedirectRequest>, res: Response) {
 	try {
