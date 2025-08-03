@@ -50,7 +50,7 @@ jobs:
           remote_user: ${{ secrets.DEPLOY_USER }}
           remote_key: ${{ secrets.SSH_PRIVATE_KEY }}
 
-      - name: Restart Server via PM2
+      - name: Install Dependencies and Restart Server
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.DEPLOY_HOST }}
@@ -58,7 +58,8 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             cd ${{ secrets.DEPLOY_PATH }}
-            /usr/local/bin/pm2 restart tidytrek
+            npm ci --omit=dev
+            npm run pm2:restart
 
       - name: Revoke Runner IP Addresses
         run: |
