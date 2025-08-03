@@ -1,22 +1,21 @@
 # 🥾 TidyTrek Backend API
 
-> Tidytrek API for backpacking gear management.
+## Overview
 
-### Additional Tidytrek Repos
+Node.js REST API for backpacking gear management with fractional indexing, web scraping, and AWS S3 integration. Features PostgreSQL database, JWT authentication, and comprehensive testing with production deployment on AWS.
 
-- **Backend** (current repo)
+**Live API**: [TidyTrek Backend](https://api.tidytrek.co/)
+
+## Related Repos
 - **[Frontend](https://github.com/rwbrockhoff/tidytrek-frontend)** - React app
 - **[Landing](https://github.com/rwbrockhoff/tt-landing)** - Marketing site
-- **[Live App](https://tidytrek.co)** - Production website
 
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.3-blue.svg)](https://typescriptlang.org/)
-[![Node.js](https://img.shields.io/badge/Node.js-22-green.svg)](https://nodejs.org/)
-[![Express](https://img.shields.io/badge/Express-4.18-lightgrey.svg)](https://expressjs.com/)
-[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-blue.svg)](https://postgresql.org/)
+## Tech Stack
 
-### Overview
-
-A Node.js API for managing backpacking gear. Built with Express, TypeScript, and PostgreSQL. Includes authentication, database migrations, testing, and AWS deployment.
+**Core**: Node.js 22, TypeScript (strict), Express, PostgreSQL  
+**Database**: Knex.js migrations, Supabase auth  
+**Infrastructure**: AWS S3 + CloudFront, Docker, Sentry monitoring  
+**Testing**: Vitest + Supertest with separate test DB
 
 ## Key Features
 
