@@ -1,11 +1,11 @@
 import type { Knex } from 'knex';
-import { tables as t } from '../../../knexfile.js';
+import { Tables } from '../tables.js';
 
 export async function up(knex: Knex): Promise<void> {
-	await knex.schema.createTable(t.pack, (table) => {
+	await knex.schema.createTable(Tables.Pack, (table) => {
 		table.increments('pack_id').unsigned().primary();
 		table.uuid('user_id').unsigned().notNullable();
-		table.foreign('user_id').references('user_id').inTable(t.user).onDelete('CASCADE');
+		table.foreign('user_id').references('user_id').inTable(Tables.User).onDelete('CASCADE');
 		table.string('pack_index', 20).notNullable().defaultTo('0');
 		table.index('pack_index');
 		table.string('pack_name', 100).notNullable();
@@ -21,8 +21,11 @@ export async function up(knex: Knex): Promise<void> {
 		table.string('pack_url_name', 100).nullable();
 		table.text('pack_url').nullable();
 		table.text('pack_photo_url').nullable();
+		table.string('pack_photo_s3_key', 500).nullable();
+		table.json('pack_photo_position').nullable();
 		table.integer('pack_views').defaultTo(0).notNullable();
 		table.integer('pack_bookmark_count').defaultTo(0).notNullable();
+		table.integer('pack_link_clicks').defaultTo(0).notNullable();
 		table.timestamp('created_at').notNullable().defaultTo(knex.fn.now());
 		table.timestamp('updated_at').nullable().defaultTo(knex.fn.now());
 		table.index(['user_id', 'pack_public']);
@@ -30,5 +33,5 @@ export async function up(knex: Knex): Promise<void> {
 }
 
 export async function down(knex: Knex): Promise<void> {
-	await knex.schema.dropTable(t.pack);
+	await knex.schema.dropTable(Tables.Pack);
 }

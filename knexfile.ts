@@ -1,18 +1,10 @@
 import dotenv from 'dotenv';
+import fs from 'fs';
 dotenv.config({
 	path: process.env.NODE_ENV === 'production' ? 'production.env' : 'dev.env',
 });
 const dbName = 'tidytrek_db';
 
-export const tables = {
-	user: 'user',
-	pack: 'pack',
-	packCategory: 'pack_category',
-	packItem: 'pack_item',
-	userSettings: 'user_settings',
-	socialLink: 'social_link',
-	userProfile: 'user_profile',
-} as const;
 
 export default {
 	development: {
@@ -43,7 +35,11 @@ export default {
 			port: 5432,
 			user: `${process.env.PRODUCTION_DB_USER}`,
 			password: `${process.env.PRODUCTION_DB_PASSWORD}`,
-			ssl: true,
+			// Use AWS RDS certificate for secure SSL connection
+			ssl: process.env.NODE_ENV === 'production' ? {
+				ca: fs.readFileSync('/opt/rds-certs/rds-ca-2019-root.pem'),
+				rejectUnauthorized: true,
+			} : true,
 		},
 		migrations: {
 			directory: `${process.cwd()}/server/db/migrations`,

@@ -2,8 +2,8 @@ import server from '../../server.js';
 import initialRequest from 'supertest';
 const request = initialRequest(server);
 import knex from '../../db/connection.js';
-import { loginMockUser, registerNewUser } from '../../utils/testUtils.js';
-import { mockUser, notSeededUser } from '../../db/mock/mockData.js';
+import { loginMockUser, registerNewUser } from '../../utils/test-utils.js';
+import { mockUserAuth, notSeededUser } from '../../db/mock/mock-data.js';
 
 beforeEach(async () => {
 	await knex.migrate.rollback();
@@ -33,29 +33,29 @@ describe('Auth Routes: ', () => {
 		const response = await userAgent.get('/packs/').send();
 
 		expect(response.status).toBe(200);
-		expect(response.body).toHaveProperty('pack');
+		expect(response.body.data).toHaveProperty('pack');
 	});
 
 	it('POST /register -> Should create a default category and pack item', async () => {
 		const userAgent = await registerNewUser();
 		const response = await userAgent.get('/packs/').send();
-		const { categories } = response.body;
+		const { categories } = response.body.data;
 
 		expect(response.status).toBe(200);
-		expect(response.body).toHaveProperty('categories');
+		expect(response.body.data).toHaveProperty('categories');
 		expect(categories[0].packItems).toHaveLength(1);
 	});
 
 	it('POST /register -> Should gracefully handle existing user trying to register', async () => {
 		const userAgent = await loginMockUser();
-		const response = await userAgent.post('/auth/register').send(mockUser);
+		const response = await userAgent.post('/auth/register').send(mockUserAuth);
 
 		expect(response.statusCode).toEqual(200);
 	});
 
 	it('POST /login -> Should allow registered users to log in', async () => {
 		const userAgent = await loginMockUser();
-		const response = await userAgent.post('/auth/login').send(mockUser);
+		const response = await userAgent.post('/auth/login').send(mockUserAuth);
 
 		expect(response.statusCode).toEqual(200);
 	});

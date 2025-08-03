@@ -1,11 +1,15 @@
+import { validateEnvironment } from '../config/environment.js';
+
+const env = validateEnvironment();
+
 export const DEFAULT_PALETTE_COLOR = 'palette-01';
-export const DEFAULT_THEME_NAME = 'earth-tones';
+export const DEFAULT_PALETTE = 'tidytrek';
 
 export const cookieName = 'tidytrek_token';
 export const supabaseCookieName = 'supabase_refresh';
 
 export const domainName =
-	process.env.NODE_ENV === 'production' ? '.tidytrek.co' : undefined;
+	env.NODE_ENV === 'production' ? '.tidytrek.co' : undefined;
 
 export const cookieOptions = {
 	httpOnly: true,

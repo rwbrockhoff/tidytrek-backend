@@ -1,6 +1,6 @@
 import { Knex } from 'knex';
-import { type MockPackCategory } from '../../types/packs/packTypes.js';
-import { tables as t } from '../../../knexfile.js';
+import { type MockPackCategory } from '../../types/packs/pack-types.js';
+import { Tables } from '../tables.js';
 import { DEFAULT_PALETTE_COLOR } from '../../utils/constants.js';
 import {
 	e2eTestUser,
@@ -13,25 +13,26 @@ import {
 	e2eClothingItems,
 	e2eKitchenItems,
 	e2eGearClosetItems,
-} from '../test/testData.js';
+} from '../test/test-data.js';
+import { packFields } from '../../routes/pack/pack-schemas.js';
 
 export async function seed(knex: Knex): Promise<void> {
 	console.log('Seeding E2E pack data...');
 
 	// Remove previous data
-	await knex(t.packItem).where('user_id', e2eTestUser.userId).del();
-	await knex(t.packCategory).where('user_id', e2eTestUser.userId).del();
-	await knex(t.pack).where('user_id', e2eTestUser.userId).del();
+	await knex(Tables.PackItem).where('user_id', e2eTestUser.userId).del();
+	await knex(Tables.PackCategory).where('user_id', e2eTestUser.userId).del();
+	await knex(Tables.Pack).where('user_id', e2eTestUser.userId).del();
 
 	// Create basic test pack
-	const [testPack] = await knex(t.pack)
+	const [testPack] = await knex(Tables.Pack)
 		.insert({
 			...e2eTestPack,
 			user_id: e2eTestUser.userId,
 		})
-		.returning('*');
+		.returning(packFields);
 
-	const [testPackCategory] = await knex(t.packCategory)
+	const [testPackCategory] = await knex(Tables.PackCategory)
 		.insert({
 			...e2eTestCategory,
 			user_id: e2eTestUser.userId,
@@ -47,15 +48,15 @@ export async function seed(knex: Knex): Promise<void> {
 		user_id: e2eTestUser.userId,
 	}));
 
-	await knex(t.packItem).insert(testPackItemsWithIds);
+	await knex(Tables.PackItem).insert(testPackItemsWithIds);
 
 	// Create multi-category pack
-	const [multiPack] = await knex(t.pack)
+	const [multiPack] = await knex(Tables.Pack)
 		.insert({
 			...e2eMultiCategoryPack,
 			user_id: e2eTestUser.userId,
 		})
-		.returning('*');
+		.returning(packFields);
 
 	const categoriesToInsert: MockPackCategory[] = e2eTestCategories.map((category) => ({
 		...category,
@@ -64,7 +65,7 @@ export async function seed(knex: Knex): Promise<void> {
 		pack_category_color: DEFAULT_PALETTE_COLOR,
 	}));
 
-	const createdCategories = await knex(t.packCategory)
+	const createdCategories = await knex(Tables.PackCategory)
 		.insert(categoriesToInsert)
 		.returning('*');
 
@@ -96,7 +97,7 @@ export async function seed(knex: Knex): Promise<void> {
 		user_id: e2eTestUser.userId,
 	}));
 
-	await knex(t.packItem).insert([
+	await knex(Tables.PackItem).insert([
 		...big3ItemsWithIds,
 		...clothingItemsWithIds,
 		...kitchenItemsWithIds,

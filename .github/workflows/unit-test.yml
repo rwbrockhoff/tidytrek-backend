@@ -1,0 +1,57 @@
+name: Unit Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  unit-test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: tidytrek_db_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+      - name: Install modules
+        run: npm ci
+      - name: Build application
+        run: npm run build
+      - name: Run tests
+        run: npm test
+        env:
+          NODE_ENV: test
+          APP_SECRET: ${{ secrets.APP_SECRET }}
+          COOKIE_SECRET: ${{ secrets.COOKIE_SECRET }}
+          FRONTEND_URL: http://localhost:5173
+          FRONTEND_TEST_URL: http://localhost:5174
+          LANDING_PAGE_URL: https://tidytrek.co
+          SUPABASE_CLIENT: ${{ secrets.SUPABASE_CLIENT }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+          SUPABASE_PRIVATE_KEY: ${{ secrets.SUPABASE_PRIVATE_KEY }}
+          PROFILE_PHOTO_S3_BUCKET: test-bucket
+          BANNER_PHOTO_S3_BUCKET: test-bucket
+          PACK_PHOTO_S3_BUCKET: test-bucket
+          AWS_REGION: us-east-1
+          PP_S3_ACCESS_KEY: test-key
+          PP_S3_SECRET_ACCESS_KEY: test-secret
+          CLOUDFRONT_PHOTO_UPLOAD_URL: https://test.cloudfront.net

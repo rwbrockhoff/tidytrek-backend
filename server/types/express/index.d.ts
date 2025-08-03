@@ -1,9 +1,9 @@
-import { UserAttachedToRequest } from '../server/serverTypes.js';
+import { UserAttachedToRequest } from '../server/server-types.ts';
 // to make the file a module and avoid the TypeScript error
 export {};
 
-declare global {
-	namespace Express {
-		export interface Request extends UserAttachedToRequest {}
+declare module 'express-serve-static-core' {
+	interface Request extends UserAttachedToRequest {
+		validatedBody?: unknown;
 	}
 }

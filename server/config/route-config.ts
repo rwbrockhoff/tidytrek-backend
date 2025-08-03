@@ -1,0 +1,29 @@
+import authenticationRoutes from '../routes/authentication/authentication-routes.js';
+import packRoutes from '../routes/pack/pack-routes.js';
+import closetRoutes from '../routes/closet/closet-routes.js';
+import guestsRoutes from '../routes/guests/guests-routes.js';
+import profileSettingsRoutes from '../routes/profile-settings/profile-settings-routes.js';
+import profileRoutes from '../routes/profile/profile-routes.js';
+import userSettingsRoutes from '../routes/user-settings/user-settings-routes.js';
+import redirectRoutes from '../routes/redirect/redirect-routes.js';
+import testRoutes from '../routes/test/test-routes.js';
+import { protectedRoute } from '../utils/custom-middleware.js';
+import { Application } from 'express';
+import { validateEnvironment } from './environment.js';
+
+const env = validateEnvironment();
+
+const routeConfig = (app: Application) => {
+	app.use('/auth', authenticationRoutes);
+	app.use('/guests', guestsRoutes);
+	app.use('/redirect', redirectRoutes);
+	app.use('/packs', protectedRoute, packRoutes);
+	app.use('/closet', protectedRoute, closetRoutes);
+	app.use('/profile', protectedRoute, profileRoutes);
+	app.use('/profile-settings', protectedRoute, profileSettingsRoutes);
+	app.use('/user-settings', protectedRoute, userSettingsRoutes);
+
+	if (env.NODE_ENV === 'test') app.use('/test', testRoutes);
+};
+
+export default routeConfig;

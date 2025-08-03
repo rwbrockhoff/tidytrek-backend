@@ -1,14 +1,13 @@
-import dotenv from 'dotenv';
-dotenv.config();
 import { S3Client, DeleteObjectCommand } from '@aws-sdk/client-s3';
 import multer from 'multer';
 import multerS3 from 'multer-s3';
+import { validateEnvironment } from '../config/environment.js';
 
-// Express.MulterS3.File
+const env = validateEnvironment();
 
-const profilePhotoBucket = process.env.PROFILE_PHOTO_S3_BUCKET;
-const bannerPhotoBucket = process.env.BANNER_PHOTO_S3_BUCKET;
-const packPhotoBucket = process.env.PACK_PHOTO_S3_BUCKET;
+const profilePhotoBucket = env.PROFILE_PHOTO_S3_BUCKET;
+const bannerPhotoBucket = env.BANNER_PHOTO_S3_BUCKET;
+const packPhotoBucket = env.PACK_PHOTO_S3_BUCKET;
 
 const buckets = {
 	profilePhotoBucket,
@@ -17,22 +16,30 @@ const buckets = {
 };
 
 const photoResizing: { [K in BucketName]?: { width?: number; height?: number } } = {
-	profilePhotoBucket: { width: 200 },
-	bannerPhotoBucket: { width: 1600, height: 400 },
-	packPhotoBucket: { width: 600, height: 400 },
+	profilePhotoBucket: { width: 800 },
+	bannerPhotoBucket: { width: 2000 },
+	packPhotoBucket: { width: 1200 },
 };
+
+interface PositionData {
+	x: number;
+	y: number;
+	scale: number;
+	cropWidth: number;
+	cropHeight: number;
+}
 
 type BucketName = 'profilePhotoBucket' | 'bannerPhotoBucket' | 'packPhotoBucket';
 
-const bucketRegion = process.env.AWS_REGION;
-const accessKey = process.env.PP_S3_ACCESS_KEY;
-const secretAccessKey = process.env.PP_S3_SECRET_ACCESS_KEY;
-const photoUploadCloudfrontUrl = process.env.CLOUDFRONT_PHOTO_UPLOAD_URL ?? '';
+const bucketRegion = env.AWS_REGION;
+const accessKey = env.PP_S3_ACCESS_KEY;
+const secretAccessKey = env.PP_S3_SECRET_ACCESS_KEY;
+const photoUploadCloudfrontUrl = env.CLOUDFRONT_PHOTO_UPLOAD_URL;
 
 const s3 = new S3Client({
 	credentials: {
-		accessKeyId: accessKey ?? '',
-		secretAccessKey: secretAccessKey ?? '',
+		accessKeyId: accessKey,
+		secretAccessKey: secretAccessKey,
 	},
 	region: bucketRegion,
 });
@@ -47,7 +54,7 @@ export const s3UploadPhoto = (bucketName: BucketName) =>
 		},
 		storage: multerS3({
 			s3: s3,
-			bucket: buckets[bucketName] ?? '',
+			bucket: buckets[bucketName],
 			metadata: function (_req, file, cb) {
 				cb(null, { fieldName: file.fieldname });
 			},
@@ -74,16 +81,55 @@ export const s3DeletePhoto = async (photoUrl: string) => {
 	}
 };
 
+interface CloudFrontEdits {
+	extract?: {
+		left: number;
+		top: number;
+		width: number;
+		height: number;
+	};
+	resize?: {
+		width?: number;
+		height?: number;
+		fit?: string;
+		position?: string;
+	};
+}
+
 export const createCloudfrontUrlForPhoto = (
 	key: string | undefined,
 	bucketName: BucketName,
+	positionData?: PositionData,
 ) => {
+	const targetResize = photoResizing[bucketName];
+	let edits: CloudFrontEdits = {};
+
+	if (positionData) {
+		// Apply crop first, then resize to target dimensions
+		edits = {
+			extract: {
+				left: Math.max(0, Math.floor(positionData.x)),
+				top: Math.max(0, Math.floor(positionData.y)),
+				width: Math.floor(positionData.cropWidth),
+				height: Math.floor(positionData.cropHeight),
+			},
+			resize: { ...targetResize },
+		};
+	} else {
+		// Default: use center crop with cover fit to preserve aspect ratio
+		edits = {
+			resize: {
+				...targetResize,
+				fit: 'cover',
+				position: 'center',
+			},
+		};
+	}
+
 	const imageRequest = JSON.stringify({
 		bucket: buckets[bucketName],
 		key: key,
-		edits: {
-			resize: { ...photoResizing[bucketName] },
-		},
+		edits,
 	});
 	const encodedObject = btoa(imageRequest);
 	return `${photoUploadCloudfrontUrl}/${encodedObject}`;
