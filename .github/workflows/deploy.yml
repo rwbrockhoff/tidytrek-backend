@@ -58,7 +58,7 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             cd ${{ secrets.DEPLOY_PATH }}
-            pm2 restart tidytrek
+            /usr/local/bin/pm2 restart tidytrek
 
       - name: Revoke Runner IP Addresses
         run: |
