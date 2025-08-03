@@ -14,7 +14,7 @@ import {
 } from '../../utils/error-response.js';
 import { createCloudfrontUrlForPhoto, s3DeletePhoto } from '../../utils/s3.js';
 import { packScraper } from '../../utils/puppeteer.js';
-import { isError } from '../../utils/utils.js';
+import { isError } from '../../utils/validation.js';
 import {
 	DEFAULT_INCREMENT,
 	getNextAppendIndex,

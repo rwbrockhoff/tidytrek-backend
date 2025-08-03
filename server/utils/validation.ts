@@ -2,6 +2,8 @@ import { z } from 'zod';
 import { type Request, type Response, type NextFunction } from 'express';
 import { badRequest } from './error-response.js';
 
+export const isError = (err: unknown): err is Error => err instanceof Error;
+
 // Middleware to validate request body with Zod schema
 export function validateRequestBody<T>(schema: z.ZodSchema<T>) {
 	return (req: Request, res: Response, next: NextFunction) => {
