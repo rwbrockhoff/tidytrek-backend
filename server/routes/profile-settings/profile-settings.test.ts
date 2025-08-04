@@ -46,6 +46,10 @@ describe('User Profile Routes ', () => {
 			.send(validSocialLink);
 
 		expect(response.statusCode).toEqual(200);
+		expect(response.body.data).toHaveProperty('socialLink');
+		expect(response.body.data.socialLink).toHaveProperty('socialLinkId');
+		expect(response.body.data.socialLink).toHaveProperty('socialLinkUrl');
+		expect(response.body.data.socialLink.socialLinkUrl).toEqual(validSocialLink.social_link_url);
 	});
 
 	it('POST / -> Should only allow four social links', async () => {

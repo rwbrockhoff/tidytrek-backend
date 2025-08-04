@@ -98,7 +98,7 @@ async function uploadProfilePhoto(req: Request, res: Response) {
 			profile_photo_position: defaultPosition
 		}).where({ user_id: userId });
 
-		return successResponse(res, null, 'Profile photo uploaded successfully');
+		return successResponse(res, { profilePhotoUrl: profile_photo_url }, 'Profile photo uploaded successfully');
 	} catch (err) {
 		logError('Upload profile avatar photo failed', err, {
 			userId: req.userId,
@@ -168,7 +168,7 @@ async function uploadBannerPhoto(req: Request, res: Response) {
 			banner_photo_position: defaultPosition
 		}).where({ user_id: userId });
 
-		return successResponse(res, null, 'Banner photo uploaded successfully');
+		return successResponse(res, { bannerPhotoUrl: banner_photo_url }, 'Banner photo uploaded successfully');
 	} catch (err) {
 		logError('Upload profile banner photo failed', err, {
 			userId: req.userId,
@@ -230,12 +230,14 @@ async function addSocialLink(req: ValidatedRequest<SocialLinkCreate>, res: Respo
 				.json({ error: 'You already have four links in your profile' });
 		}
 
-		await knex(Tables.SocialLink).insert({
-			user_id: userId,
-			social_link_url,
-		});
+		const [socialLink] = await knex(Tables.SocialLink)
+			.insert({
+				user_id: userId,
+				social_link_url,
+			})
+			.returning(['social_link_id', 'social_link_url']);
 
-		return successResponse(res, null, 'Social link added successfully');
+		return successResponse(res, { socialLink }, 'Social link added successfully');
 	} catch (err) {
 		return internalError(res, 'There was an error adding your link.');
 	}
