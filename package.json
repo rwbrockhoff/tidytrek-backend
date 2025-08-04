@@ -16,6 +16,8 @@
 		"commit": "cz",
 		"build": "npx tsc",
 		"start": "NODE_ENV=production node --import=./instrument.js server/index.js",
+		"pm2:start": "/usr/local/bin/pm2 start npm --name 'tidytrek' -- run start",
+		"pm2:restart": "/usr/local/bin/pm2 restart tidytrek || npm run pm2:start",
 		"dev": "NODE_ENV=development tsx watch server/index.ts",
 		"dev:test": "NODE_ENV=test PORT=4002 tsx watch server/index.ts",
 		"lint": "eslint server/**/*.ts",
@@ -51,7 +53,7 @@
 		"docker:test:seed": "docker compose exec api-test npm run test:seed",
 		"docker:test:seed-packs": "docker compose exec api-test npm run test:seed-packs",
 		"docker:test:db-setup": "npm run docker:test:migrate && npm run docker:test:seed",
-		"prepare": "husky"
+		"prepare": "[ \"$NODE_ENV\" = \"development\" ] && husky || true"
 	},
 	"devDependencies": {
 		"@testing-library/jest-dom": "^6.2.1",

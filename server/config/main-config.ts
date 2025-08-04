@@ -11,6 +11,9 @@ import { validateEnvironment } from './environment.js';
 const env = validateEnvironment();
 
 const mainConfig = (app: Express) => {
+	// Trust proxy for rate limiting and request handling
+	app.set('trust proxy', true);
+
 	app.use(
 		helmet({
 			contentSecurityPolicy: {
