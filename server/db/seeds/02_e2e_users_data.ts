@@ -4,13 +4,6 @@ import { DEFAULT_PALETTE } from '../../utils/constants.js';
 import { e2eTestUser } from '../test/test-data.js';
 
 export async function seed(knex: Knex): Promise<void> {
-	// Clean up existing test user data
-	await knex(Tables.PackItem).where('user_id', e2eTestUser.userId).del();
-	await knex(Tables.PackCategory).where('user_id', e2eTestUser.userId).del();
-	await knex(Tables.Pack).where('user_id', e2eTestUser.userId).del();
-	await knex(Tables.SocialLink).where('user_id', e2eTestUser.userId).del();
-	await knex(Tables.UserProfile).where('user_id', e2eTestUser.userId).del();
-	await knex(Tables.UserSettings).where('user_id', e2eTestUser.userId).del();
 	await knex(Tables.User).where('user_id', e2eTestUser.userId).del();
 
 	await knex(Tables.User).insert({

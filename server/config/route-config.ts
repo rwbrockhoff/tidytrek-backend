@@ -1,6 +1,7 @@
 import authenticationRoutes from '../routes/authentication/authentication-routes.js';
 import packRoutes from '../routes/pack/pack-routes.js';
 import closetRoutes from '../routes/closet/closet-routes.js';
+import bookmarksRoutes from '../routes/bookmarks/bookmarks-routes.js';
 import guestsRoutes from '../routes/guests/guests-routes.js';
 import profileSettingsRoutes from '../routes/profile-settings/profile-settings-routes.js';
 import profileRoutes from '../routes/profile/profile-routes.js';
@@ -19,6 +20,7 @@ const routeConfig = (app: Application) => {
 	app.use('/redirect', redirectRoutes);
 	app.use('/packs', protectedRoute, packRoutes);
 	app.use('/closet', protectedRoute, closetRoutes);
+	app.use('/pack-bookmarks', protectedRoute, bookmarksRoutes);
 	app.use('/profile', protectedRoute, profileRoutes);
 	app.use('/profile-settings', protectedRoute, profileSettingsRoutes);
 	app.use('/user-settings', protectedRoute, userSettingsRoutes);
