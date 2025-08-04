@@ -21,12 +21,14 @@ const mainConfig = (app: Express) => {
 					defaultSrc: ["'self'"],
 					imgSrc: ["'self'", 'data:', 'https:'], // Allow S3 images and external images
 					connectSrc: ["'self'", 'https://api.sentry.io'], // Allow Sentry
+					scriptSrc: ["'self'", 'https://accounts.google.com', 'https://apis.google.com'], // Allow Google OAuth scripts
+					frameSrc: ["'self'", 'https://accounts.google.com'], // Allow Google OAuth frames
 				},
 			},
 		}),
 	);
 
-	// Request logging - skip during tests
+	// Skip logging during tests
 	if (env.NODE_ENV !== 'test') {
 		const logFormat =
 			env.NODE_ENV === 'production'

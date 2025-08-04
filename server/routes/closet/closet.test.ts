@@ -37,6 +37,9 @@ describe('Gear Closet Routes: ', () => {
 		const getItemsResponse = await userAgent.get('/closet');
 
 		expect(response.statusCode).toEqual(200);
+		expect(response.body.data).toHaveProperty('gearClosetItem');
+		expect(response.body.data.gearClosetItem).toHaveProperty('packItemId');
+		expect(response.body.data.gearClosetItem).toHaveProperty('packItemName');
 		expect(getItemsResponse.statusCode).toEqual(200);
 		expect(getItemsResponse.body.data.gearClosetList).toHaveLength(defaultLength + 1);
 	});

@@ -346,7 +346,7 @@ async function uploadPackPhoto(req: Request, res: Response) {
 			})
 			.where({ user_id: userId, pack_id: packId });
 
-		return successResponse(res, null, 'Pack photo uploaded successfully');
+		return successResponse(res, { packPhotoUrl: newPackPhotoUrl }, 'Pack photo uploaded successfully');
 	} catch (err) {
 		logError('Upload pack photo failed', err, {
 			userId: req.userId,

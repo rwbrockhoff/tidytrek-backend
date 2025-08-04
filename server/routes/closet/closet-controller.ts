@@ -65,13 +65,15 @@ async function addGearClosetItem(req: Request, res: Response) {
 			pack_category_id: null,
 		});
 
-		await knex(Tables.PackItem).insert({
-			user_id: userId,
-			pack_item_name: '',
-			pack_item_index,
-		});
+		const [gearClosetItem] = await knex(Tables.PackItem)
+			.insert({
+				user_id: userId,
+				pack_item_name: '',
+				pack_item_index,
+			})
+			.returning(gearClosetItemFields);
 
-		return successResponse(res, null, 'Item added to gear closet successfully');
+		return successResponse(res, { gearClosetItem }, 'Item added to gear closet successfully');
 	} catch (err) {
 		return internalError(res, 'There was an error adding your item to your gear closet.');
 	}
