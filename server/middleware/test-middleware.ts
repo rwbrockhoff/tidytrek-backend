@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction as Next } from 'express';
-import { supabaseCookieName } from './constants.js';
+import { supabaseCookieName } from '../utils/constants.js';
 import { validateEnvironment } from '../config/environment.js';
 import { mockUser, notSeededUser } from '../db/mock/mock-data.js';
 

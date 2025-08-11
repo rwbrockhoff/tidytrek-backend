@@ -1,9 +1,6 @@
-import {
-	attachUserToRequest,
-	convertRequestToSnakeCase,
-	convertResponseToCamelCase,
-} from '../utils/custom-middleware.js';
-import { setTestUserId } from '../utils/test-middleware.js';
+import { attachUserToRequest } from '../middleware/auth-middleware.js';
+import { convertRequestToSnakeCase, convertResponseToCamelCase } from '../middleware/format-middleware.js';
+import { setTestUserId } from '../middleware/test-middleware.js';
 import { Express } from 'express';
 import * as Sentry from '@sentry/node';
 

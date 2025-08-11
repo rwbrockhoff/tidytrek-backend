@@ -1,10 +1,8 @@
-import snakeCaseKeys from 'snakecase-keys';
-import camelCaseKeys from 'camelcase-keys';
 import { Request, Response, NextFunction as Next } from 'express';
 import { getUser } from '../routes/authentication/authentication-controller.js';
-import { supabaseCookieName, supabaseCookieOptions } from './constants.js';
+import { supabaseCookieName, supabaseCookieOptions } from '../utils/constants.js';
 import { supabase } from '../db/supabase-client.js';
-import { unauthorized } from './error-response.js';
+import { unauthorized } from '../utils/error-response.js';
 import { validateEnvironment } from '../config/environment.js';
 
 const env = validateEnvironment();
@@ -52,28 +50,6 @@ export const protectedRoute = async (req: Request, res: Response, next: Next) =>
 			.status(401)
 			.json({ error: 'Authentication validation failed. Please log in again.' });
 	}
-
-	next();
-};
-
-export const convertRequestToSnakeCase = (req: Request, _res: Response, next: Next) => {
-	if (req.body) {
-		const snakeCaseBody = snakeCaseKeys(req.body);
-		req.body = snakeCaseBody;
-	}
-	next();
-};
-
-export const convertResponseToCamelCase = (_req: Request, res: Response, next: Next) => {
-	const originalJson = res.json;
-
-	res.json = function (body) {
-		if (body && typeof body === 'object') {
-			const camelCaseBody = camelCaseKeys(body, { deep: true });
-			return originalJson.call(this, camelCaseBody);
-		}
-		return originalJson.call(this, body);
-	};
 
 	next();
 };
