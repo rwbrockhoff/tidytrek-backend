@@ -2,7 +2,7 @@
 
 ## Overview
 
-Node.js REST API for backpacking gear management with fractional indexing, web scraping, and AWS S3 integration. Features PostgreSQL database, JWT authentication, and comprehensive testing with production deployment on AWS.
+Node.js REST API for backpacking gear management with fractional indexing, web scraping, and AWS S3 integration. Features PostgreSQL database, Supabase authentication, and comprehensive testing with production deployment on AWS.
 
 **Live API**: [TidyTrek Backend](https://api.tidytrek.co/)
 
@@ -40,7 +40,7 @@ Node.js REST API for backpacking gear management with fractional indexing, web s
 
 - CORS with environment-specific origins
 - Rate limiting with express-rate-limit
-- JWT authentication with signed cookies
+- Supabase authentication with signed cookies
 - Input validation and sanitization
 
 **Infrastructure**
@@ -95,7 +95,7 @@ const packData = await packScraper(url);
 ### Authentication Flow
 
 1. Supabase handles user registration and email verification
-2. JWT tokens issued with secure, signed cookies
+2. Supabase refresh tokens with secure, signed cookies
 3. Refresh token rotation for enhanced security
 4. Protected routes with middleware validation
 
