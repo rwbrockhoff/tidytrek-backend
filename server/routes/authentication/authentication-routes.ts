@@ -1,7 +1,8 @@
 import express from 'express';
 import controller from './authentication-controller.js';
 import { authRateLimit } from '../../config/rate-limiting.js';
-import { validateRequestBody as validate, withTypes } from '../../utils/validation.js';
+import { validateRequestBody as validate } from '../../middleware/validation-middleware.js';
+import { withTypes } from '../../utils/validation.js';
 import {
 	RegisterSchema,
 	LoginSchema,

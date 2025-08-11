@@ -7,7 +7,7 @@ import profileRoutes from '../routes/profile/profile-routes.js';
 import userSettingsRoutes from '../routes/user-settings/user-settings-routes.js';
 import redirectRoutes from '../routes/redirect/redirect-routes.js';
 import testRoutes from '../routes/test/test-routes.js';
-import { protectedRoute } from '../utils/custom-middleware.js';
+import { protectedRoute } from '../middleware/auth-middleware.js';
 import { Application } from 'express';
 import { validateEnvironment } from './environment.js';
 

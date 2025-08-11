@@ -1,23 +1,6 @@
-import { z } from 'zod';
-import { type Request, type Response, type NextFunction } from 'express';
-import { badRequest } from './error-response.js';
+import { type Request, type Response } from 'express';
 
 export const isError = (err: unknown): err is Error => err instanceof Error;
-
-// Middleware to validate request body with Zod schema
-export function validateRequestBody<T>(schema: z.ZodSchema<T>) {
-	return (req: Request, res: Response, next: NextFunction) => {
-		try {
-			req.validatedBody = schema.parse(req.body);
-			next();
-		} catch (error) {
-			if (error instanceof z.ZodError) {
-				return badRequest(res, 'Request validation failed', error.issues);
-			}
-			return badRequest(res, 'Request validation failed');
-		}
-	};
-}
 
 // check if validated request body is empty (no fields to update)
 export function hasEmptyValidatedBody(req: Request): boolean {

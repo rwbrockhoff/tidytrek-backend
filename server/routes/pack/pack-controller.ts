@@ -13,7 +13,7 @@ import {
 	ErrorCode,
 } from '../../utils/error-response.js';
 import { createCloudfrontUrlForPhoto, s3DeletePhoto } from '../../utils/s3.js';
-import { packScraper } from '../../utils/puppeteer.js';
+import { packScraper } from './pack-scraper.js';
 import { isError } from '../../utils/validation.js';
 import {
 	DEFAULT_INCREMENT,
