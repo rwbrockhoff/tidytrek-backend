@@ -13,6 +13,7 @@ export const mockUser = {
 	email: 'ryan@tidytrek.co',
 	trailName: 'Rocket',
 	username: 'tidyTrekHiker171',
+	supabaseRefreshToken: 'mock_seeded_user_token',
 };
 
 // For authentication API testing (camelCase fields)
@@ -94,7 +95,7 @@ export const notSeededUser = {
 	lastName: 'Collins',
 	email: 'scollins@tidytrek.co',
 	userId: mockUserId2,
-	supabaseRefreshToken: 'test_refresh_token',
+	supabaseRefreshToken: 'mock_not_seeded_user_token',
 };
 
 export const mockGearClosetItems: MockPackItem[] = [

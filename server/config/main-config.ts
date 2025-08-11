@@ -11,8 +11,12 @@ import { validateEnvironment } from './environment.js';
 const env = validateEnvironment();
 
 const mainConfig = (app: Express) => {
-	// Trust proxy for rate limiting and request handling
-	app.set('trust proxy', true);
+	if (env.NODE_ENV === 'production') {
+		// 1: trust only first - load balancer
+		app.set('trust proxy', 1);
+	} else {
+		app.set('trust proxy', false);
+	}
 
 	app.use(
 		helmet({

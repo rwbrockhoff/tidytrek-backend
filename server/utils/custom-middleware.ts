@@ -1,115 +1,15 @@
-import jwt from 'jsonwebtoken';
 import snakeCaseKeys from 'snakecase-keys';
 import camelCaseKeys from 'camelcase-keys';
 import { Request, Response, NextFunction as Next } from 'express';
 import { getUser } from '../routes/authentication/authentication-controller.js';
-import { cookieName, supabaseCookieName, cookieOptions } from './constants.js';
+import { supabaseCookieName, supabaseCookieOptions } from './constants.js';
 import { supabase } from '../db/supabase-client.js';
 import { unauthorized } from './error-response.js';
-import { logError } from '../config/logger.js';
 import { validateEnvironment } from '../config/environment.js';
 
 const env = validateEnvironment();
 
-type JwtPayload = { userId: string; iat?: number };
-type SupabaseJwtPayload = { sub: string; iat?: number };
-
-// JWT verification
-const verifyJwtToken = (token: string, secret: string): JwtPayload | null => {
-	try {
-		return jwt.verify(token, secret) as JwtPayload;
-	} catch (error) {
-		logError('JWT verification failed', error, {
-			tokenLength: token?.length,
-			hasSecret: !!secret,
-		});
-		return null;
-	}
-};
-
-// Supabase JWT verification
-const verifySupabaseToken = (
-	token: string,
-	secret: string,
-): SupabaseJwtPayload | null => {
-	try {
-		return jwt.verify(token, secret) as SupabaseJwtPayload;
-	} catch (error) {
-		logError('Supabase JWT verification failed', error, {
-			tokenLength: token?.length,
-			hasSecret: !!secret,
-		});
-		return null;
-	}
-};
-
-// Extract userId from different token sources
-const extractUserId = (req: Request): string | null => {
-	// Try app cookie token first
-	const cookieToken = req.signedCookies[cookieName];
-	if (cookieToken) {
-		const payload = verifyJwtToken(cookieToken, env.APP_SECRET);
-		if (payload?.userId) return payload.userId;
-	}
-
-	// Try Supabase cookie token
-	const supabaseCookieToken = req.signedCookies[supabaseCookieName];
-	if (supabaseCookieToken) {
-		const payload = verifySupabaseToken(supabaseCookieToken, env.SUPABASE_KEY);
-		if (payload?.sub) return payload.sub;
-	}
-
-	// Fallback: check header (Supabase format)
-	const authHeader = req.headers['authorization'];
-	if (authHeader) {
-		const parts = authHeader.split(' ');
-		if (parts.length === 2 && parts[0].toLowerCase() === 'bearer') {
-			const token = parts[1];
-			if (token) {
-				const payload = verifySupabaseToken(token, env.SUPABASE_KEY);
-				if (payload?.sub) return payload.sub;
-			}
-		}
-	}
-
-	return null;
-};
-
-export const getUserId = async (req: Request, _res: Response, next: Next) => {
-	const userId = extractUserId(req);
-	if (userId) req.userId = userId;
-	next();
-};
-
-export const attachCookie = (req: Request, res: Response, next: Next) => {
-	const token = req.signedCookies[cookieName];
-
-	if (token) {
-		const decoded = verifyJwtToken(token, env.APP_SECRET);
-
-		if (decoded?.userId) {
-			req.cookie = decoded.userId;
-
-			// Rolling expiration: refresh JWT cookie if more than halfway to expiration
-			if (decoded.iat && cookieOptions.maxAge) {
-				const now = Math.floor(Date.now() / 1000);
-				const tokenAge = now - decoded.iat;
-				const maxAge = cookieOptions.maxAge / 1000; // Convert to seconds
-				const halfLife = maxAge / 2;
-
-				if (tokenAge > halfLife) {
-					const newToken = jwt.sign({ userId: decoded.userId }, env.APP_SECRET);
-					res.cookie(cookieName, newToken, cookieOptions);
-				}
-			}
-		}
-	}
-
-	next();
-};
-
 export const attachUserToRequest = async (req: Request, _res: Response, next: Next) => {
-	// don't attach user if not logged in
 	if (!req.userId) return next();
 
 	const user = await getUser(req.userId);
@@ -119,40 +19,38 @@ export const attachUserToRequest = async (req: Request, _res: Response, next: Ne
 };
 
 export const protectedRoute = async (req: Request, res: Response, next: Next) => {
-	// attach userId for testing
 	if (env.NODE_ENV === 'test') {
-		req.userId = req.cookie;
-		// Still check if user is authenticated in test mode
 		if (!req.userId) {
 			return unauthorized(res);
 		}
 		return next();
 	}
 
-	// Basic validation: cookie and userId must match
-	if (!req.userId || !req.cookie || req.userId !== req.cookie) {
+	const supabaseRefreshToken = req.signedCookies[supabaseCookieName];
+	if (!supabaseRefreshToken) {
 		return unauthorized(res);
 	}
 
-	// Validate Supabase token for protected routes
-	const supabaseRefreshToken = req.signedCookies[supabaseCookieName];
-	if (supabaseRefreshToken) {
-		try {
-			const { data, error } = await supabase.auth.refreshSession({
-				refresh_token: supabaseRefreshToken,
-			});
+	try {
+		const { data, error } = await supabase.auth.refreshSession({
+			refresh_token: supabaseRefreshToken,
+		});
 
-			// Verify Supabase user matches our cookie user
-			if (error || !data.session || data.session.user?.id !== req.userId) {
-				return res
-					.status(401)
-					.json({ error: 'Invalid authentication. Please log in again.' });
-			}
-		} catch (supabaseError) {
+		if (error || !data.session || !data.session.user?.id) {
 			return res
 				.status(401)
-				.json({ error: 'Authentication validation failed. Please log in again.' });
+				.json({ error: 'Invalid authentication. Please log in again.' });
 		}
+
+		req.userId = data.session.user.id;
+
+		if (data.session.refresh_token !== supabaseRefreshToken) {
+			res.cookie(supabaseCookieName, data.session.refresh_token, supabaseCookieOptions);
+		}
+	} catch (supabaseError) {
+		return res
+			.status(401)
+			.json({ error: 'Authentication validation failed. Please log in again.' });
 	}
 
 	next();
