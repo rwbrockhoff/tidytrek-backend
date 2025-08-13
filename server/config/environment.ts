@@ -28,12 +28,14 @@ const DevelopmentSchema = BaseEnvironmentSchema.extend({
 	DB_HOST: z.string().default('127.0.0.1'),
 	DB_PASSWORD: z.string().default('postgres'),
 	FRONTEND_TEST_URL: z.url(),
+	REDIS_HOST: z.string().default('127.0.0.1'),
 });
 
 const ProductionSchema = BaseEnvironmentSchema.extend({
 	PRODUCTION_DB_HOST: z.string().min(1),
 	PRODUCTION_DB_USER: z.string().min(1),
 	PRODUCTION_DB_PASSWORD: z.string().min(1),
+	REDIS_HOST: z.string().min(1),
 });
 
 function getEnvironmentSchema() {

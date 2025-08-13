@@ -9,8 +9,14 @@ type UserAgent = TestAgent<Test>;
 
 const errorMessage = 'Could not register user for testing';
 
+export const getTestRequest = async () => {
+	const app = await server;
+	return supertest(app);
+};
+
 export const loginMockUser = async (): Promise<UserAgent> => {
-	const agent = supertest.agent(server);
+	const app = await server;
+	const agent = supertest.agent(app);
 
 	const res = await agent.post('/auth/login').send({ 
 		user_id: userId, 
@@ -24,7 +30,8 @@ export const loginMockUser = async (): Promise<UserAgent> => {
 };
 
 export const registerNewUser = async (): Promise<UserAgent> => {
-	const agent = supertest.agent(server);
+	const app = await server;
+	const agent = supertest.agent(app);
 	const res = await agent.post('/auth/register').send(notSeededUser);
 
 	if (res.status !== 200) throw new Error(errorMessage, res.body);

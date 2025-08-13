@@ -1,9 +1,8 @@
-import server from '../../server.js';
-import initialRequest from 'supertest';
-const request = initialRequest(server);
 import knex from '../../db/connection.js';
 import { mockPrivateUser } from '../../db/mock/mock-data.js';
-import { loginMockUser, registerNewUser } from '../../utils/test-utils.js';
+import { getTestRequest, loginMockUser, registerNewUser } from '../../utils/test-utils.js';
+
+const request = await getTestRequest();
 
 beforeEach(async () => {
 	await knex.migrate.rollback();
