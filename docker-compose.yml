@@ -18,6 +18,17 @@ services:
       timeout: 5s
       retries: 5
 
+  # Redis
+  redis:
+    image: redis:7-alpine
+    ports:
+      - '6379:6379'
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   # TidyTrek Backend API
   api:
     build:
@@ -31,6 +42,7 @@ services:
       # Override only Docker-specific settings
       - NODE_ENV=development
       - DB_HOST=postgres
+      - REDIS_HOST=redis
     volumes:
       # Sync local code to container for live development
       - .:/app
@@ -39,6 +51,9 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: sh -c "npm run dev:migrate && npm run dev:seed && npm run dev"
 
   # Test PostgreSQL Database
   postgres-test:

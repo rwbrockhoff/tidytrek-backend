@@ -1,7 +1,6 @@
 import express from 'express';
 import controller from './profile-settings-controller.js';
 import { s3UploadPhoto } from '../../utils/s3.js';
-import { uploadRateLimit } from '../../config/rate-limiting.js';
 import { validateRequestBody as validate } from '../../middleware/validation-middleware.js';
 import { withTypes } from '../../utils/validation.js';
 import { 
@@ -12,8 +11,10 @@ import {
 	UsernameUpdate, 
 	SocialLinkCreate 
 } from './profile-settings-schemas.js';
+import { RequestHandler } from 'express';
 
-const router = express.Router();
+export function createProfileSettingsRoutes(uploadRateLimit: RequestHandler) {
+	const router = express.Router();
 
 router.get('/', controller.getProfileSettings);
 router.get('/random-username', controller.generateUsernamePreview);
@@ -38,4 +39,5 @@ router.put('/', validate(ProfileSettingsUpdateSchema), withTypes<ProfileSettings
 router.delete('/social-link/:socialLinkId', controller.deleteSocialLink);
 router.delete('/profile-photo/', controller.deleteProfilePhoto);
 
-export default router;
+	return router;
+}

@@ -6,14 +6,30 @@ import helmet from 'helmet';
 import compression from 'compression';
 import { Express } from 'express';
 import { acceptedOrigins, corsErrorMessage } from './config-vars.js';
-import { apiRateLimit } from './rate-limiting.js';
 import { validateEnvironment } from './environment.js';
+import redisClient from './redis-config.js';
+import {
+	createApiRateLimit,
+	createAuthRateLimit,
+	createUploadRateLimit,
+	createImportRateLimit,
+} from './rate-limiting.js';
 
 const env = validateEnvironment();
 
-const mainConfig = (app: Express) => {
+const mainConfig = async (app: Express) => {
+	if (env.NODE_ENV !== 'test') {
+		await redisClient.connect();
+
+		const logFormat =
+			env.NODE_ENV === 'production'
+				? ':method :url :status :res[content-length] - :response-time ms'
+				: 'dev';
+
+		app.use(morgan(logFormat));
+	}
+
 	if (env.NODE_ENV === 'production') {
-		// 1: trust only first - load balancer
 		app.set('trust proxy', 1);
 	} else {
 		app.set('trust proxy', false);
@@ -24,10 +40,10 @@ const mainConfig = (app: Express) => {
 			contentSecurityPolicy: {
 				directives: {
 					defaultSrc: ["'self'"],
-					imgSrc: ["'self'", 'data:', 'https:'], // Allow S3 images and external images
-					connectSrc: ["'self'", 'https://api.sentry.io'], // Allow Sentry
-					scriptSrc: ["'self'", 'https://accounts.google.com', 'https://apis.google.com'], // Allow Google OAuth scripts
-					frameSrc: ["'self'", 'https://accounts.google.com'], // Allow Google OAuth frames
+					imgSrc: ["'self'", 'data:', 'https:'],
+					connectSrc: ["'self'", 'https://api.sentry.io'],
+					scriptSrc: ["'self'", 'https://accounts.google.com', 'https://apis.google.com'],
+					frameSrc: ["'self'", 'https://accounts.google.com'],
 				},
 			},
 		}),
@@ -35,20 +51,14 @@ const mainConfig = (app: Express) => {
 
 	app.use(compression());
 
-	// Skip logging during tests
-	if (env.NODE_ENV !== 'test') {
-		const logFormat =
-			env.NODE_ENV === 'production'
-				? ':method :url :status :res[content-length] - :response-time ms' // production
-				: 'dev'; // dev (colored messages)
-
-		app.use(morgan(logFormat));
-	}
-
 	app.use(express.urlencoded({ extended: false, limit: '1mb' }));
 	app.use(express.json({ limit: '1mb' }));
 
-	// General API rate limiting
+	const apiRateLimit = createApiRateLimit(redisClient);
+	const authRateLimit = createAuthRateLimit(redisClient);
+	const uploadRateLimit = createUploadRateLimit(redisClient);
+	const importRateLimit = createImportRateLimit(redisClient);
+
 	app.use(apiRateLimit);
 	app.use(
 		cors({
@@ -66,6 +76,12 @@ const mainConfig = (app: Express) => {
 		}),
 	);
 	app.use(cookieParser(env.COOKIE_SECRET));
+
+	return {
+		authRateLimit,
+		uploadRateLimit,
+		importRateLimit,
+	};
 };
 
 export default mainConfig;

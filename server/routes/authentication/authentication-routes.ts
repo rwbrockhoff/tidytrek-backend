@@ -1,6 +1,5 @@
 import express from 'express';
 import controller from './authentication-controller.js';
-import { authRateLimit } from '../../config/rate-limiting.js';
 import { validateRequestBody as validate } from '../../middleware/validation-middleware.js';
 import { withTypes } from '../../utils/validation.js';
 import {
@@ -10,13 +9,17 @@ import {
 	LoginData,
 } from './authentication-schemas.js';
 
-const router = express.Router();
+import { RequestHandler } from 'express';
 
-router.get('/status', controller.getAuthStatus);
-router.post('/register', authRateLimit, validate(RegisterSchema), withTypes<RegisterData>(controller.register));
-router.post('/login', authRateLimit, validate(LoginSchema), withTypes<LoginData>(controller.login));
-router.post('/logout', controller.logout);
-router.post('/refresh', controller.refreshSupabaseSession);
-router.delete('/account', controller.deleteAccount);
+export function createAuthRoutes(authRateLimit: RequestHandler) {
+	const router = express.Router();
 
-export default router;
+	router.get('/status', controller.getAuthStatus);
+	router.post('/register', authRateLimit, validate(RegisterSchema), withTypes<RegisterData>(controller.register));
+	router.post('/login', authRateLimit, validate(LoginSchema), withTypes<LoginData>(controller.login));
+	router.post('/logout', controller.logout);
+	router.post('/refresh', controller.refreshSupabaseSession);
+	router.delete('/account', controller.deleteAccount);
+
+	return router;
+}
