@@ -59,6 +59,7 @@ jobs:
           script: |
             cd ${{ secrets.DEPLOY_PATH }}
             npm ci --omit=dev
+            npm run prod:migrate
             npm run pm2:restart
 
       - name: Revoke Runner IP Addresses

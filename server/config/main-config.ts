@@ -3,6 +3,7 @@ import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import morgan from 'morgan';
 import helmet from 'helmet';
+import compression from 'compression';
 import { Express } from 'express';
 import { acceptedOrigins, corsErrorMessage } from './config-vars.js';
 import { apiRateLimit } from './rate-limiting.js';
@@ -31,6 +32,8 @@ const mainConfig = (app: Express) => {
 			},
 		}),
 	);
+
+	app.use(compression());
 
 	// Skip logging during tests
 	if (env.NODE_ENV !== 'test') {
