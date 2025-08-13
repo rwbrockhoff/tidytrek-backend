@@ -17,6 +17,6 @@
 		"noUnusedLocals": true,
 		"noUnusedParameters": true
 	},
-	"include": ["server/**/*", "instrument.ts", "package.json", "package-lock.json"],
+	"include": ["server/**/*", "instrument.ts", "knexfile.ts", "ecosystem.config.cjs", "package.json", "package-lock.json"],
 	"exclude": ["server/**/*.test.ts"]
 }
