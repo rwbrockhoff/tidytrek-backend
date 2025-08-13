@@ -1,0 +1,14 @@
+node_modules
+server
+coverage
+logs
+*.env
+.git*
+docker-compose.yml
+tsconfig.json
+vitest.config.ts
+README.md
+LICENSE.md
+Dockerfile
+.cz.json
+commitizen.json
