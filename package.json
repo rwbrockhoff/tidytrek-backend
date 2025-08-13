@@ -16,7 +16,7 @@
 		"commit": "cz",
 		"build": "npx tsc",
 		"start": "NODE_ENV=production node --import=./instrument.js server/index.js",
-		"pm2:start": "/usr/local/bin/pm2 start ecosystem.config.js --env production",
+		"pm2:start": "/usr/local/bin/pm2 start ecosystem.config.cjs",
 		"pm2:restart": "/usr/local/bin/pm2 restart tidytrek-api || npm run pm2:start",
 		"dev": "NODE_ENV=development tsx watch server/index.ts",
 		"dev:hybrid": "docker compose up postgres redis -d && npm run dev",

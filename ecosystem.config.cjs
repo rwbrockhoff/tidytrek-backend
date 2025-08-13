@@ -2,15 +2,18 @@ module.exports = {
 	apps: [
 		{
 			name: 'tidytrek-api',
-			script: '/var/www/tidytrek/server/index.js',
+			script: 'server/index.js',
+			interpreter: 'node',
+			interpreter_args: '--import=/var/www/tidytrek/instrument.js',
 			cwd: '/var/www/tidytrek',
 			instances: 2,
+			exec_mode: 'cluster',
 			max_memory_restart: '500M',
-			env_file: '/var/www/tidytrek/production.env',
+			env: {
+				NODE_ENV: 'production',
+			},
 			error_file: '/var/www/tidytrek/logs/pm2-error.log',
-			// enables monitoring
 			pmx: true,
-			// useful debugging naming convention
 			instance_var: 'INSTANCE_ID',
 		},
 	],
