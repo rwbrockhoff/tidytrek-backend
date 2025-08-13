@@ -1,7 +1,6 @@
 import express from 'express';
 import controller from './pack-controller.js';
 import { s3UploadPhoto } from '../../utils/s3.js';
-import { uploadRateLimit, importRateLimit } from '../../config/rate-limiting.js';
 import { validateRequestBody as validate } from '../../middleware/validation-middleware.js';
 import { withTypes } from '../../utils/validation.js';
 import {
@@ -25,7 +24,10 @@ import {
 	PackMigrationSchema,
 } from './pack-schemas.js';
 
-const router = express.Router();
+import { RequestHandler } from 'express';
+
+export function createPackRoutes(uploadRateLimit: RequestHandler, importRateLimit: RequestHandler) {
+	const router = express.Router();
 
 router.get('/', controller.getDefaultPack);
 router.get('/pack-list', controller.getPackList);
@@ -91,4 +93,5 @@ router.put(
 router.delete('/categories/:categoryId', controller.moveCategoryToCloset);
 router.delete('/categories/items/:categoryId', controller.deleteCategoryAndItems);
 
-export default router;
+	return router;
+}

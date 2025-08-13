@@ -6,8 +6,12 @@ import routeConfig from './config/route-config.js';
 import customConfig from './config/custom-config.js';
 
 const app = express();
-mainConfig(app);
-customConfig(app); // custom middleware
-routeConfig(app);
 
-export default app;
+async function initializeApp() {
+	const rateLimiters = await mainConfig(app);
+	customConfig(app);
+	routeConfig(app, rateLimiters);
+	return app;
+}
+
+export default initializeApp();
