@@ -11,7 +11,11 @@ import {
 	HTTP_STATUS,
 	ErrorCode,
 } from '../../utils/error-response.js';
-import { createCloudfrontUrlForPhoto, s3DeletePhoto } from '../../utils/s3.js';
+import { s3DeletePhoto } from '../../utils/s3.js';
+import {
+	createQuickPhotoUrl,
+	updateToOptimizedPhoto,
+} from '../../utils/photo-processing.js';
 import { isError } from '../../utils/validation.js';
 import { logError, logger } from '../../config/logger.js';
 import {
@@ -155,8 +159,7 @@ async function uploadPackPhoto(req: Request, res: Response) {
 		const { packId } = req.params;
 
 		const s3Key = (req.file as MulterS3File)?.key;
-		const defaultPosition = { x: 0, y: 0, zoom: 1.0 };
-		const newPackPhotoUrl = createCloudfrontUrlForPhoto(s3Key, 'packPhotoBucket');
+		const quickPhotoUrl = createQuickPhotoUrl(s3Key, 'packPhotoBucket');
 
 		// check for previous pack photo url
 		const packPhotoResult = await db(Tables.Pack)
@@ -169,21 +172,39 @@ async function uploadPackPhoto(req: Request, res: Response) {
 		// Delete previous pack photo from S3
 		if (prevPackPhotoUrl) await s3DeletePhoto(prevPackPhotoUrl);
 
-		// Update pack with new S3 URL and positioning data
 		await db(Tables.Pack)
 			.update({
-				pack_photo_url: newPackPhotoUrl,
+				pack_photo_url: quickPhotoUrl,
 				pack_photo_s3_key: s3Key,
-				pack_photo_position: defaultPosition,
 			})
 			.where('user_id', userId)
 			.where('pack_id', packId);
 
-		return successResponse(
+		const response = successResponse(
 			res,
-			{ packPhotoUrl: newPackPhotoUrl },
+			{ packPhotoUrl: quickPhotoUrl },
 			'Pack photo uploaded successfully',
 		);
+
+		setImmediate(async () => {
+			try {
+				await updateToOptimizedPhoto(
+					Tables.Pack,
+					'pack_photo_url',
+					{ user_id: userId, pack_id: packId },
+					s3Key,
+					'packPhotoBucket',
+				);
+			} catch (optimizationError) {
+				logError('Background photo optimization failed', optimizationError, {
+					userId,
+					packId,
+					s3Key,
+				});
+			}
+		});
+
+		return response;
 	} catch (err) {
 		logError('Upload pack photo failed', err, {
 			userId: req.userId,

@@ -12,6 +12,7 @@ import {
 	ErrorCode,
 } from '../../utils/error-response.js';
 import { createCloudfrontUrlForPhoto, s3DeletePhoto } from '../../utils/s3.js';
+import { createQuickPhotoUrl, updateToOptimizedPhoto } from '../../utils/photo-processing.js';
 import { generateUsername } from '../../utils/username-generator.js';
 import { logError } from '../../config/logger.js';
 import { getUserProfileInfo } from '../../services/profile-service.js';
@@ -156,8 +157,7 @@ async function uploadBannerPhoto(req: Request, res: Response) {
 		}
 
 		const s3Key = (req.file as MulterS3File)?.key;
-		const defaultPosition = { x: 0, y: 0, zoom: 1.0 };
-		const banner_photo_url = createCloudfrontUrlForPhoto(s3Key, 'bannerPhotoBucket');
+		const banner_photo_url = createQuickPhotoUrl(s3Key, 'bannerPhotoBucket');
 
 		// check for previous photo url
 		const bannerResult = await db('user_profile')
@@ -172,15 +172,33 @@ async function uploadBannerPhoto(req: Request, res: Response) {
 			.update({
 				banner_photo_url,
 				banner_photo_s3_key: s3Key,
-				banner_photo_position: defaultPosition,
 			})
 			.where({ user_id: userId });
 
-		return successResponse(
+		const response = successResponse(
 			res,
 			{ bannerPhotoUrl: banner_photo_url },
 			'Banner photo uploaded successfully',
 		);
+
+		setImmediate(async () => {
+			try {
+				await updateToOptimizedPhoto(
+					Tables.UserProfile,
+					'banner_photo_url',
+					{ user_id: userId },
+					s3Key,
+					'bannerPhotoBucket'
+				);
+			} catch (optimizationError) {
+				logError('Background banner optimization failed', optimizationError, {
+					userId,
+					s3Key,
+				});
+			}
+		});
+
+		return response;
 	} catch (err) {
 		logError('Upload profile banner photo failed', err, {
 			userId: req.userId,
