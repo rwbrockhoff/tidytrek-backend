@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { WeightUnit, WEIGHT_UNIT_VALUES } from '../../types/units.js';
+import { getSchemaFields } from '../../utils/type-utils.js';
 
 export const PackUpdateSchema = z
 	.object({
@@ -24,7 +25,7 @@ export const PackUpdateSchema = z
 	})
 	.strict();
 
-export const packFields = Object.keys(PackUpdateSchema.shape);
+export const packFields = getSchemaFields(PackUpdateSchema);
 
 export const PackMigrationSchema = z
 	.object({
@@ -114,11 +115,12 @@ export const PackCategoryMoveSchema = z
 	})
 	.strict();
 
-export const packItemFields = Object.keys(PackItemUpdateSchema.shape);
+export const packItemFields = getSchemaFields(PackItemUpdateSchema);
 
-export const packCategoryFields = Object.keys(PackCategoryUpdateSchema.shape);
+export const packCategoryFields = getSchemaFields(PackCategoryUpdateSchema);
 
 export type PackUpdate = z.infer<typeof PackUpdateSchema>;
+export type PackKeys = keyof PackUpdate;
 export type PackMigration = z.infer<typeof PackMigrationSchema>;
 export type PackMove = z.infer<typeof PackMoveSchema>;
 export type PackItemCreate = z.infer<typeof PackItemCreateSchema>;

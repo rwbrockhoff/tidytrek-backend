@@ -6,6 +6,7 @@ export const RegisterSchema = z
 		first_name: z.string().max(100),
 		last_name: z.string().max(100),
 		email: z.email(),
+		password: z.string().optional(),
 		avatar_url: z.url().optional(),
 		supabase_refresh_token: z.string().optional(),
 	})

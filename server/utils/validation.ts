@@ -1,4 +1,5 @@
 import { type Request, type Response } from 'express';
+import { internalError } from './error-response.js';
 
 export const isError = (err: unknown): err is Error => err instanceof Error;
 
@@ -29,7 +30,10 @@ export function withTypes<T>(
 			return controller(req, res);
 		}
 		// Fallback
-		throw new Error('Missing validatedBody - validation middleware may not have run');
+		return internalError(
+			res,
+			'Missing validatedBody - validation middleware may not have run',
+		);
 	};
 }
 

@@ -18,6 +18,7 @@ import { generateUsername } from '../../utils/username-generator.js';
 import { getUserSettingsData } from '../../services/user-service.js';
 import { logger, logError } from '../../config/logger.js';
 import { ValidatedRequest } from '../../utils/validation.js';
+import { DEFAULT_INCREMENT } from '../../utils/fractional-indexing/fractional-indexing.js';
 import { RegisterData, LoginData } from './authentication-schemas.js';
 
 async function register(req: ValidatedRequest<RegisterData>, res: Response) {
@@ -188,7 +189,7 @@ export async function getUser(userId: string) {
 			'trail_name',
 			'profile_photo_url',
 		)
-		.where({ 'user.user_id': userId })
+		.where(`${Tables.User}.user_id`, userId)
 		.first();
 }
 
@@ -269,7 +270,7 @@ async function createDefaultPack(user_id: string, trx = knex) {
 		.insert({
 			user_id,
 			pack_name: 'Default Pack',
-			pack_index: 0,
+			pack_index: DEFAULT_INCREMENT.toString(),
 		})
 		.returning('pack_id');
 
@@ -279,7 +280,7 @@ async function createDefaultPack(user_id: string, trx = knex) {
 			user_id,
 			pack_id,
 			pack_category_name: '',
-			pack_category_index: 0,
+			pack_category_index: DEFAULT_INCREMENT.toString(),
 			pack_category_color: DEFAULT_PALETTE_COLOR,
 		})
 		.returning('pack_category_id');
@@ -290,7 +291,7 @@ async function createDefaultPack(user_id: string, trx = knex) {
 		pack_id,
 		pack_category_id,
 		pack_item_name: '',
-		pack_item_index: 0,
+		pack_item_index: DEFAULT_INCREMENT.toString(),
 	});
 }
 

@@ -93,7 +93,8 @@ async function editGearClosetItem(
 
 		await knex(Tables.PackItem)
 			.update(req.validatedBody)
-			.where({ pack_item_id: packItemId, user_id: userId });
+			.where('pack_item_id', packItemId)
+			.where('user_id', userId);
 
 		return successResponse(res, null, 'Gear closet item updated successfully');
 	} catch (err) {
@@ -147,8 +148,13 @@ async function moveItemToPack(req: ValidatedRequest<MoveItemToPack>, res: Respon
 		});
 
 		await knex(Tables.PackItem)
-			.update({ pack_id, pack_category_id, pack_item_index: newPackItemIndex })
-			.where({ user_id: userId, pack_item_id: packItemId });
+			.update({ 
+				pack_id: Number(pack_id), 
+				pack_category_id: Number(pack_category_id), 
+				pack_item_index: newPackItemIndex 
+			})
+			.where('user_id', userId)
+			.where('pack_item_id', packItemId);
 
 		return successResponse(res, null, 'Item moved to pack successfully');
 	} catch (err) {
@@ -160,7 +166,10 @@ async function deleteGearClosetItem(req: Request, res: Response) {
 		const { userId } = req;
 		const { packItemId } = req.params;
 
-		await knex(Tables.PackItem).delete().where({ pack_item_id: packItemId, user_id: userId });
+		await knex(Tables.PackItem)
+		.delete()
+		.where('pack_item_id', packItemId)
+		.where('user_id', userId);
 
 		return successResponse(res, null, 'Gear closet item deleted successfully');
 	} catch (err) {

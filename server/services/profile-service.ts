@@ -13,7 +13,7 @@ export const getUserProfileInfo = async (userId: string) => {
 			'user_bio',
 			'user_location',
 		)
-		.where({ [`${Tables.User}.user_id`]: userId })
+		.where(`${Tables.User}.user_id`, userId)
 		.first();
 
 	const socialLinks = await knex(Tables.SocialLink)

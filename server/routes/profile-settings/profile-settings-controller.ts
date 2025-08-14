@@ -1,4 +1,4 @@
-import knex from '../../db/connection.js';
+import db from '../../db/connection.js';
 import { Tables } from '../../db/tables.js';
 import { Request, Response } from 'express';
 import { MulterS3File } from '../../types/multer.js';
@@ -55,10 +55,11 @@ async function editProfileSettings(
 		if (username) {
 			// check for existing username
 			const result = await isUniqueUsername(username, userId);
-			if (!result.unique) return conflict(res, result.message || 'Username is not available');
+			if (!result.unique)
+				return conflict(res, result.message || 'Username is not available');
 		}
 
-		await knex(Tables.UserProfile).update(req.validatedBody).where({ user_id: userId });
+		await db(Tables.UserProfile).update(req.validatedBody).where({ user_id: userId });
 
 		return successResponse(res, null, 'Profile updated successfully');
 	} catch (err) {
@@ -79,26 +80,30 @@ async function uploadProfilePhoto(req: Request, res: Response) {
 
 		const s3Key = (req.file as MulterS3File)?.key;
 		const defaultPosition = { x: 0, y: 0, zoom: 1.0 };
-		const profile_photo_url = createCloudfrontUrlForPhoto(
-			s3Key,
-			'profilePhotoBucket',
-		);
+		const profile_photo_url = createCloudfrontUrlForPhoto(s3Key, 'profilePhotoBucket');
 
 		// check for previous photo url
-		const { profile_photo_url: prevUrl } = await knex(Tables.UserProfile)
+		const photoResult = await db(Tables.UserProfile)
 			.select('profile_photo_url')
-			.where({ user_id: userId })
+			.where('user_id', userId)
 			.first();
+		const prevUrl = photoResult?.profile_photo_url;
 
 		if (prevUrl) await s3DeletePhoto(prevUrl);
 
-		await knex(Tables.UserProfile).update({
-			profile_photo_url,
-			profile_photo_s3_key: s3Key,
-			profile_photo_position: defaultPosition
-		}).where({ user_id: userId });
+		await db(Tables.UserProfile)
+			.update({
+				profile_photo_url,
+				profile_photo_s3_key: s3Key,
+				profile_photo_position: defaultPosition,
+			})
+			.where({ user_id: userId });
 
-		return successResponse(res, { profilePhotoUrl: profile_photo_url }, 'Profile photo uploaded successfully');
+		return successResponse(
+			res,
+			{ profilePhotoUrl: profile_photo_url },
+			'Profile photo uploaded successfully',
+		);
 	} catch (err) {
 		logError('Upload profile avatar photo failed', err, {
 			userId: req.userId,
@@ -108,7 +113,7 @@ async function uploadProfilePhoto(req: Request, res: Response) {
 			res,
 			HTTP_STATUS.INTERNAL_SERVER_ERROR,
 			'There was an error uploading your profile photo.',
-			ErrorCode.FILE_UPLOAD_ERROR
+			ErrorCode.FILE_UPLOAD_ERROR,
 		);
 	}
 }
@@ -117,20 +122,23 @@ async function deleteProfilePhoto(req: Request, res: Response) {
 	try {
 		const { userId } = req;
 
-		const { profile_photo_url } = await knex(Tables.UserProfile)
+		const photoResult = await db('user_profile')
 			.select('profile_photo_url')
-			.where({ user_id: userId })
+			.where('user_id', userId)
 			.first();
+		const profile_photo_url = photoResult?.profile_photo_url;
 
 		// delete from S3
-		await s3DeletePhoto(profile_photo_url);
+		if (profile_photo_url) {
+			await s3DeletePhoto(profile_photo_url);
+		}
 
 		// delete from DB
-		await knex(Tables.UserProfile)
+		await db('user_profile')
 			.update({
 				profile_photo_url: null,
 				profile_photo_s3_key: null,
-				profile_photo_position: null
+				profile_photo_position: null,
 			})
 			.where({ user_id: userId });
 
@@ -149,26 +157,30 @@ async function uploadBannerPhoto(req: Request, res: Response) {
 
 		const s3Key = (req.file as MulterS3File)?.key;
 		const defaultPosition = { x: 0, y: 0, zoom: 1.0 };
-		const banner_photo_url = createCloudfrontUrlForPhoto(
-			s3Key,
-			'bannerPhotoBucket',
-		);
+		const banner_photo_url = createCloudfrontUrlForPhoto(s3Key, 'bannerPhotoBucket');
 
 		// check for previous photo url
-		const { banner_photo_url: prevUrl } = await knex(Tables.UserProfile)
+		const bannerResult = await db('user_profile')
 			.select('banner_photo_url')
-			.where({ user_id: userId })
+			.where('user_id', userId)
 			.first();
+		const prevUrl = bannerResult?.banner_photo_url;
 
 		if (prevUrl) await s3DeletePhoto(prevUrl);
 
-		await knex(Tables.UserProfile).update({
-			banner_photo_url,
-			banner_photo_s3_key: s3Key,
-			banner_photo_position: defaultPosition
-		}).where({ user_id: userId });
+		await db(Tables.UserProfile)
+			.update({
+				banner_photo_url,
+				banner_photo_s3_key: s3Key,
+				banner_photo_position: defaultPosition,
+			})
+			.where({ user_id: userId });
 
-		return successResponse(res, { bannerPhotoUrl: banner_photo_url }, 'Banner photo uploaded successfully');
+		return successResponse(
+			res,
+			{ bannerPhotoUrl: banner_photo_url },
+			'Banner photo uploaded successfully',
+		);
 	} catch (err) {
 		logError('Upload profile banner photo failed', err, {
 			userId: req.userId,
@@ -192,10 +204,11 @@ async function updateUsername(req: ValidatedRequest<UsernameUpdate>, res: Respon
 		if (username) {
 			// check for existing username
 			const result = await isUniqueUsername(username, userId);
-			if (!result.unique) return conflict(res, result.message || 'Username is not available');
+			if (!result.unique)
+				return conflict(res, result.message || 'Username is not available');
 		}
 
-		await knex(Tables.UserProfile)
+		await db(Tables.UserProfile)
 			.update({ username: username || null, trail_name })
 			.where({ user_id: userId });
 		return successResponse(res, null, 'Username updated successfully');
@@ -219,7 +232,7 @@ async function addSocialLink(req: ValidatedRequest<SocialLinkCreate>, res: Respo
 		const { social_link_url } = req.validatedBody;
 
 		// Check if user has hit social link limit
-		const countResponse = await knex(Tables.SocialLink)
+		const countResponse = await db(Tables.SocialLink)
 			.count()
 			.where({ user_id: userId })
 			.first();
@@ -230,7 +243,7 @@ async function addSocialLink(req: ValidatedRequest<SocialLinkCreate>, res: Respo
 				.json({ error: 'You already have four links in your profile' });
 		}
 
-		const [socialLink] = await knex(Tables.SocialLink)
+		const [socialLink] = await db(Tables.SocialLink)
 			.insert({
 				user_id: userId,
 				social_link_url,
@@ -248,9 +261,10 @@ async function deleteSocialLink(req: Request, res: Response) {
 		const { userId } = req;
 		const { socialLinkId } = req.params;
 
-		await knex(Tables.SocialLink)
+		await db(Tables.SocialLink)
 			.del()
-			.where({ user_id: userId, social_link_id: socialLinkId });
+			.where('user_id', userId)
+			.where('social_link_id', socialLinkId);
 
 		return successResponse(res, null, 'Social link deleted successfully');
 	} catch (err) {
@@ -260,7 +274,7 @@ async function deleteSocialLink(req: Request, res: Response) {
 
 async function isUniqueUsername(username: string, userId: string) {
 	if (username && username.length) {
-		const existingUsername = await knex(Tables.UserProfile)
+		const existingUsername = await db(Tables.UserProfile)
 			.select('username')
 			.whereNot('user_id', '=', userId)
 			.andWhere({ username })

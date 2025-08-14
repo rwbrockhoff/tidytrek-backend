@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { WeightUnit, WEIGHT_UNIT_VALUES } from '../../types/units.js';
+import { getSchemaFields } from '../../utils/type-utils.js';
 
 export const GearClosetItemUpdateSchema = z
 	.object({
@@ -37,7 +38,7 @@ export const MoveItemToPackSchema = z
 	})
 	.strict();
 
-export const gearClosetItemFields = Object.keys(GearClosetItemUpdateSchema.shape);
+export const gearClosetItemFields = getSchemaFields(GearClosetItemUpdateSchema);
 
 export type GearClosetItemUpdate = z.infer<typeof GearClosetItemUpdateSchema>;
 export type GearClosetItemMove = z.infer<typeof GearClosetItemMoveSchema>;

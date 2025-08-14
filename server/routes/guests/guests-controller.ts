@@ -1,6 +1,5 @@
 import knex from '../../db/connection.js';
 import { Request, Response } from 'express';
-import { Pack } from '../../types/packs/pack-types.js';
 import { Tables } from '../../db/tables.js';
 import { getUserSettingsData } from '../../services/user-service.js';
 import {
@@ -14,8 +13,9 @@ async function getPack(req: Request, res: Response) {
 	try {
 		const { packId } = req.params;
 
-		const pack: Pack = await knex(Tables.Pack)
-			.where({ pack_id: packId, pack_public: true })
+		const pack = await knex(Tables.Pack)
+			.where('pack_id', packId)
+			.where('pack_public', true)
 			.first();
 
 		// Handle private and non-existent packs
@@ -55,11 +55,11 @@ async function getPack(req: Request, res: Response) {
 	}
 }
 
-async function addPackViewCount({ pack_id, pack_views }: Pack) {
+async function addPackViewCount({ pack_id, pack_views }: { pack_id: number; pack_views: number }) {
 	try {
 		return await knex(Tables.Pack)
 			.update({ pack_views: pack_views + 1 })
-			.where({ pack_id });
+			.where('pack_id', pack_id);
 	} catch (err) {
 		return new Error('Error adding to view count.');
 	}
@@ -90,10 +90,12 @@ async function getUserProfile(req: Request, res: Response) {
 		// User doesn't exist
 		if (!resolvedId) return notFound(res, 'User not found.');
 
-		const { public_profile } = await knex(Tables.UserSettings)
+		const userSettings = await knex(Tables.UserSettings)
 			.select('public_profile')
-			.where({ user_id: resolvedId })
+			.where('user_id', resolvedId)
 			.first();
+			
+		const public_profile = userSettings?.public_profile;
 
 		// User exists but profile is private
 		if (!public_profile) {
@@ -118,7 +120,7 @@ async function getUserProfile(req: Request, res: Response) {
 }
 
 async function getIdFromUsername(username: string) {
-	const result = await knex(Tables.UserProfile).select('user_id').where({ username }).first();
+	const result = await knex(Tables.UserProfile).select('user_id').where('username', username).first();
 	return result?.user_id;
 }
 

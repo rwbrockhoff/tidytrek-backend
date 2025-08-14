@@ -6,7 +6,7 @@ import { Tables } from '../../db/tables.js';
 import { PackItem } from '../../types/packs/pack-types.js';
 
 // Type for items that can be moved to gear closet (allows null pack_id/pack_category_id)
-type MovablePackItem = Omit<PackItem, 'pack_id' | 'pack_category_id'> & {
+export type MovablePackItem = Omit<PackItem, 'pack_id' | 'pack_category_id'> & {
 	pack_id: number | null;
 	pack_category_id: number | null;
 };
@@ -17,6 +17,25 @@ export const DEFAULT_INCREMENT = 1000; // Default gap between fractional indexes
 // Type definitions
 export type TableName = 'pack_item' | 'pack_category' | 'pack';
 export type IndexColumn = 'pack_item_index' | 'pack_category_index' | 'pack_index';
+
+function isIndexableTable(table: string): table is TableName {
+	return ['pack_item', 'pack_category', 'pack'].includes(table);
+}
+
+type TableIndexMap = {
+	'pack_item': 'pack_item_index';
+	'pack_category': 'pack_category_index'; 
+	'pack': 'pack_index';
+}
+
+function getIndexColumnForTable(table: TableName): TableIndexMap[TableName] {
+	const map: TableIndexMap = {
+		'pack_item': 'pack_item_index',
+		'pack_category': 'pack_category_index',
+		'pack': 'pack_index'
+	};
+	return map[table];
+}
 export type WhereConditions = Record<string, string | number | null>;
 export type UpdateFields = Record<string, string | number | null>;
 export type KnexRecord = Record<string, string | number | null>;
@@ -234,6 +253,9 @@ export async function rebalanceIndexes(
 	whereConditions: WhereConditions,
 	excludeItemId?: string | number,
 ): Promise<string> {
+	if (!isIndexableTable(table)) {
+		return DEFAULT_INCREMENT.toString();
+	}
 	// Determine primary key column for exclusion
 	const primaryKeyMap = {
 		[Tables.PackItem]: 'pack_item_id',
@@ -267,7 +289,11 @@ export async function rebalanceIndexes(
 
 	// Update only the index column (reuse primaryKey from above)
 	// Only merge the index column, leave everything else unchanged
-	await knex(table).insert(updates).onConflict(primaryKey).merge([indexColumn]);
+	const tableIndexColumn = getIndexColumnForTable(table);
+	// Use object form of merge with knex.ref() to reference the attempted insert value
+	await knex(table).insert(updates).onConflict(primaryKey).merge({
+		[tableIndexColumn]: knex.ref(`excluded.${tableIndexColumn}`)
+	});
 
 	return (parseFloat(newIndexes[newIndexes.length - 1]) + DEFAULT_INCREMENT).toString();
 }
