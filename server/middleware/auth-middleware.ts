@@ -4,6 +4,7 @@ import { supabaseCookieName, supabaseCookieOptions } from '../utils/constants.js
 import { supabase } from '../db/supabase-client.js';
 import { unauthorized } from '../utils/error-response.js';
 import { validateEnvironment } from '../config/environment.js';
+import { clearAuthCookie } from '../utils/cookie-utils.js';
 
 const env = validateEnvironment();
 
@@ -35,6 +36,7 @@ export const protectedRoute = async (req: Request, res: Response, next: Next) =>
 		});
 
 		if (error || !data.session || !data.session.user?.id) {
+			clearAuthCookie(res);
 			return res
 				.status(401)
 				.json({ error: 'Invalid authentication. Please log in again.' });
@@ -46,6 +48,7 @@ export const protectedRoute = async (req: Request, res: Response, next: Next) =>
 			res.cookie(supabaseCookieName, data.session.refresh_token, supabaseCookieOptions);
 		}
 	} catch (supabaseError) {
+		clearAuthCookie(res);
 		return res
 			.status(401)
 			.json({ error: 'Authentication validation failed. Please log in again.' });

@@ -10,9 +10,9 @@ import {
 import {
 	supabaseCookieName,
 	supabaseCookieOptions,
-	domainName,
 	DEFAULT_PALETTE_COLOR,
 } from '../../utils/constants.js';
+import { clearAuthCookie } from '../../utils/cookie-utils.js';
 import { supabase } from '../../db/supabase-client.js';
 import { generateUsername } from '../../utils/username-generator.js';
 import { getUserSettingsData } from '../../services/user-service.js';
@@ -125,7 +125,7 @@ async function login(req: ValidatedRequest<LoginData>, res: Response) {
 }
 
 async function logout(_req: Request, res: Response) {
-	res.clearCookie(supabaseCookieName, { domain: domainName });
+	clearAuthCookie(res);
 	return successResponse(res, null, 'User has been logged out.');
 }
 
@@ -143,7 +143,7 @@ async function getAuthStatus(req: Request, res: Response) {
 			});
 
 			if (error || !data.session || !data.session.user?.id) {
-				res.clearCookie(supabaseCookieName, { domain: domainName });
+				clearAuthCookie(res);
 				return successResponse(res, { isAuthenticated: false });
 			}
 
@@ -162,7 +162,7 @@ async function getAuthStatus(req: Request, res: Response) {
 				settings,
 			});
 		} catch (supabaseError) {
-			res.clearCookie(supabaseCookieName, { domain: domainName });
+			clearAuthCookie(res);
 			return successResponse(res, { isAuthenticated: false });
 		}
 	} catch (err) {
@@ -240,7 +240,7 @@ async function deleteAccount(req: Request, res: Response) {
 
 		await knex(Tables.User).del().where({ user_id: userId });
 
-		res.clearCookie(supabaseCookieName, { domain: domainName });
+		clearAuthCookie(res);
 		return successResponse(res, null, 'User account has been deleted.');
 	} catch (err) {
 		logError('Delete user account failed', err, { userId: req?.userId });
