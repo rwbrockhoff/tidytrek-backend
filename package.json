@@ -24,7 +24,7 @@
 		"lint": "eslint server/**/*.ts",
 		"dev:migrate-make": "NODE_OPTIONS='--import=tsx' knex migrate:make",
 		"dev:migrate": "NODE_OPTIONS='--import=tsx' knex migrate:latest",
-		"dev:migrate-rollback": "NODE_OPTIONS='--import=tsx' knex migrate:rollback",
+		"dev:migrate-rollback": "NODE_ENV=development NODE_OPTIONS='--import=tsx' knex migrate:rollback",
 		"dev:migrate-unlock": "NODE_OPTIONS='--import=tsx' knex migrate:unlock",
 		"dev:seed-make": "NODE_OPTIONS='--import=tsx' knex seed:make",
 		"dev:seed": "NODE_ENV=development NODE_OPTIONS='--import=tsx' knex seed:run",

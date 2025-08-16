@@ -6,9 +6,17 @@ export async function up(knex: Knex): Promise<void> {
 	await knex.schema.createTable(Tables.PackItem, (table) => {
 		table.increments('pack_item_id').unsigned().primary();
 		table.uuid('user_id').unsigned().notNullable();
-		table.foreign('user_id').references('user_id').inTable(Tables.User).onDelete('CASCADE');
+		table
+			.foreign('user_id')
+			.references('user_id')
+			.inTable(Tables.User)
+			.onDelete('CASCADE');
 		table.integer('pack_id').unsigned().nullable();
-		table.foreign('pack_id').references('pack_id').inTable(Tables.Pack).onDelete('CASCADE');
+		table
+			.foreign('pack_id')
+			.references('pack_id')
+			.inTable(Tables.Pack)
+			.onDelete('CASCADE');
 
 		table.integer('pack_category_id').unsigned().nullable();
 		table
@@ -22,11 +30,12 @@ export async function up(knex: Knex): Promise<void> {
 		table.text('pack_item_description').nullable();
 		table.integer('pack_item_quantity').defaultTo(1).notNullable();
 		table.decimal('pack_item_weight').nullable().defaultTo(0);
-		table.string('pack_item_weight_unit', 10)
+		table
+			.string('pack_item_weight_unit', 10)
 			.notNullable()
 			.defaultTo(WeightUnit.oz)
 			.checkIn(WEIGHT_UNIT_VALUES);
-		table.decimal('pack_item_price', 10, 4).nullable().defaultTo(0);
+		table.decimal('pack_item_price', 10, 2).nullable().defaultTo(0);
 		table.text('pack_item_url').nullable();
 		table.integer('pack_item_link_clicks').defaultTo(0).notNullable();
 		table.boolean('worn_weight').defaultTo(false).notNullable();
