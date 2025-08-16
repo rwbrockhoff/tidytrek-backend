@@ -125,7 +125,6 @@ async function addNewPack(req: Request, res: Response) {
 			userId: req.userId,
 			packId: pack.pack_id,
 			packName: pack.pack_name,
-			timestamp: new Date(),
 		});
 
 		return successResponse(res, { pack, categories });
@@ -273,7 +272,7 @@ async function editPack(req: ValidatedRequest<PackUpdate>, res: Response) {
 		}
 
 		const updateData = Object.fromEntries(
-			Object.entries(req.validatedBody).filter(([_, value]) => value !== null),
+			Object.entries(req.validatedBody).filter(([, value]) => value !== null),
 		);
 
 		const [updatedPack] = await db(Tables.Pack)

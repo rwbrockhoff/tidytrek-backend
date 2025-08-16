@@ -27,14 +27,9 @@ const {
 } = mockPrivateUser;
 
 export async function seed(knex: Knex): Promise<void> {
-	// Clean up all mock data
-	await knex(Tables.PackItem).where('user_id', user_id).del();
-	await knex(Tables.PackCategory).where('user_id', user_id).del();
-	await knex(Tables.Pack).where('user_id', user_id).del();
-	await knex(Tables.SocialLink).where('user_id', user_id).del();
-	await knex(Tables.UserProfile).where('user_id', user_id).del();
-	await knex(Tables.UserSettings).where('user_id', user_id).del();
+	// Delete users - cascade delete
 	await knex(Tables.User).where('user_id', user_id).del();
+	await knex(Tables.User).where('user_id', privateUserId).del();
 
 	// Insert mock user, profile, and settings
 	await knex(Tables.User).insert({ user_id, first_name, last_name, email });
