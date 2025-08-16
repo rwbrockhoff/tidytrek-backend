@@ -4,6 +4,6 @@ export default defineConfig({
 	test: {
 		globals: true,
 		poolOptions: { threads: { singleThread: true } },
-		setupFiles: './server/tests/setup.ts',
+		setupFiles: './dist/server/tests/setup.js',
 	},
 });

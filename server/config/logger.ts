@@ -27,10 +27,13 @@ const extractErrorDetails = (error: unknown) => {
 };
 
 // Build transports array conditionally
-const transports: winston.transport[] = [
-	// Always log to console
-	new winston.transports.Console(),
-];
+const transports: winston.transport[] = [];
+
+if (process.env.NODE_ENV === 'test') {
+	transports.push(new winston.transports.Console({ silent: true }));
+} else {
+	transports.push(new winston.transports.Console());
+}
 
 // Add file logging in production
 if (process.env.NODE_ENV === 'production') {
