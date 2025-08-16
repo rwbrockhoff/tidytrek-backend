@@ -138,6 +138,20 @@ async function getAuthStatus(req: Request, res: Response) {
 		}
 
 		try {
+			const { data: { user }, error: userError } = await supabase.auth.getUser();
+
+			if (user && !userError) {
+				req.userId = user.id;
+				const userData = await getUser(req.userId);
+				const settings = await getUserSettingsData(req.userId);
+
+				return successResponse(res, {
+					isAuthenticated: true,
+					user: userData,
+					settings,
+				});
+			}
+
 			const { data, error } = await supabase.auth.refreshSession({
 				refresh_token: supabaseRefreshToken,
 			});
@@ -153,12 +167,12 @@ async function getAuthStatus(req: Request, res: Response) {
 				res.cookie(supabaseCookieName, data.session.refresh_token, supabaseCookieOptions);
 			}
 
-			const user = await getUser(req.userId);
+			const userData = await getUser(req.userId);
 			const settings = await getUserSettingsData(req.userId);
 
 			return successResponse(res, {
 				isAuthenticated: true,
-				user,
+				user: userData,
 				settings,
 			});
 		} catch (supabaseError) {
