@@ -9,7 +9,7 @@ import {
 import {
 	getNextAppendIndex,
 	moveWithFractionalIndex,
-} from '../../utils/fractional-indexing/fractional-indexing.js';
+} from '../../utils/fractional-indexing/index.js';
 import {
 	hasEmptyValidatedBody,
 	NO_VALID_FIELDS_MESSAGE,

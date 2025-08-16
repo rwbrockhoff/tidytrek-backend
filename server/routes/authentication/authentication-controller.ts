@@ -18,7 +18,7 @@ import { generateUsername } from '../../utils/username-generator.js';
 import { getUserSettingsData } from '../../services/user-service.js';
 import { logger, logError } from '../../config/logger.js';
 import { ValidatedRequest } from '../../utils/validation.js';
-import { DEFAULT_INCREMENT } from '../../utils/fractional-indexing/fractional-indexing.js';
+import { DEFAULT_INCREMENT } from '../../utils/fractional-indexing/index.js';
 import { RegisterData, LoginData } from './authentication-schemas.js';
 
 async function register(req: ValidatedRequest<RegisterData>, res: Response) {

@@ -10,7 +10,7 @@ import {
 	moveWithFractionalIndex,
 	bulkMoveToGearCloset,
 	type MovablePackItem,
-} from '../../utils/fractional-indexing/fractional-indexing.js';
+} from '../../utils/fractional-indexing/index.js';
 import { logger } from '../../config/logger.js';
 import { packFields, packItemFields, packCategoryFields } from './pack-schemas.js';
 
@@ -302,6 +302,7 @@ export async function movePackItemBetweenCategories(
 	);
 
 	return {
+		packItemId,
 		newIndex,
 		rebalanced,
 		categoryChanged: prev_pack_category_id !== pack_category_id,
@@ -390,6 +391,7 @@ export async function movePackCategory(
 	);
 
 	return {
+		packCategoryId: categoryId,
 		newIndex,
 		rebalanced,
 	};
