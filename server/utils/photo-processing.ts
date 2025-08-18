@@ -6,6 +6,14 @@ const env = validateEnvironment();
 
 type BucketName = 'profilePhotoBucket' | 'bannerPhotoBucket' | 'packPhotoBucket';
 
+/**
+ * Creates CloudFront URL for quick photo processing with smaller resize transformations
+ * Creates base64-encoded config for image processing
+ *
+ * @param key - S3 object key
+ * @param bucketName - Destination S3 bucket for the image
+ * @returns CloudFront URL string with embedded processing config (for 600px resize)
+ */
 export function createQuickPhotoUrl(key: string, bucketName: BucketName): string {
 	const quickProcessingConfig = {
 		bucket: getBucketName(bucketName),
@@ -18,7 +26,7 @@ export function createQuickPhotoUrl(key: string, bucketName: BucketName): string
 			},
 		},
 	};
-	
+
 	const encodedObject = btoa(JSON.stringify(quickProcessingConfig));
 	return `${env.CLOUDFRONT_PHOTO_UPLOAD_URL}/${encodedObject}`;
 }
@@ -32,10 +40,10 @@ export async function updateToOptimizedPhoto(
 	photoUrlColumn: string,
 	whereConditions: Record<string, string | number>,
 	s3Key: string,
-	bucketName: BucketName
+	bucketName: BucketName,
 ) {
 	const optimizedUrl = createOptimizedPhotoUrl(s3Key, bucketName);
-	
+
 	await db(tableName)
 		.update({ [photoUrlColumn]: optimizedUrl })
 		.where(whereConditions);

@@ -1,21 +1,21 @@
 import knex from '../../db/connection.js';
 import { Tables } from '../../db/tables.js';
-import { 
-	calculateMidpoint, 
-	calculateAfter, 
-	generateSequence, 
-	needsRebalancing, 
+import {
+	calculateMidpoint,
+	calculateAfter,
+	generateSequence,
+	needsRebalancing,
 	hasInvalidOrdering,
-	DEFAULT_INCREMENT 
+	DEFAULT_INCREMENT,
 } from './calculations.js';
-import { 
-	TableName, 
-	IndexColumn, 
-	WhereConditions, 
-	UpdateFields, 
+import {
+	TableName,
+	IndexColumn,
+	WhereConditions,
+	UpdateFields,
 	KnexRecord,
 	MovablePackItem,
-	MoveResult
+	MoveResult,
 } from './types.js';
 
 function isIndexableTable(table: string): table is TableName {
@@ -23,16 +23,16 @@ function isIndexableTable(table: string): table is TableName {
 }
 
 type TableIndexMap = {
-	'pack_item': 'pack_item_index';
-	'pack_category': 'pack_category_index'; 
-	'pack': 'pack_index';
-}
+	pack_item: 'pack_item_index';
+	pack_category: 'pack_category_index';
+	pack: 'pack_index';
+};
 
 function getIndexColumnForTable(table: TableName): TableIndexMap[TableName] {
 	const map: TableIndexMap = {
-		'pack_item': 'pack_item_index',
-		'pack_category': 'pack_category_index',
-		'pack': 'pack_index'
+		pack_item: 'pack_item_index',
+		pack_category: 'pack_category_index',
+		pack: 'pack_index',
 	};
 	return map[table];
 }
@@ -56,6 +56,20 @@ export async function getNextAppendIndex(
 		: defaultIndex;
 }
 
+/**
+ * Moves database item using fractional indexing with rebalancing
+ * Handles drag-and-drop while maintaining proper sort order
+ *
+ * @param table - Database table name
+ * @param indexColumn - Column name storing index values
+ * @param itemIdColumn - Column name for item ID
+ * @param itemId - Item ID being moved
+ * @param prevIndex - Previous item index (item that should be before)
+ * @param nextIndex - Next item index (item that should be after)
+ * @param whereConditions - Additional WHERE clause conditions for update (packCategoryId, etc)
+ * @param updateFields - Additional fields to update during the move
+ * @returns Object containing new index and whether or not it rebalanced
+ */
 export async function moveWithFractionalIndex(
 	table: TableName,
 	indexColumn: IndexColumn,
@@ -122,15 +136,11 @@ export async function bulkMoveToGearCloset(
 ): Promise<void> {
 	if (items.length === 0) return;
 
-	const startIndex = await getNextAppendIndex(
-		Tables.PackItem,
-		'pack_item_index',
-		{
-			user_id: userId,
-			pack_id: null,
-			pack_category_id: null,
-		},
-	);
+	const startIndex = await getNextAppendIndex(Tables.PackItem, 'pack_item_index', {
+		user_id: userId,
+		pack_id: null,
+		pack_category_id: null,
+	});
 
 	const indexes = generateSequence(items.length, parseFloat(startIndex));
 
@@ -147,6 +157,16 @@ export async function bulkMoveToGearCloset(
 		.merge(['pack_item_index', 'pack_category_id', 'pack_id']);
 }
 
+/**
+ * Rebalances fractional indexes when they become too precise or invalid
+ * Regenerates clean, evenly-spaced index values for improved performance
+ *
+ * @param table - Database table containing items to rebalance
+ * @param indexColumn - Column storing fractional index values
+ * @param whereConditions - Conditions to scope which items get rebalanced
+ * @param excludeItemId - Optional item ID to exclude from rebalancing operation
+ * @returns New index value that can be safely used for the excluded item
+ */
 export async function rebalanceIndexes(
 	table: TableName,
 	indexColumn: IndexColumn,
@@ -184,9 +204,12 @@ export async function rebalanceIndexes(
 	}));
 
 	const tableIndexColumn = getIndexColumnForTable(table);
-	await knex(table).insert(updates).onConflict(primaryKey).merge({
-		[tableIndexColumn]: knex.ref(`excluded.${tableIndexColumn}`)
-	});
+	await knex(table)
+		.insert(updates)
+		.onConflict(primaryKey)
+		.merge({
+			[tableIndexColumn]: knex.ref(`excluded.${tableIndexColumn}`),
+		});
 
 	return (parseFloat(newIndexes[newIndexes.length - 1]) + DEFAULT_INCREMENT).toString();
 }

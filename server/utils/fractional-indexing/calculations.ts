@@ -5,6 +5,14 @@ function isValidNumber(value: number): boolean {
 	return !isNaN(value);
 }
 
+/**
+ * Calculates fractional index between two existing items for ordered list insertion
+ * Handles beginning/end of list cases and maintains numerical ordering
+ *
+ * @param prevIndex - Previous item's index (item that should come before)
+ * @param nextIndex - Next item's index (item that should come after)
+ * @returns Fractional index string that maintains ordering between prev/next
+ */
 export function calculateMidpoint(prevIndex?: string, nextIndex?: string): string {
 	if (!prevIndex && !nextIndex) return DEFAULT_INCREMENT.toString();
 	if (!prevIndex) return calculateBefore(nextIndex!);
@@ -62,9 +70,9 @@ export function needsRebalancing(index: string): boolean {
 
 export function hasInvalidOrdering(prevIndex?: string, nextIndex?: string): boolean {
 	if (!prevIndex || !nextIndex) return false;
-	
+
 	const prevFloat = parseFloat(prevIndex);
 	const nextFloat = parseFloat(nextIndex);
-	
+
 	return isValidNumber(prevFloat) && isValidNumber(nextFloat) && prevFloat >= nextFloat;
 }
