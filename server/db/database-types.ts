@@ -108,5 +108,13 @@ declare module 'knex/types/tables.js' {
 			created_at: Date;
 			updated_at: Date;
 		};
+
+		pack_bookmarks: {
+			pack_bookmark_id: number;
+			user_id: string;
+			pack_id: number;
+			created_at: Date;
+			updated_at: Date | null;
+		};
 	}
 }
