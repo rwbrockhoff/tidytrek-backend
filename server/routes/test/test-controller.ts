@@ -25,19 +25,11 @@ export const resetTestDatabase = async (_req: Request, res: Response) => {
 		// Run the test setup script
 		const setupScript =
 			process.env.DOCKER === 'true' ? 'docker:test:db-setup' : 'test:setup';
-		const { stdout, stderr } = await execAsync(`npm run ${setupScript}`);
+		await execAsync(`npm run ${setupScript}`);
 
 		console.log('Test database reset completed');
-		if (stdout) console.log('stdout:', stdout);
-		if (stderr) console.log('stderr:', stderr);
 
-		return successResponse(
-			res,
-			{
-				timestamp: new Date().toISOString(),
-			},
-			'Test database reset successfully',
-		);
+		return successResponse(res, null, 'Test database reset successfully');
 	} catch (error) {
 		console.error('Error resetting test database:', error);
 		return errorResponse(
@@ -61,19 +53,11 @@ export const resetPackData = async (_req: Request, res: Response) => {
 		// Run the pack-specific seed script
 		const seedScript =
 			process.env.DOCKER === 'true' ? 'docker:test:seed-packs' : 'test:seed-packs';
-		const { stdout, stderr } = await execAsync(`npm run ${seedScript}`);
+		await execAsync(`npm run ${seedScript}`);
 
 		console.log('Pack data reset completed');
-		if (stdout) console.log('stdout:', stdout);
-		if (stderr) console.log('stderr:', stderr);
 
-		return successResponse(
-			res,
-			{
-				timestamp: new Date().toISOString(),
-			},
-			'Pack data reset successfully',
-		);
+		return successResponse(res, null, 'Pack data reset successfully');
 	} catch (error) {
 		console.error('Error resetting pack data:', error);
 		return errorResponse(

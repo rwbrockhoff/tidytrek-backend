@@ -10,14 +10,15 @@ import {
 import {
 	supabaseCookieName,
 	supabaseCookieOptions,
-	domainName,
 	DEFAULT_PALETTE_COLOR,
 } from '../../utils/constants.js';
+import { clearAuthCookie } from '../../utils/cookie-utils.js';
 import { supabase } from '../../db/supabase-client.js';
 import { generateUsername } from '../../utils/username-generator.js';
 import { getUserSettingsData } from '../../services/user-service.js';
 import { logger, logError } from '../../config/logger.js';
 import { ValidatedRequest } from '../../utils/validation.js';
+import { DEFAULT_INCREMENT } from '../../utils/fractional-indexing/index.js';
 import { RegisterData, LoginData } from './authentication-schemas.js';
 
 async function register(req: ValidatedRequest<RegisterData>, res: Response) {
@@ -124,7 +125,7 @@ async function login(req: ValidatedRequest<LoginData>, res: Response) {
 }
 
 async function logout(_req: Request, res: Response) {
-	res.clearCookie(supabaseCookieName, { domain: domainName });
+	clearAuthCookie(res);
 	return successResponse(res, null, 'User has been logged out.');
 }
 
@@ -137,12 +138,26 @@ async function getAuthStatus(req: Request, res: Response) {
 		}
 
 		try {
+			const { data: { user }, error: userError } = await supabase.auth.getUser();
+
+			if (user && !userError) {
+				req.userId = user.id;
+				const userData = await getUser(req.userId);
+				const settings = await getUserSettingsData(req.userId);
+
+				return successResponse(res, {
+					isAuthenticated: true,
+					user: userData,
+					settings,
+				});
+			}
+
 			const { data, error } = await supabase.auth.refreshSession({
 				refresh_token: supabaseRefreshToken,
 			});
 
 			if (error || !data.session || !data.session.user?.id) {
-				res.clearCookie(supabaseCookieName, { domain: domainName });
+				clearAuthCookie(res);
 				return successResponse(res, { isAuthenticated: false });
 			}
 
@@ -152,16 +167,16 @@ async function getAuthStatus(req: Request, res: Response) {
 				res.cookie(supabaseCookieName, data.session.refresh_token, supabaseCookieOptions);
 			}
 
-			const user = await getUser(req.userId);
+			const userData = await getUser(req.userId);
 			const settings = await getUserSettingsData(req.userId);
 
 			return successResponse(res, {
 				isAuthenticated: true,
-				user,
+				user: userData,
 				settings,
 			});
 		} catch (supabaseError) {
-			res.clearCookie(supabaseCookieName, { domain: domainName });
+			clearAuthCookie(res);
 			return successResponse(res, { isAuthenticated: false });
 		}
 	} catch (err) {
@@ -188,7 +203,7 @@ export async function getUser(userId: string) {
 			'trail_name',
 			'profile_photo_url',
 		)
-		.where({ 'user.user_id': userId })
+		.where(`${Tables.User}.user_id`, userId)
 		.first();
 }
 
@@ -239,7 +254,7 @@ async function deleteAccount(req: Request, res: Response) {
 
 		await knex(Tables.User).del().where({ user_id: userId });
 
-		res.clearCookie(supabaseCookieName, { domain: domainName });
+		clearAuthCookie(res);
 		return successResponse(res, null, 'User account has been deleted.');
 	} catch (err) {
 		logError('Delete user account failed', err, { userId: req?.userId });
@@ -269,7 +284,7 @@ async function createDefaultPack(user_id: string, trx = knex) {
 		.insert({
 			user_id,
 			pack_name: 'Default Pack',
-			pack_index: 0,
+			pack_index: DEFAULT_INCREMENT.toString(),
 		})
 		.returning('pack_id');
 
@@ -279,7 +294,7 @@ async function createDefaultPack(user_id: string, trx = knex) {
 			user_id,
 			pack_id,
 			pack_category_name: '',
-			pack_category_index: 0,
+			pack_category_index: DEFAULT_INCREMENT.toString(),
 			pack_category_color: DEFAULT_PALETTE_COLOR,
 		})
 		.returning('pack_category_id');
@@ -290,7 +305,7 @@ async function createDefaultPack(user_id: string, trx = knex) {
 		pack_id,
 		pack_category_id,
 		pack_item_name: '',
-		pack_item_index: 0,
+		pack_item_index: DEFAULT_INCREMENT.toString(),
 	});
 }
 

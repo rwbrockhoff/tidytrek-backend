@@ -8,7 +8,7 @@ import {
 	rebalanceIndexes,
 	type IndexColumn,
 	type WhereConditions,
-} from './fractional-indexing.js';
+} from './index.js';
 import knex from '../../db/connection.js';
 import { Tables } from '../../db/tables.js';
 import {

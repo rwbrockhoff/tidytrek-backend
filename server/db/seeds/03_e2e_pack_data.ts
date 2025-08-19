@@ -17,11 +17,7 @@ import {
 import { packFields } from '../../routes/pack/pack-schemas.js';
 
 export async function seed(knex: Knex): Promise<void> {
-	console.log('Seeding E2E pack data...');
-
-	// Remove previous data
-	await knex(Tables.PackItem).where('user_id', e2eTestUser.userId).del();
-	await knex(Tables.PackCategory).where('user_id', e2eTestUser.userId).del();
+	// Remove previous pack data - cascade delete pack_category, pack_items
 	await knex(Tables.Pack).where('user_id', e2eTestUser.userId).del();
 
 	// Create basic test pack
@@ -103,6 +99,4 @@ export async function seed(knex: Knex): Promise<void> {
 		...kitchenItemsWithIds,
 		...gearClosetItemsWithIds,
 	]);
-
-	console.log('E2E pack data seeded successfully');
 }

@@ -1,4 +1,5 @@
 import { type Request, type Response } from 'express';
+import { internalError } from './error-response.js';
 
 export const isError = (err: unknown): err is Error => err instanceof Error;
 
@@ -17,9 +18,13 @@ function hasValidatedBody<T>(req: Request): req is ValidatedRequest<T> {
 	return req.validatedBody !== undefined;
 }
 
-// Type wrapper for controller fucntions - provides typed req.validatedBody
-// Wraps the controller rather than trying to get in the way of how Express
-// wants this to be typed for middleware
+/**
+ * Type-safe wrapper for controllers with validated request bodies
+ * Ensures req.validatedBody is properly typed in controller functions
+ *
+ * @param controller - Express controller function expecting validated body of type T
+ * @returns Wrapped controller that handles type validation and error handling
+ */
 export function withTypes<T>(
 	controller: (req: ValidatedRequest<T>, res: Response) => Promise<Response | void>,
 ) {
@@ -29,7 +34,10 @@ export function withTypes<T>(
 			return controller(req, res);
 		}
 		// Fallback
-		throw new Error('Missing validatedBody - validation middleware may not have run');
+		return internalError(
+			res,
+			'Missing validatedBody - validation middleware may not have run',
+		);
 	};
 }
 

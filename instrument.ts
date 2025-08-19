@@ -17,6 +17,4 @@ if (dsn && environment === 'production') {
 		// PII handling: currently only send user IDs (not emails, names, etc.)
 	});
 	console.log(`Sentry initialized for environment: ${environment}`);
-} else {
-	console.log('Sentry disabled for development environment');
 }

@@ -11,7 +11,7 @@ export const domainName = env.NODE_ENV === 'production' ? '.tidytrek.co' : undef
 
 export const supabaseCookieOptions = {
 	httpOnly: true,
-	maxAge: 1000 * 60 * 60 * 24 * 14, // 14 days
+	maxAge: 1000 * 60 * 60 * 24 * 30, // 30 days
 	signed: true,
-	domain: domainName,
+	...(domainName && { domain: domainName }),
 };

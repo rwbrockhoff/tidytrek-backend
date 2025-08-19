@@ -1,186 +1,93 @@
-# 🥾 TidyTrek Backend API
+# TidyTrek Backend API
 
-## Overview
+Node.js REST API for backpacking gear management with TypeScript, PostgreSQL, and AWS integration.
 
-Node.js REST API for backpacking gear management with fractional indexing, web scraping, and AWS S3 integration. Features PostgreSQL database, Supabase authentication, and comprehensive testing with production deployment on AWS.
+## Related Repositories
 
-**Live API**: [TidyTrek Backend](https://api.tidytrek.co/)
-
-## Related Repos
-- **[Frontend](https://github.com/rwbrockhoff/tidytrek-frontend)** - React app
+- **[Frontend](https://github.com/rwbrockhoff/tidytrek-frontend)** - React application
 - **[Landing](https://github.com/rwbrockhoff/tt-landing)** - Marketing site
 
 ## Tech Stack
 
-**Core**: Node.js 22, TypeScript (strict), Express, PostgreSQL  
-**Database**: Knex.js migrations, Supabase auth  
-**Infrastructure**: AWS S3 + CloudFront, Docker, Sentry monitoring  
-**Testing**: Vitest + Supertest with separate test DB
+**Backend**: Node.js, TypeScript, Express, PostgreSQL  
+**Database**: Knex.js query builder with migrations  
+**Authentication**: Supabase with refresh token rotation  
+**Infrastructure**: AWS S3 + CloudFront, Redis (ElastiCache), PM2 clustering  
+**Testing**: Vitest + Supertest with isolated test database  
+**Monitoring**: Winston logging, Sentry error tracking
 
 ## Key Features
 
-### Architecture
+### Production Architecture
 
-- Database migrations and seeding with Knex.js
-- TypeScript throughout with strict configuration
-- Testing with Vitest and Supertest
-- Docker containerization for dev/production
-- AWS S3 integration for file uploads with CloudFront CDN
+- **PM2 clustering** with 2 instances for high availability
+- **Redis-backed rate limiting** using AWS ElastiCache
+- **Async photo processing** for instant uploads with background optimization
+- **Type-safe database queries** with full TypeScript integration
+- **Service layer architecture** for complex business logic
 
-### Tech Stack
+### Core Functionality
 
-**Core**
+- **Fractional indexing** for efficient drag-and-drop reordering
+- **Multi-bucket file uploads** with S3 and CloudFront CDN
+- **Web scraping** for pack migration from other services
+- **Secure authentication** with signed cookies and token rotation
 
-- Node.js with Express
-- PostgreSQL with Knex.js query builder
-- Supabase for authentication and user management
-- Winston for structured logging
+### Performance Optimizations
 
-**Security & Middleware**
+- **Async image processing**: Users see photos instantly while optimization happens in background
+- **Redis caching**: Distributed rate limiting and session management
+- **CloudFront CDN**: Global edge caching for static assets
+- **Database indexing**: Optimized queries with proper constraints
 
-- CORS with environment-specific origins
-- Rate limiting with express-rate-limit
-- Supabase authentication with signed cookies
+## Development
+
+### Testing
+
+- **Unit tests**: Controller logic and utility functions
+- **Integration tests**: End-to-end API workflows
+- **Database tests**: Migration and transaction testing
+- **Separate test database**: Isolated test environment
+
+## Production Deployment
+
+### Infrastructure
+
+- **Multi-VPC architecture** with VPC peering
+- **EC2 instances** in private subnets with bastion host access
+- **PostgreSQL RDS** in isolated database VPC
+- **ElastiCache Redis** for distributed caching
+- **S3 + CloudFront** for file storage and CDN
+
+### CI/CD Pipeline
+
+- **GitHub Actions** for automated testing and deployment
+- **Direct EC2 deployment** via SSH and rsync
+- **Security**: Temporary IP whitelisting during deployment
+- **Cache invalidation**: Automatic CloudFront cache clearing
+
+### Process Management
+
+- **PM2 clustering**: Multiple Node.js instances with load balancing
+- **Graceful restarts**: Zero-downtime deployments
+- **Health monitoring**: Process and memory monitoring (via PM2+)
+
+## Security
+
+### Authentication
+
+- Supabase-managed user registration and email verification
+- Refresh token rotation with secure HTTP-only cookies
+- Protected routes with middleware validation
+
+### Data Protection
+
 - Input validation and sanitization
-
-**Infrastructure**
-
-- AWS S3 for file storage with CloudFront CDN
-- Docker multi-stage builds for dev/production
-- Sentry for error tracking and monitoring
-
-**Testing**
-
-- Vitest for unit and integration testing
-- Comprehensive test coverage
-- Separate test database configuration
-
-## Features
-
-### Fractional Indexing
-
-Fractional indexing for efficient drag-and-drop reordering without bulk updates.
-
-```typescript
-// Efficient reordering with fractional indexing
-const newIndex = moveWithFractionalIndex(currentIndex, targetIndex, siblingIndexes);
-```
-
-### File Upload System
-
-AWS S3 integration with automatic image resizing, CloudFront CDN distribution, and signed URLs.
-
-```typescript
-// Multi-bucket upload configuration
-const buckets = {
-	profilePhotoBucket: { width: 200 },
-	bannerPhotoBucket: { width: 1600, height: 400 },
-	packPhotoBucket: { width: 600, height: 400 },
-};
-```
-
-### Web Scraping
-
-Automated pack data extraction using Puppeteer. Users can easily migrate
-existing packs from Lighterpack (an older app not being updated anymore).
-This makes the switch easy and improves user adoption.
-
-```typescript
-// Pack data scraping from external sources
-const packData = await packScraper(url);
-```
-
-## Security Implementation
-
-### Authentication Flow
-
-1. Supabase handles user registration and email verification
-2. Supabase refresh tokens with secure, signed cookies
-3. Refresh token rotation for enhanced security
-4. Protected routes with middleware validation
-
-## Testing Strategy
-
-### Test Structure
-
-**Unit Tests**
-
-- Controller logic testing
-- Utility function validation
-- Database query testing
-- Authentication middleware testing
-
-**Integration Tests**
-
-- End-to-end API workflow testing
-- Database transaction testing
-- Error handling validation
-
-**E2E Tests**
-
-Backend includes test endpoints for frontend E2E testing. These endpoints
-allow the frontend tests to reset and manage the test database.
-
-### Database Testing
-
-Separate test database with automatic setup/teardown:
-
-```bash
-# Test database lifecycle
-npm run test:db-reset    # Clean slate
-npm run test:migrate     # Apply migrations
-npm run test:seed        # Add test data
-npm run test             # Run tests
-```
-
-## Monitoring
-
-### Logging
-
-Winston structured logging with different levels:
-
-```typescript
-// Structured logging
-logger.info('User registration successful', {
-	userId: user_id,
-	email,
-	hasRefreshToken: !!supabase_refresh_token,
-});
-// I also have a Sentry wrapped logger for errors
-```
-
-### Error Tracking
-
-Sentry integration for production error monitoring and performance tracking.
-
-## CI/CD & Deployment
-
-### GitHub Actions Pipeline
-
-**Test Pipeline**
-
-- Automated testing on pull requests
-- Database setup and migration testing
-- Code coverage reporting
-
-**Deployment Pipeline**
-
-- GitHub Actions with temporary IP whitelisting
-- Direct deployment to EC2 via SSH and rsync
-- CloudFront cache invalidation
-
-### Production Infrastructure
-
-**Current Setup**
-
-- Multi-VPC architecture with VPC peering
-- EC2 instances in private subnets
-- PostgreSQL RDS in isolated VPC
-- S3 + CloudFront for static assets
-- Bastion host for secure access
+- CORS with environment-specific origins
+- Signed cookies for session management
 
 ---
 
 **Author**: Ryan Brockhoff  
-**Email**: ryanbrockhoff@protonmail.com  
-**Website**: [Developer Website](https://ryanbrockhoff.com/)
+**Contact**: ryanbrockhoff@protonmail.com  
+**Portfolio**: [ryanbrockhoff.com](https://ryanbrockhoff.com/)
