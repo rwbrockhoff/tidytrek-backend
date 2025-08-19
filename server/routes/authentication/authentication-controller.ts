@@ -4,7 +4,6 @@ import { Tables } from '../../db/tables.js';
 import {
 	successResponse,
 	badRequest,
-	unauthorized,
 	internalError,
 } from '../../utils/error-response.js';
 import {
@@ -138,7 +137,10 @@ async function getAuthStatus(req: Request, res: Response) {
 		}
 
 		try {
-			const { data: { user }, error: userError } = await supabase.auth.getUser();
+			const {
+				data: { user },
+				error: userError,
+			} = await supabase.auth.getUser();
 
 			if (user && !userError) {
 				req.userId = user.id;
@@ -207,52 +209,17 @@ export async function getUser(userId: string) {
 		.first();
 }
 
-async function refreshSupabaseSession(req: Request, res: Response) {
-	try {
-		const refreshToken = req.signedCookies[supabaseCookieName];
-
-		if (!refreshToken) {
-			return unauthorized(res, 'No refresh token available');
-		}
-
-		const { data, error } = await supabase.auth.refreshSession({
-			refresh_token: refreshToken,
-		});
-
-		if (error || !data.session) {
-			return unauthorized(res, 'Invalid refresh token');
-		}
-
-		// Update the refresh token cookie if it changed
-		if (data.session.refresh_token !== refreshToken) {
-			res.cookie(supabaseCookieName, data.session.refresh_token, supabaseCookieOptions);
-		}
-
-		return successResponse(
-			res,
-			{
-				access_token: data.session.access_token,
-				expires_at: data.session.expires_at,
-			},
-			'Session refreshed successfully',
-		);
-	} catch (err) {
-		logError('Refresh user Supabase token failed', err, {
-			supabaseRefreshToken: req?.signedCookies[supabaseCookieName],
-		});
-		return internalError(res, 'Error refreshing session');
-	}
-}
-
 async function deleteAccount(req: Request, res: Response) {
 	try {
 		const { userId } = req;
-		const { error } = await supabase.auth.admin.deleteUser(userId);
 
-		if (error)
-			return internalError(res, 'There was an error deleting your account at this time.');
+		await knex(Tables.User).where({ user_id: userId }).del();
 
-		await knex(Tables.User).del().where({ user_id: userId });
+		try {
+			await supabase.auth.admin.deleteUser(userId);
+		} catch (supabaseError) {
+			logError('Supabase user deletion failed (non-critical)', supabaseError, { userId });
+		}
 
 		clearAuthCookie(res);
 		return successResponse(res, null, 'User account has been deleted.');
@@ -325,6 +292,5 @@ export default {
 	login,
 	logout,
 	getAuthStatus,
-	refreshSupabaseSession,
 	deleteAccount,
 };

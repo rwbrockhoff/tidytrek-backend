@@ -2,6 +2,7 @@ import express from 'express';
 import controller from './authentication-controller.js';
 import { validateRequestBody as validate } from '../../middleware/validation-middleware.js';
 import { withTypes } from '../../utils/validation.js';
+import { protectedRoute } from '../../middleware/auth-middleware.js';
 import {
 	RegisterSchema,
 	LoginSchema,
@@ -18,8 +19,7 @@ export function createAuthRoutes(authRateLimit: RequestHandler) {
 	router.post('/register', authRateLimit, validate(RegisterSchema), withTypes<RegisterData>(controller.register));
 	router.post('/login', authRateLimit, validate(LoginSchema), withTypes<LoginData>(controller.login));
 	router.post('/logout', controller.logout);
-	router.post('/refresh', controller.refreshSupabaseSession);
-	router.delete('/account', controller.deleteAccount);
+	router.delete('/account', protectedRoute, controller.deleteAccount);
 
 	return router;
 }
