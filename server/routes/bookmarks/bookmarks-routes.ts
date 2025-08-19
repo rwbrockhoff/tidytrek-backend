@@ -7,6 +7,15 @@ import { AddBookmarkSchema, AddBookmarkRequest } from './bookmarks-schemas.js';
 const router = express.Router();
 
 router.get('/', controller.getUserBookmarks);
-router.post('/', validate(AddBookmarkSchema), withTypes<AddBookmarkRequest>(controller.addBookmark));
+router.post(
+	'/',
+	validate(AddBookmarkSchema),
+	withTypes<AddBookmarkRequest>(controller.addBookmark),
+);
+router.delete(
+	'/',
+	validate(AddBookmarkSchema),
+	withTypes<AddBookmarkRequest>(controller.deleteBookmark),
+);
 
 export default router;

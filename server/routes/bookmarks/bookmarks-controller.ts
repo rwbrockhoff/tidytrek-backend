@@ -1,7 +1,11 @@
 import knex from '../../db/connection.js';
 import { Tables } from '../../db/tables.js';
 import { Request, Response } from 'express';
-import { successResponse, internalError, badRequest } from '../../utils/error-response.js';
+import {
+	successResponse,
+	internalError,
+	badRequest,
+} from '../../utils/error-response.js';
 import { logError } from '../../config/logger.js';
 import { ValidatedRequest } from '../../utils/validation.js';
 import { AddBookmarkRequest } from './bookmarks-schemas.js';
@@ -61,7 +65,22 @@ async function addBookmark(req: ValidatedRequest<AddBookmarkRequest>, res: Respo
 	}
 }
 
+async function deleteBookmark(req: ValidatedRequest<AddBookmarkRequest>, res: Response) {
+	try {
+		const { userId } = req;
+		const { pack_id } = req.validatedBody;
+
+		await knex(Tables.PackBookmarks).where({ user_id: userId, pack_id }).delete();
+
+		return successResponse(res, null, 'Bookmark deleted successfully.');
+	} catch (err) {
+		logError('Delete bookmark failed', err, { userId: req.userId });
+		return internalError(res, 'There was an error deleting this bookmark.');
+	}
+}
+
 export default {
 	getUserBookmarks,
 	addBookmark,
+	deleteBookmark,
 };
