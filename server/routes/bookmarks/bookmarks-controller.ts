@@ -5,6 +5,8 @@ import {
 	successResponse,
 	internalError,
 	badRequest,
+	conflict,
+	notFound,
 } from '../../utils/error-response.js';
 import { logError } from '../../config/logger.js';
 import { ValidatedRequest } from '../../utils/validation.js';
@@ -20,14 +22,11 @@ async function getUserBookmarks(req: Request, res: Response) {
 			.join(Tables.UserProfile, `${Tables.User}.user_id`, `${Tables.UserProfile}.user_id`)
 			.select(
 				`${Tables.Pack}.pack_id`,
-				`${Tables.Pack}.pack_name`,
-				`${Tables.Pack}.pack_description`,
-				`${Tables.Pack}.pack_photo_url`,
-				`${Tables.Pack}.pack_views`,
-				`${Tables.Pack}.pack_bookmark_count`,
-				`${Tables.UserProfile}.username`,
-				`${Tables.UserProfile}.trail_name`,
-				`${Tables.PackBookmarks}.created_at as bookmarked_at`,
+				'pack_name',
+				'pack_description',
+				'pack_photo_url',
+				'username',
+				'profile_photo_url',
 			)
 			.where(`${Tables.PackBookmarks}.user_id`, userId)
 			.where(`${Tables.Pack}.pack_public`, true)
@@ -35,6 +34,7 @@ async function getUserBookmarks(req: Request, res: Response) {
 
 		return successResponse(res, { bookmarks });
 	} catch (err) {
+		console.log(err);
 		logError('Get user bookmarks failed', err, { userId: req.userId });
 		return internalError(res, 'There was an error getting your saved packs.');
 	}
@@ -45,18 +45,38 @@ async function addBookmark(req: ValidatedRequest<AddBookmarkRequest>, res: Respo
 		const { userId } = req;
 		const { pack_id } = req.validatedBody;
 
+		const pack = await knex(Tables.Pack)
+			.select('pack_id', 'user_id', 'pack_public')
+			.where({ pack_id })
+			.first();
+
+		if (!pack) return notFound(res, 'Pack not found.');
+		if (!pack.pack_public) return badRequest(res, 'Cannot bookmark a private pack.');
+		if (pack.user_id === userId) return badRequest(res, 'Cannot bookmark your own pack.');
+
 		const existingBookmark = await knex(Tables.PackBookmarks)
 			.where({ user_id: userId, pack_id })
 			.first();
 
 		if (existingBookmark) {
-			return badRequest(res, 'Pack is already bookmarked.');
+			return conflict(res, 'Pack is already bookmarked.');
 		}
 
-		await knex(Tables.PackBookmarks).insert({
-			user_id: userId,
-			pack_id,
-		});
+		const trx = await knex.transaction();
+		try {
+			await trx(Tables.PackBookmarks).insert({
+				user_id: userId,
+				pack_id,
+			});
+
+			await trx(Tables.Pack).where({ pack_id }).increment('pack_bookmark_count', 1);
+
+			await trx.commit();
+		} catch (error) {
+			await trx.rollback();
+			logError('Bookmark creation failed', error, { userId, pack_id });
+			return internalError(res, 'There was an error bookmarking this pack.');
+		}
 
 		return successResponse(res, null, 'Pack bookmarked successfully.');
 	} catch (err) {
