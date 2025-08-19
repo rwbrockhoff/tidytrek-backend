@@ -230,7 +230,7 @@ export async function deletePackAndMoveItems(userId: string, packId: string) {
 	await bulkMoveToGearCloset(packItems, userId);
 
 	// DELETE ON CASCADE: pack -> pack_category -> pack_item
-	await db(Tables.Pack).del().where('user_id', userId).where('pack_id', packId);
+	await db(Tables.Pack).where('user_id', userId).where('pack_id', packId).del();
 
 	//if no packs left, create default pack
 	const response = await db(Tables.Pack)
@@ -244,7 +244,7 @@ export async function deletePackAndMoveItems(userId: string, packId: string) {
 
 export async function deletePackCompletely(userId: string, packId: string) {
 	// DELETE ON CASCADE: pack -> pack_category -> pack_item
-	await db(Tables.Pack).del().where('user_id', userId).where('pack_id', packId);
+	await db(Tables.Pack).where('user_id', userId).where('pack_id', packId).del();
 
 	// if no packs left, ensure user has default pack
 	const response = await db(Tables.Pack)
@@ -417,13 +417,13 @@ export async function deleteCategoryAndAllItems(userId: string, categoryId: stri
 	const trx = await db.transaction();
 	try {
 		await trx(Tables.PackItem)
-			.del()
 			.where('user_id', userId)
-			.where('pack_category_id', categoryId);
+			.where('pack_category_id', categoryId)
+			.del();
 		await trx(Tables.PackCategory)
-			.del()
 			.where('user_id', userId)
-			.where('pack_category_id', categoryId);
+			.where('pack_category_id', categoryId)
+			.del();
 		await trx.commit();
 	} catch (error) {
 		await trx.rollback();
@@ -455,9 +455,9 @@ async function deletePackCategory(user_id: string, pack_category_id: number | st
 	try {
 		// Delete ON CASCADE: pack_category -> pack_item
 		await db(Tables.PackCategory)
-			.del()
 			.where('user_id', user_id)
-			.where('pack_category_id', pack_category_id);
+			.where('pack_category_id', pack_category_id)
+			.del();
 	} catch (err) {
 		throw new Error('Failed to delete category');
 	}

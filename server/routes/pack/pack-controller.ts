@@ -411,9 +411,9 @@ async function deletePackItem(req: Request, res: Response) {
 		const { packItemId } = req.params;
 
 		await db(Tables.PackItem)
-			.delete()
 			.where('user_id', userId)
-			.where('pack_item_id', packItemId);
+			.where('pack_item_id', packItemId)
+			.delete();
 
 		return successResponse(res, null, 'Pack item deleted successfully');
 	} catch (err) {
