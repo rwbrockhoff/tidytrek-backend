@@ -1,8 +1,10 @@
 import knex from '../../db/connection.js';
 import { Tables } from '../../db/tables.js';
 import { Request, Response } from 'express';
-import { successResponse, internalError } from '../../utils/error-response.js';
+import { successResponse, internalError, badRequest } from '../../utils/error-response.js';
 import { logError } from '../../config/logger.js';
+import { ValidatedRequest } from '../../utils/validation.js';
+import { AddBookmarkRequest } from './bookmarks-schemas.js';
 
 async function getUserBookmarks(req: Request, res: Response) {
 	try {
@@ -34,6 +36,32 @@ async function getUserBookmarks(req: Request, res: Response) {
 	}
 }
 
+async function addBookmark(req: ValidatedRequest<AddBookmarkRequest>, res: Response) {
+	try {
+		const { userId } = req;
+		const { pack_id } = req.validatedBody;
+
+		const existingBookmark = await knex(Tables.PackBookmarks)
+			.where({ user_id: userId, pack_id })
+			.first();
+
+		if (existingBookmark) {
+			return badRequest(res, 'Pack is already bookmarked.');
+		}
+
+		await knex(Tables.PackBookmarks).insert({
+			user_id: userId,
+			pack_id,
+		});
+
+		return successResponse(res, null, 'Pack bookmarked successfully.');
+	} catch (err) {
+		logError('Add bookmark failed', err, { userId: req.userId });
+		return internalError(res, 'There was an error bookmarking this pack.');
+	}
+}
+
 export default {
 	getUserBookmarks,
+	addBookmark,
 };
