@@ -38,14 +38,6 @@ export const protectedRoute = async (req: Request, res: Response, next: Next) =>
 			return next();
 		}
 
-		const { data: { user }, error: userError } = await supabase.auth.getUser();
-
-		if (user && !userError) {
-			req.userId = user.id;
-			setCachedUserId(supabaseRefreshToken, user.id);
-			return next();
-		}
-
 		const { data, error } = await supabase.auth.refreshSession({
 			refresh_token: supabaseRefreshToken,
 		});

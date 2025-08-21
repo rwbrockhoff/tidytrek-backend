@@ -167,9 +167,9 @@ async function deleteGearClosetItem(req: Request, res: Response) {
 		const { packItemId } = req.params;
 
 		await knex(Tables.PackItem)
-		.delete()
 		.where('pack_item_id', packItemId)
-		.where('user_id', userId);
+		.where('user_id', userId)
+		.delete();
 
 		return successResponse(res, null, 'Gear closet item deleted successfully');
 	} catch (err) {
