@@ -13,6 +13,7 @@ import {
 	createAuthRateLimit,
 	createUploadRateLimit,
 	createImportRateLimit,
+	createAccountDeletionRateLimit,
 } from './rate-limiting.js';
 
 const env = validateEnvironment();
@@ -58,6 +59,7 @@ const mainConfig = async (app: Express) => {
 	const authRateLimit = createAuthRateLimit(redisClient);
 	const uploadRateLimit = createUploadRateLimit(redisClient);
 	const importRateLimit = createImportRateLimit(redisClient);
+	const accountDeletionRateLimit = createAccountDeletionRateLimit(redisClient);
 
 	app.use(apiRateLimit);
 	app.use(
@@ -81,6 +83,7 @@ const mainConfig = async (app: Express) => {
 		authRateLimit,
 		uploadRateLimit,
 		importRateLimit,
+		accountDeletionRateLimit,
 	};
 };
 

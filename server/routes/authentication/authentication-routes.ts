@@ -12,14 +12,14 @@ import {
 
 import { RequestHandler } from 'express';
 
-export function createAuthRoutes(authRateLimit: RequestHandler) {
+export function createAuthRoutes(authRateLimit: RequestHandler, accountDeletionRateLimit: RequestHandler) {
 	const router = express.Router();
 
 	router.get('/status', controller.getAuthStatus);
 	router.post('/register', authRateLimit, validate(RegisterSchema), withTypes<RegisterData>(controller.register));
 	router.post('/login', authRateLimit, validate(LoginSchema), withTypes<LoginData>(controller.login));
 	router.post('/logout', controller.logout);
-	router.delete('/account', protectedRoute, controller.deleteAccount);
+	router.delete('/account', protectedRoute, accountDeletionRateLimit, controller.deleteAccount);
 
 	return router;
 }

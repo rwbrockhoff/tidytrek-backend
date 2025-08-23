@@ -17,7 +17,7 @@ function createRedisStore(redisClient: RedisClientType) {
 export function createAuthRateLimit(redisClient: RedisClientType) {
 	return rateLimit({
 		windowMs: 15 * 60 * 1000, // 15 min
-		max: 5,
+		max: 10,
 		message: {
 			error: 'Too many authentication attempts. Please try again in 15 minutes.',
 		},
@@ -31,7 +31,7 @@ export function createAuthRateLimit(redisClient: RedisClientType) {
 export function createApiRateLimit(redisClient: RedisClientType) {
 	return rateLimit({
 		windowMs: 15 * 60 * 1000, // 15 min
-		max: 250,
+		max: 500,
 		message: {
 			error: 'Too many requests. Please try again in 15 minutes.',
 		},
@@ -61,6 +61,19 @@ export function createImportRateLimit(redisClient: RedisClientType) {
 		max: 10,
 		message: {
 			error: 'Too many import requests. Please try again in 1 hour.',
+		},
+		standardHeaders: true,
+		legacyHeaders: false,
+		store: createRedisStore(redisClient),
+	});
+}
+
+export function createAccountDeletionRateLimit(redisClient: RedisClientType) {
+	return rateLimit({
+		windowMs: 24 * 60 * 60 * 1000, // 24 hours
+		max: 5,
+		message: {
+			error: 'Too many account deletion requests. Please try again tomorrow.',
 		},
 		standardHeaders: true,
 		legacyHeaders: false,

@@ -18,10 +18,11 @@ interface RateLimiters {
 	authRateLimit: RequestHandler;
 	uploadRateLimit: RequestHandler;
 	importRateLimit: RequestHandler;
+	accountDeletionRateLimit: RequestHandler;
 }
 
 const routeConfig = (app: Application, rateLimiters: RateLimiters) => {
-	const authRoutes = createAuthRoutes(rateLimiters.authRateLimit);
+	const authRoutes = createAuthRoutes(rateLimiters.authRateLimit, rateLimiters.accountDeletionRateLimit);
 	const packRoutes = createPackRoutes(rateLimiters.uploadRateLimit, rateLimiters.importRateLimit);
 	const profileSettingsRoutes = createProfileSettingsRoutes(rateLimiters.uploadRateLimit);
 
