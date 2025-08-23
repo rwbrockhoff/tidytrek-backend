@@ -12,7 +12,7 @@ export const GearClosetItemUpdateSchema = z
 		pack_item_description: z.string().max(500).nullish(),
 		pack_item_weight: z.coerce.number().min(0).optional(),
 		pack_item_weight_unit: z.enum(WEIGHT_UNIT_VALUES).default(WeightUnit.oz).optional(),
-		pack_item_quantity: z.coerce.number().int().min(1).optional(),
+		pack_item_quantity: z.coerce.number().int().min(0).optional(),
 		pack_item_url: z.string().nullish(),
 		worn_weight: z.boolean().optional(),
 		consumable: z.boolean().optional(),

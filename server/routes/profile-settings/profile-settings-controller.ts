@@ -12,7 +12,10 @@ import {
 	ErrorCode,
 } from '../../utils/error-response.js';
 import { createCloudfrontUrlForPhoto, s3DeletePhoto } from '../../utils/s3.js';
-import { createQuickPhotoUrl, updateToOptimizedPhoto } from '../../utils/photo-processing.js';
+import {
+	createQuickPhotoUrl,
+	updateToOptimizedPhoto,
+} from '../../utils/photo-processing.js';
 import { generateUsername } from '../../utils/username-generator.js';
 import { logError } from '../../config/logger.js';
 import { getUserProfileInfo } from '../../services/profile-service.js';
@@ -57,12 +60,12 @@ async function editProfileSettings(
 			// check for existing username
 			const result = await isUniqueUsername(username, userId);
 			if (!result.unique)
-				return conflict(res, result.message || 'Username is not available');
+				return conflict(res, result.message || 'Username is not available.');
 		}
 
 		await db(Tables.UserProfile).update(req.validatedBody).where({ user_id: userId });
 
-		return successResponse(res, null, 'Profile updated successfully');
+		return successResponse(res, null, 'Profile updated successfully.');
 	} catch (err) {
 		logError('Edit profile settings failed', err, { userId: req.userId });
 		return internalError(res, 'There was an error updating your profile.');
@@ -103,7 +106,7 @@ async function uploadProfilePhoto(req: Request, res: Response) {
 		return successResponse(
 			res,
 			{ profilePhotoUrl: profile_photo_url },
-			'Profile photo uploaded successfully',
+			'Profile photo uploaded successfully.',
 		);
 	} catch (err) {
 		logError('Upload profile avatar photo failed', err, {
@@ -143,7 +146,7 @@ async function deleteProfilePhoto(req: Request, res: Response) {
 			})
 			.where({ user_id: userId });
 
-		return successResponse(res, null, 'Profile photo deleted successfully');
+		return successResponse(res, null, 'Profile photo deleted successfully.');
 	} catch (err) {
 		return internalError(res, 'There was an error deleting your photo.');
 	}
@@ -178,7 +181,7 @@ async function uploadBannerPhoto(req: Request, res: Response) {
 		const response = successResponse(
 			res,
 			{ bannerPhotoUrl: banner_photo_url },
-			'Banner photo uploaded successfully',
+			'Banner photo uploaded successfully.',
 		);
 
 		setImmediate(async () => {
@@ -188,7 +191,7 @@ async function uploadBannerPhoto(req: Request, res: Response) {
 					'banner_photo_url',
 					{ user_id: userId },
 					s3Key,
-					'bannerPhotoBucket'
+					'bannerPhotoBucket',
 				);
 			} catch (optimizationError) {
 				logError('Background banner optimization failed', optimizationError, {
@@ -223,13 +226,13 @@ async function updateUsername(req: ValidatedRequest<UsernameUpdate>, res: Respon
 			// check for existing username
 			const result = await isUniqueUsername(username, userId);
 			if (!result.unique)
-				return conflict(res, result.message || 'Username is not available');
+				return conflict(res, result.message || 'Username is not available.');
 		}
 
 		await db(Tables.UserProfile)
 			.update({ username: username || null, trail_name })
 			.where({ user_id: userId });
-		return successResponse(res, null, 'Username updated successfully');
+		return successResponse(res, null, 'Username updated successfully.');
 	} catch (err) {
 		return internalError(res, 'There was an error saving your username.');
 	}
@@ -256,9 +259,7 @@ async function addSocialLink(req: ValidatedRequest<SocialLinkCreate>, res: Respo
 			.first();
 
 		if (countResponse && Number(countResponse.count) >= 4) {
-			return res
-				.status(400)
-				.json({ error: 'You already have four links in your profile' });
+			return badRequest(res, 'You already have four links in your profile.');
 		}
 
 		const [socialLink] = await db(Tables.SocialLink)
@@ -268,7 +269,7 @@ async function addSocialLink(req: ValidatedRequest<SocialLinkCreate>, res: Respo
 			})
 			.returning(['social_link_id', 'social_link_url']);
 
-		return successResponse(res, { socialLink }, 'Social link added successfully');
+		return successResponse(res, { socialLink }, 'Social link added successfully.');
 	} catch (err) {
 		return internalError(res, 'There was an error adding your link.');
 	}
@@ -284,7 +285,7 @@ async function deleteSocialLink(req: Request, res: Response) {
 			.where('user_id', userId)
 			.where('social_link_id', socialLinkId);
 
-		return successResponse(res, null, 'Social link deleted successfully');
+		return successResponse(res, null, 'Social link deleted successfully.');
 	} catch (err) {
 		return internalError(res, 'There was an error deleting your link.');
 	}

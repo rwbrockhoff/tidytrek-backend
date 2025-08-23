@@ -34,6 +34,7 @@ declare module 'knex/types/tables.js' {
 			pack_photo_s3_key?: string | null;
 			pack_photo_position?: { x: number; y: number; zoom: number } | null;
 			pack_bookmark_count?: number | null;
+			palette?: string | null;
 			created_at: Date;
 			updated_at: Date;
 		};
@@ -74,9 +75,9 @@ declare module 'knex/types/tables.js' {
 			user_id: string;
 			weight_unit: 'metric' | 'imperial';
 			public_profile?: boolean | null;
-			palette?: string | null;
 			dark_mode?: boolean | null;
 			currency_unit?: string | null;
+			palette?: string | null;
 			created_at: Date;
 			updated_at: Date;
 		};

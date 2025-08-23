@@ -1,6 +1,6 @@
 import db from '../../db/connection.js';
 import { Tables } from '../../db/tables.js';
-import { DEFAULT_PALETTE_COLOR } from '../../utils/constants.js';
+import { DEFAULT_PALETTE_COLOR, DEFAULT_PALETTE } from '../../utils/constants.js';
 import { validateWeightUnit, validatePrice } from './pack-utils.js';
 import { packScraper } from './pack-scraper.js';
 import { isError } from '../../utils/validation.js';
@@ -13,6 +13,7 @@ import {
 } from '../../utils/fractional-indexing/index.js';
 import { logger } from '../../config/logger.js';
 import { packFields, packItemFields, packCategoryFields } from './pack-schemas.js';
+import { getUserSettingsData } from '../../services/user-service.js';
 
 export async function getPackWithCategories(userId: string, packId: number) {
 	const pack = await db(Tables.Pack)
@@ -50,6 +51,9 @@ export async function getPackWithCategories(userId: string, packId: number) {
 }
 
 export async function createNewPack(userId: string) {
+	const userSettings = await getUserSettingsData(userId);
+	const defaultPalette = userSettings?.palette || DEFAULT_PALETTE;
+
 	// Calculate index for new pack (append to end of user's pack list)
 	const packIndex = await getNextAppendIndex(Tables.Pack, 'pack_index', {
 		user_id: userId,
@@ -62,6 +66,7 @@ export async function createNewPack(userId: string) {
 				user_id: userId,
 				pack_name: 'New Pack',
 				pack_index: packIndex,
+				palette: defaultPalette,
 			})
 			.returning(packFields);
 
